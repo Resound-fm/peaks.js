@@ -25,8 +25,9 @@ function DefaultSegmentMarker(options) {
 
 DefaultSegmentMarker.prototype.init = function(group) {
   const handleWidth  = 10;
-  const handleHeight = 20;
-  const handleX      = -(handleWidth / 2) + 0.5; // Place in the middle of the marker
+  const handleHeight = 30;
+  const handleX      = -(handleWidth / 2) + 15; // Place off to the side of the segment
+  handleX = this._options.startMarker ? (handleX * -1) - 10 : handleX;
 
   const xPosition = this._options.startMarker ? -24 : 24;
 
@@ -55,7 +56,8 @@ DefaultSegmentMarker.prototype.init = function(group) {
     height:      handleHeight,
     fill:        this._options.color,
     stroke:      this._options.color,
-    strokeWidth: 1
+    strokeWidth: 1,
+    cornerRadius: 2,
   });
 
   // Vertical Line - create with default y and points, the real values
@@ -68,7 +70,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
   });
 
   group.add(this._label);
-  group.add(this._line);
+  // group.add(this._line);
   group.add(this._handle);
 
   this.fitToView();
@@ -96,6 +98,7 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
   }
 
   self._handle.on('mouseover touchstart', function() {
+    document.body.style.cursor = 'pointer';
     if (self._options.startMarker) {
       self._label.setX(xPosition - self._label.getWidth());
     }
@@ -104,6 +107,7 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
   });
 
   self._handle.on('mouseout touchend', function() {
+    document.body.style.cursor = 'default';
     self._label.hide();
   });
 };
