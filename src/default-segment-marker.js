@@ -26,7 +26,7 @@ function DefaultSegmentMarker(options) {
 DefaultSegmentMarker.prototype.init = function(group) {
   const handleWidth  = 10;
   const handleHeight = 30;
-  const handleX      = -(handleWidth / 2) + 15; // Place in the middle of the marker
+  const handleX      = -(handleWidth / 2) + 15; // Place off to the side of the segment
   handleX = this._options.startMarker ? (handleX * -1) - 10 : handleX;
 
   const xPosition = this._options.startMarker ? -24 : 24;
