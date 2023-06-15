@@ -26,7 +26,8 @@ function DefaultSegmentMarker(options) {
 DefaultSegmentMarker.prototype.init = function(group) {
   const handleWidth  = 10;
   const handleHeight = 30;
-  const handleX      = -(handleWidth / 2) + 15; // Place off to the side of the segment
+  let handleX      = -(handleWidth / 2) + 15; // Place off to the side of the segment
+
   handleX = this._options.startMarker ? (handleX * -1) - 10 : handleX;
 
   const xPosition = this._options.startMarker ? -24 : 24;
@@ -57,7 +58,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
     fill:        this._options.color,
     stroke:      this._options.color,
     strokeWidth: 1,
-    cornerRadius: 2,
+    cornerRadius: 2
   });
 
   // Vertical Line - create with default y and points, the real values
