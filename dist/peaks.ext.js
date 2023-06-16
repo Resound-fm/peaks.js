@@ -2389,7 +2389,7 @@
   DefaultSegmentMarker.prototype.init = function (group) {
     var handleWidth = 10;
     var handleHeight = 30;
-    var handleX = -(handleWidth / 2) + 15; // Place off to the side of the segment
+    var handleX = -(handleWidth / 2) + 13; // Place off to the side of the segment
 
     handleX = this._options.startMarker ? handleX * -1 - 10 : handleX;
     var xPosition = this._options.startMarker ? -24 : 24;
@@ -2450,6 +2450,8 @@
     }
     self._handle.on('mouseover touchstart', function () {
       document.body.style.cursor = 'pointer';
+      self._handle.attrs.fill = '#5c9af5'; // blueberry-500
+      self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
       if (self._options.startMarker) {
         self._label.setX(xPosition - self._label.getWidth());
       }
@@ -2457,13 +2459,15 @@
     });
     self._handle.on('mouseout touchend', function () {
       document.body.style.cursor = 'default';
+      self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
+      self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
       self._label.hide();
     });
   };
   DefaultSegmentMarker.prototype.fitToView = function () {
     var height = this._options.layer.getHeight();
     this._label.y(height / 2 - 5);
-    this._handle.y(height / 2 - 10.5);
+    this._handle.y(height / 2 - 15.5);
     this._line.points([0.5, 0, 0.5, height]);
   };
   DefaultSegmentMarker.prototype.timeUpdated = function (time) {
@@ -6272,10 +6276,9 @@
       // TODO: move this code to animation function?
       // TODO: don't scroll if user has positioned view manually (e.g., using
       // the keyboard)
-      var endThreshold = this._frameOffset + this._width - 100;
+      var endThreshold = this._frameOffset + this._width - this._width / 2;
       if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
-        // Put the playhead at 100 pixels from the left edge
-        this._frameOffset = pixelIndex - 100;
+        this._frameOffset = pixelIndex - this._width / 2;
         if (this._frameOffset < 0) {
           this._frameOffset = 0;
         }
