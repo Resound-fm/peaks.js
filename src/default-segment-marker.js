@@ -26,7 +26,7 @@ function DefaultSegmentMarker(options) {
 DefaultSegmentMarker.prototype.init = function(group) {
   const handleWidth  = 10;
   const handleHeight = 30;
-  let handleX      = -(handleWidth / 2) + 15; // Place off to the side of the segment
+  let handleX      = -(handleWidth / 2) + 13; // Place off to the side of the segment
 
   handleX = this._options.startMarker ? (handleX * -1) - 10 : handleX;
 
@@ -100,6 +100,8 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
 
   self._handle.on('mouseover touchstart', function() {
     document.body.style.cursor = 'pointer';
+    self._handle.attrs.fill = '#5c9af5'; // blueberry-500
+    self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
     if (self._options.startMarker) {
       self._label.setX(xPosition - self._label.getWidth());
     }
@@ -109,6 +111,8 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
 
   self._handle.on('mouseout touchend', function() {
     document.body.style.cursor = 'default';
+    self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
+    self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
     self._label.hide();
   });
 };
@@ -117,7 +121,7 @@ DefaultSegmentMarker.prototype.fitToView = function() {
   const height = this._options.layer.getHeight();
 
   this._label.y(height / 2 - 5);
-  this._handle.y(height / 2 - 10.5);
+  this._handle.y(height / 2 - 15.5);
   this._line.points([0.5, 0, 0.5, height]);
 };
 
