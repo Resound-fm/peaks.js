@@ -535,7 +535,7 @@ WaveformZoomView.prototype._syncPlayhead = function(time) {
     const endThreshold = this._frameOffset + this._width - (this._width / 2);
 
     if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
-      this._frameOffset = pixelIndex - (this._width / 2);
+      this._frameOffset = pixelIndex - Math.round(this._width / 2)
 
       if (this._frameOffset < 0) {
         this._frameOffset = 0;
