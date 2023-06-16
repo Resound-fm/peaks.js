@@ -41,7 +41,8 @@ function Scrollbar(waveformData, container, peaks) {
   peaks.on('window_resize', this._onWindowResize);
 
   this._width = container.clientWidth;
-  this._height = container.clientHeight;
+  // this._height = container.clientHeight;
+  this._height = 10;
 
   this._stage = new Konva.Stage({
     container: container,
@@ -70,7 +71,8 @@ function Scrollbar(waveformData, container, peaks) {
     y:           this._offsetY,
     width:       0,
     height:      this._height,
-    fill:        this._color
+    fill:        this._color,
+    cornerRadius: 10
   });
 
   this._scrollbox.add(this._scrollboxRect);
