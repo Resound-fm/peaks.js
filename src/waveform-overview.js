@@ -50,7 +50,7 @@ function WaveformOverview(waveformData, container, peaks) {
   peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
   peaks.on('window_resize', self._onWindowResize);
 
-  self._amplitudeScale = .75;
+  self._amplitudeScale = 0.75;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
   self._enableSeek = true;
 
