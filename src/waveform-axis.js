@@ -167,15 +167,15 @@ WaveformAxis.prototype._drawAxis = function(context, view) {
     context.beginPath();
     context.moveTo(x + 0.5, 0);
     context.lineTo(x + 0.5, 0 + markerHeight);
-    context.moveTo(x + 0.5, height);
-    context.lineTo(x + 0.5, height - markerHeight);
+    // context.moveTo(x + 0.5, height);
+    // context.lineTo(x + 0.5, height - markerHeight);
     context.stroke();
 
     if (this._showAxisLabels) {
       const label      = this._formatAxisTime(secs);
       const labelWidth = context.measureText(label).width;
       const labelX     = x - labelWidth / 2;
-      const labelY     = height - 1 - markerHeight;
+      const labelY     = 15 + markerHeight;
 
       if (labelX >= 0) {
         context.fillText(label, labelX, labelY);
