@@ -2436,34 +2436,43 @@
   };
   DefaultSegmentMarker.prototype.bindEventHandlers = function (group) {
     var self = this;
-    var xPosition = self._options.startMarker ? -24 : 24;
+
+    // const xPosition = self._options.startMarker ? -24 : 24;
+
     if (self._options.draggable) {
       group.on('dragstart', function () {
-        if (self._options.startMarker) {
-          self._label.setX(xPosition - self._label.getWidth());
-        }
-        self._label.show();
+        self._handle.attrs.fill = '#5c9af5'; // blueberry-500
+        self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+        // if (self._options.startMarker) {
+        //   self._label.setX(xPosition - self._label.getWidth());
+        // }
+
+        // self._label.show();
       });
+
       group.on('dragend', function () {
-        self._label.hide();
+        // self._label.hide();
       });
     }
     self._handle.on('mouseover touchstart', function () {
       document.body.style.cursor = 'pointer';
       self._handle.attrs.fill = '#5c9af5'; // blueberry-500
       self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
-      if (self._options.startMarker) {
-        self._label.setX(xPosition - self._label.getWidth());
-      }
-      self._label.show();
+      // if (self._options.startMarker) {
+      //   self._label.setX(xPosition - self._label.getWidth());
+      // }
+
+      // self._label.show();
     });
+
     self._handle.on('mouseout touchend', function () {
       document.body.style.cursor = 'default';
       self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
       self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
-      self._label.hide();
+      // self._label.hide();
     });
   };
+
   DefaultSegmentMarker.prototype.fitToView = function () {
     var height = this._options.layer.getHeight();
     this._label.y(height / 2 - 5);
@@ -4275,12 +4284,12 @@
     // Create with default y and height, the real values are set in fitToView().
     var segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
     var segmentEndOffset = this._view.timeToPixelOffset(this._segment.endTime);
-    var overlayRectHeight = clamp(0, this._view.getHeight() - 2 * this._overlayOffset);
+    var overlayRectHeight = clamp(0, this._view.getHeight() * this._overlayOffset);
     this._overlay = new Konva__default["default"].Group({
       name: 'segment-overlay',
       segment: this._segment,
       x: segmentStartOffset,
-      y: 0,
+      y: -10,
       width: segmentEndOffset - segmentStartOffset,
       height: this._view.getHeight(),
       clipX: 0,
@@ -5328,7 +5337,8 @@
     context.setAttr('textAlign', 'left');
     context.setAttr('textBaseline', 'bottom');
     var width = view.getWidth();
-    var height = view.getHeight();
+    // const height = view.getHeight();
+
     var secs = firstAxisLabelSecs;
     for (;;) {
       // Position of axis marker (pixels)
@@ -5339,14 +5349,14 @@
       context.beginPath();
       context.moveTo(x + 0.5, 0);
       context.lineTo(x + 0.5, 0 + markerHeight);
-      context.moveTo(x + 0.5, height);
-      context.lineTo(x + 0.5, height - markerHeight);
+      // context.moveTo(x + 0.5, height);
+      // context.lineTo(x + 0.5, height - markerHeight);
       context.stroke();
       if (this._showAxisLabels) {
         var label = this._formatAxisTime(secs);
         var labelWidth = context.measureText(label).width;
         var labelX = x - labelWidth / 2;
-        var labelY = height - 1 - markerHeight;
+        var labelY = 15 + markerHeight;
         if (labelX >= 0) {
           context.fillText(label, labelX, labelY);
         }
