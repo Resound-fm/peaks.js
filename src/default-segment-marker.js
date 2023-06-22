@@ -86,15 +86,17 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
 
   if (self._options.draggable) {
     group.on('dragstart', function() {
-      if (self._options.startMarker) {
-        self._label.setX(xPosition - self._label.getWidth());
-      }
+      self._handle.attrs.fill = '#5c9af5'; // blueberry-500
+      self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+      // if (self._options.startMarker) {
+      //   self._label.setX(xPosition - self._label.getWidth());
+      // }
 
-      self._label.show();
+      // self._label.show();
     });
 
     group.on('dragend', function() {
-      self._label.hide();
+      // self._label.hide();
     });
   }
 
@@ -102,18 +104,18 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
     document.body.style.cursor = 'pointer';
     self._handle.attrs.fill = '#5c9af5'; // blueberry-500
     self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
-    if (self._options.startMarker) {
-      self._label.setX(xPosition - self._label.getWidth());
-    }
+    // if (self._options.startMarker) {
+    //   self._label.setX(xPosition - self._label.getWidth());
+    // }
 
-    self._label.show();
+    // self._label.show();
   });
 
   self._handle.on('mouseout touchend', function() {
     document.body.style.cursor = 'default';
     self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
     self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
-    self._label.hide();
+    // self._label.hide();
   });
 };
 
