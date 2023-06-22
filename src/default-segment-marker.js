@@ -82,7 +82,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
 DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
   const self = this;
 
-  const xPosition = self._options.startMarker ? -24 : 24;
+  // const xPosition = self._options.startMarker ? -24 : 24;
 
   if (self._options.draggable) {
     group.on('dragstart', function() {

@@ -152,7 +152,7 @@ WaveformAxis.prototype._drawAxis = function(context, view) {
   context.setAttr('textBaseline', 'bottom');
 
   const width  = view.getWidth();
-  const height = view.getHeight();
+  // const height = view.getHeight();
 
   let secs = firstAxisLabelSecs;
 
