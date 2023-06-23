@@ -13784,9 +13784,11 @@
 	  self.setWheelMode(self._viewOptions.wheelMode);
 	  self._onClick = self._onClick.bind(this);
 	  self._onDblClick = self._onDblClick.bind(this);
+	  self._onMouseDown = self._onMouseDown.bind(this);
 	  self._onContextMenu = self._onContextMenu.bind(this);
 	  self._stage.on('click', self._onClick);
 	  self._stage.on('dblclick', self._onDblClick);
+	  self._stage.on('mousedown', self._onMouseDown);
 	  self._stage.on('contextmenu', self._onContextMenu);
 	}
 	WaveformZoomView.prototype._initWaveformCache = function () {
@@ -13891,6 +13893,9 @@
 	};
 	WaveformZoomView.prototype._onDblClick = function (event) {
 	  this._clickHandler(event, 'dblclick');
+	};
+	WaveformZoomView.prototype._onMouseDown = function (event) {
+	  this._clickHandler(event, 'mousedown');
 	};
 	WaveformZoomView.prototype._onContextMenu = function (event) {
 	  this._clickHandler(event, 'contextmenu');
