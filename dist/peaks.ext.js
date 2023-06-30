@@ -5405,7 +5405,7 @@
     peaks.on('player.pause', self._onPause);
     peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
     peaks.on('window_resize', self._onWindowResize);
-    self._amplitudeScale = 0.75;
+    self._amplitudeScale = 1;
     self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
     self._enableSeek = true;
     if (self._viewOptions.formatPlayheadTime) {
