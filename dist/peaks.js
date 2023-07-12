@@ -10192,11 +10192,11 @@
 	  this._options = options;
 	}
 	DefaultSegmentMarker.prototype.init = function (group) {
-	  var handleWidth = 10;
-	  var handleHeight = 30;
-	  var handleX = -(handleWidth / 2) + 13; // Place off to the side of the segment
+	  var handleWidth = 15;
+	  var handleHeight = this._options.layer.getHeight();
+	  var handleX = -(handleWidth / 2) + 8; // Place off to the side of the segment
 
-	  handleX = this._options.startMarker ? handleX * -1 - 10 : handleX;
+	  handleX = this._options.startMarker ? handleX * -1 - 14 : handleX;
 	  var xPosition = this._options.startMarker ? -24 : 24;
 	  var time = this._options.startMarker ? this._options.segment.startTime : this._options.segment.endTime;
 
@@ -10221,8 +10221,7 @@
 	    height: handleHeight,
 	    fill: this._options.color,
 	    stroke: this._options.color,
-	    strokeWidth: 1,
-	    cornerRadius: 2
+	    strokeWidth: 1
 	  });
 
 	  // Vertical Line - create with default y and points, the real values
@@ -10246,8 +10245,8 @@
 
 	  if (self._options.draggable) {
 	    group.on('dragstart', function () {
-	      self._handle.attrs.fill = '#5c9af5'; // blueberry-500
-	      self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+	      self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+	      self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
 	      // if (self._options.startMarker) {
 	      //   self._label.setX(xPosition - self._label.getWidth());
 	      // }
@@ -10260,28 +10259,28 @@
 	    });
 	  }
 	  self._handle.on('mouseover touchstart', function () {
-	    document.body.style.cursor = 'pointer';
-	    self._handle.attrs.fill = '#5c9af5'; // blueberry-500
-	    self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+	    document.body.style.cursor = 'col-resize';
+	    self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+	    self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
 	    // if (self._options.startMarker) {
 	    //   self._label.setX(xPosition - self._label.getWidth());
 	    // }
 
 	    // self._label.show();
+	    self.parent.parent.draw();
 	  });
-
 	  self._handle.on('mouseout touchend', function () {
 	    document.body.style.cursor = 'default';
-	    self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
-	    self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
+	    self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
+	    self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
 	    // self._label.hide();
+	    self.parent.parent.draw();
 	  });
 	};
-
 	DefaultSegmentMarker.prototype.fitToView = function () {
 	  var height = this._options.layer.getHeight();
 	  this._label.y(height / 2 - 5);
-	  this._handle.y(height / 2 - 15.5);
+	  this._handle.y(0);
 	  this._line.points([0.5, 0, 0.5, height]);
 	};
 	DefaultSegmentMarker.prototype.timeUpdated = function (time) {
@@ -13210,7 +13209,7 @@
 	  peaks.on('player.pause', self._onPause);
 	  peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
 	  peaks.on('window_resize', self._onWindowResize);
-	  self._amplitudeScale = 1;
+	  self._amplitudeScale = 1.0;
 	  self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
 	  self._enableSeek = true;
 	  if (self._viewOptions.formatPlayheadTime) {
