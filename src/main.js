@@ -103,6 +103,7 @@ const defaultSegmentOptions = {
   markers:                   true,
   startMarkerColor:          '#aaaaaa',
   endMarkerColor:            '#aaaaaa',
+  strokeColor:               '',
   waveformColor:             '#0074d9',
   overlayColor:              '#ff0000',
   overlayOpacity:            0.3,

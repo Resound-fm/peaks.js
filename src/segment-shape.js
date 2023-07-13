@@ -26,6 +26,7 @@ const defaultFontShape = 'normal';
  * @property {Boolean} overlay
  * @property {String} startMarkerColor
  * @property {String} endMarkerColor
+ * @property {String} strokeColor
  * @property {String} waveformColor
  * @property {String} overlayColor
  * @property {Number} overlayOpacity
@@ -334,6 +335,7 @@ SegmentShape.prototype._createMarkers = function() {
     draggable:      editable,
     startMarker:    true,
     color:          segmentOptions.startMarkerColor,
+    strokeColor:    segmentOptions.strokeColor,
     fontFamily:     this._peaks.options.fontFamily || defaultFontFamily,
     fontSize:       this._peaks.options.fontSize || defaultFontSize,
     fontStyle:      this._peaks.options.fontStyle || defaultFontShape,
@@ -361,6 +363,7 @@ SegmentShape.prototype._createMarkers = function() {
     draggable:      editable,
     startMarker:    false,
     color:          segmentOptions.endMarkerColor,
+    strokeColor:    segmentOptions.strokeColor,
     fontFamily:     this._peaks.options.fontFamily || defaultFontFamily,
     fontSize:       this._peaks.options.fontSize || defaultFontSize,
     fontStyle:      this._peaks.options.fontStyle || defaultFontShape,
