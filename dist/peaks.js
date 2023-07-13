@@ -10223,17 +10223,37 @@
 	    stroke: this._options.color,
 	    strokeWidth: 1
 	  });
+	  this._handleLineOne = new Rect_2({
+	    x: handleX + 4.5,
+	    y: 0,
+	    width: 0.5,
+	    height: 16,
+	    fill: '#FFFFFFBF',
+	    stroke: '#FFFFFFBF',
+	    strokeWidth: 1
+	  });
+	  this._handleLineTwo = new Rect_2({
+	    x: handleX + 9.5,
+	    y: 0,
+	    width: 0.5,
+	    height: 16,
+	    fill: '#FFFFFFBF',
+	    stroke: '#FFFFFFBF',
+	    strokeWidth: 1
+	  });
 
 	  // Vertical Line - create with default y and points, the real values
 	  // are set in fitToView().
 	  this._line = new Line_2({
 	    x: 0,
 	    y: 0,
-	    stroke: this._options.color,
+	    stroke: this._options.strokeColor,
 	    strokeWidth: 1
 	  });
 	  group.add(this._label);
-	  // group.add(this._line);
+	  group.add(this._line);
+	  group.add(this._handleLineOne);
+	  group.add(this._handleLineTwo);
 	  group.add(this._handle);
 	  this.fitToView();
 	  this.bindEventHandlers(group);
@@ -10267,20 +10287,22 @@
 	    // }
 
 	    // self._label.show();
-	    self.parent.parent.draw();
+	    this.parent.parent.draw();
 	  });
 	  self._handle.on('mouseout touchend', function () {
 	    document.body.style.cursor = 'default';
 	    self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
 	    self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
 	    // self._label.hide();
-	    self.parent.parent.draw();
+	    this.parent.parent.draw();
 	  });
 	};
 	DefaultSegmentMarker.prototype.fitToView = function () {
 	  var height = this._options.layer.getHeight();
 	  this._label.y(height / 2 - 5);
-	  this._handle.y(0);
+	  this._handle.y(height / 2 + 45);
+	  this._handleLineOne.y(height / 2 + 61);
+	  this._handleLineTwo.y(height / 2 + 61);
 	  this._line.points([0.5, 0, 0.5, height]);
 	};
 	DefaultSegmentMarker.prototype.timeUpdated = function (time) {
@@ -12010,6 +12032,7 @@
 	 * @property {Boolean} overlay
 	 * @property {String} startMarkerColor
 	 * @property {String} endMarkerColor
+	 * @property {String} strokeColor
 	 * @property {String} waveformColor
 	 * @property {String} overlayColor
 	 * @property {Number} overlayOpacity
@@ -12268,6 +12291,7 @@
 	    draggable: editable,
 	    startMarker: true,
 	    color: segmentOptions.startMarkerColor,
+	    strokeColor: segmentOptions.strokeColor,
 	    fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
 	    fontSize: this._peaks.options.fontSize || defaultFontSize,
 	    fontStyle: this._peaks.options.fontStyle || defaultFontShape,
@@ -12293,6 +12317,7 @@
 	    draggable: editable,
 	    startMarker: false,
 	    color: segmentOptions.endMarkerColor,
+	    strokeColor: segmentOptions.strokeColor,
 	    fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
 	    fontSize: this._peaks.options.fontSize || defaultFontSize,
 	    fontStyle: this._peaks.options.fontStyle || defaultFontShape,
@@ -15897,6 +15922,7 @@
 	  markers: true,
 	  startMarkerColor: '#aaaaaa',
 	  endMarkerColor: '#aaaaaa',
+	  strokeColor: '',
 	  waveformColor: '#0074d9',
 	  overlayColor: '#ff0000',
 	  overlayOpacity: 0.3,
