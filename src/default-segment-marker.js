@@ -63,7 +63,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
   this._handleLineOne = new Rect({
     x: handleX + 4.5,
     y: 0,
-    width: .5,
+    width: 0.5,
     height: 16,
     fill: '#FFFFFFBF',
     stroke: '#FFFFFFBF',
@@ -73,7 +73,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
   this._handleLineTwo = new Rect({
     x: handleX + 9.5,
     y: 0,
-    width: .5,
+    width: 0.5,
     height: 16,
     fill: '#FFFFFFBF',
     stroke: '#FFFFFFBF',
