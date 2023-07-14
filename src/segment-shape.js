@@ -26,7 +26,6 @@ const defaultFontShape = 'normal';
  * @property {Boolean} overlay
  * @property {String} startMarkerColor
  * @property {String} endMarkerColor
- * @property {String} strokeColor
  * @property {String} waveformColor
  * @property {String} overlayColor
  * @property {Number} overlayOpacity
@@ -113,13 +112,13 @@ function SegmentShape(segment, peaks, layer, view) {
   const segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
   const segmentEndOffset   = this._view.timeToPixelOffset(this._segment.endTime);
 
-  const overlayRectHeight = clamp(0, this._view.getHeight() * this._overlayOffset);
+  const overlayRectHeight = clamp(0, this._view.getHeight());
 
   this._overlay = new Konva.Group({
     name:          'segment-overlay',
     segment:       this._segment,
     x:             segmentStartOffset,
-    y:             -10,
+    y:             0,
     width:         segmentEndOffset - segmentStartOffset,
     height:        this._view.getHeight(),
     clipX:         0,
@@ -335,7 +334,6 @@ SegmentShape.prototype._createMarkers = function() {
     draggable:      editable,
     startMarker:    true,
     color:          segmentOptions.startMarkerColor,
-    strokeColor:    segmentOptions.strokeColor,
     fontFamily:     this._peaks.options.fontFamily || defaultFontFamily,
     fontSize:       this._peaks.options.fontSize || defaultFontSize,
     fontStyle:      this._peaks.options.fontStyle || defaultFontShape,
@@ -363,7 +361,6 @@ SegmentShape.prototype._createMarkers = function() {
     draggable:      editable,
     startMarker:    false,
     color:          segmentOptions.endMarkerColor,
-    strokeColor:    segmentOptions.strokeColor,
     fontFamily:     this._peaks.options.fontFamily || defaultFontFamily,
     fontSize:       this._peaks.options.fontSize || defaultFontSize,
     fontStyle:      this._peaks.options.fontStyle || defaultFontShape,
