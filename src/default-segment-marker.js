@@ -26,14 +26,18 @@ function DefaultSegmentMarker(options) {
 DefaultSegmentMarker.prototype.init = function(group) {
   const handleWidth  = 15;
   const handleHeight = this._options.layer.getHeight();
-  let handleX      = -(handleWidth / 2) + 8; // Place off to the side of the segment
+  let handleX      = -(handleWidth / 2) - 8; // Place off to the side of the segment
 
-  handleX = this._options.startMarker ? (handleX * -1) - 14 : handleX;
+  handleX = this._options.startMarker ? (handleX * -1) - 14.9 : handleX;
 
   const xPosition = this._options.startMarker ? -24 : 24;
 
   const time = this._options.startMarker ? this._options.segment.startTime :
                                            this._options.segment.endTime;
+
+  const handleLineColor = this._options.segment.borderColor;
+
+  const handleColor = this._options.segment.handleColor;
 
   // Label - create with default y, the real value is set in fitToView().
   this._label = new Text({
@@ -55,9 +59,9 @@ DefaultSegmentMarker.prototype.init = function(group) {
     y:           0,
     width:       handleWidth,
     height:      handleHeight,
-    fill:        this._options.color,
-    stroke:      this._options.color,
-    strokeWidth: 1
+    fill:        handleColor,
+    stroke:      handleColor,
+    strokeWidth: 0
   });
 
   this._handleLineOne = new Rect({
@@ -65,8 +69,8 @@ DefaultSegmentMarker.prototype.init = function(group) {
     y: 0,
     width: 0.5,
     height: 16,
-    fill: '#FFFFFFBF',
-    stroke: '#FFFFFFBF',
+    fill: handleLineColor,
+    stroke: handleLineColor,
     strokeWidth: 1
   });
 
@@ -75,8 +79,8 @@ DefaultSegmentMarker.prototype.init = function(group) {
     y: 0,
     width: 0.5,
     height: 16,
-    fill: '#FFFFFFBF',
-    stroke: '#FFFFFFBF',
+    fill: handleLineColor,
+    stroke: handleLineColor,
     strokeWidth: 1
   });
 
@@ -84,13 +88,11 @@ DefaultSegmentMarker.prototype.init = function(group) {
   // are set in fitToView().
   this._line = new Line({
     x:           0,
-    y:           0,
-    stroke:      this._options.strokeColor,
-    strokeWidth: 1
+    y:           0
   });
 
   group.add(this._label);
-  group.add(this._line);
+  // group.add(this._line);
   group.add(this._handleLineOne);
   group.add(this._handleLineTwo);
   group.add(this._handle);
@@ -149,7 +151,7 @@ DefaultSegmentMarker.prototype.fitToView = function() {
   this._handle.y(height / 2 + 45);
   this._handleLineOne.y(height / 2 + 61);
   this._handleLineTwo.y(height / 2 + 61);
-  this._line.points([0.5, 0, 0.5, height]);
+  // this._line.points([0.5, 0, 0.5, height]);
 };
 
 DefaultSegmentMarker.prototype.timeUpdated = function(time) {
