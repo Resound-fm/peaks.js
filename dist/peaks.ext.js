@@ -2389,11 +2389,13 @@
   DefaultSegmentMarker.prototype.init = function (group) {
     var handleWidth = 15;
     var handleHeight = this._options.layer.getHeight();
-    var handleX = -(handleWidth / 2) + 8; // Place off to the side of the segment
+    var handleX = -(handleWidth / 2) - 8; // Place off to the side of the segment
 
-    handleX = this._options.startMarker ? handleX * -1 - 14 : handleX;
+    handleX = this._options.startMarker ? handleX * -1 - 14.9 : handleX;
     var xPosition = this._options.startMarker ? -24 : 24;
     var time = this._options.startMarker ? this._options.segment.startTime : this._options.segment.endTime;
+    var handleLineColor = this._options.segment.borderColor;
+    var handleColor = this._options.segment.handleColor;
 
     // Label - create with default y, the real value is set in fitToView().
     this._label = new Text.Text({
@@ -2414,17 +2416,17 @@
       y: 0,
       width: handleWidth,
       height: handleHeight,
-      fill: this._options.color,
-      stroke: this._options.color,
-      strokeWidth: 1
+      fill: handleColor,
+      stroke: handleColor,
+      strokeWidth: 0
     });
     this._handleLineOne = new Rect.Rect({
       x: handleX + 4.5,
       y: 0,
       width: 0.5,
       height: 16,
-      fill: '#FFFFFFBF',
-      stroke: '#FFFFFFBF',
+      fill: handleLineColor,
+      stroke: handleLineColor,
       strokeWidth: 1
     });
     this._handleLineTwo = new Rect.Rect({
@@ -2432,8 +2434,8 @@
       y: 0,
       width: 0.5,
       height: 16,
-      fill: '#FFFFFFBF',
-      stroke: '#FFFFFFBF',
+      fill: handleLineColor,
+      stroke: handleLineColor,
       strokeWidth: 1
     });
 
@@ -2441,12 +2443,10 @@
     // are set in fitToView().
     this._line = new Line.Line({
       x: 0,
-      y: 0,
-      stroke: this._options.strokeColor,
-      strokeWidth: 1
+      y: 0
     });
     group.add(this._label);
-    group.add(this._line);
+    // group.add(this._line);
     group.add(this._handleLineOne);
     group.add(this._handleLineTwo);
     group.add(this._handle);
@@ -2498,8 +2498,9 @@
     this._handle.y(height / 2 + 45);
     this._handleLineOne.y(height / 2 + 61);
     this._handleLineTwo.y(height / 2 + 61);
-    this._line.points([0.5, 0, 0.5, height]);
+    // this._line.points([0.5, 0, 0.5, height]);
   };
+
   DefaultSegmentMarker.prototype.timeUpdated = function (time) {
     this._label.setText(this._options.layer.formatTime(time));
   };
@@ -4227,7 +4228,6 @@
    * @property {Boolean} overlay
    * @property {String} startMarkerColor
    * @property {String} endMarkerColor
-   * @property {String} strokeColor
    * @property {String} waveformColor
    * @property {String} overlayColor
    * @property {Number} overlayOpacity
@@ -4306,12 +4306,12 @@
     // Create with default y and height, the real values are set in fitToView().
     var segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
     var segmentEndOffset = this._view.timeToPixelOffset(this._segment.endTime);
-    var overlayRectHeight = clamp(0, this._view.getHeight() * this._overlayOffset);
+    var overlayRectHeight = clamp(0, this._view.getHeight());
     this._overlay = new Konva__default["default"].Group({
       name: 'segment-overlay',
       segment: this._segment,
       x: segmentStartOffset,
-      y: -10,
+      y: 0,
       width: segmentEndOffset - segmentStartOffset,
       height: this._view.getHeight(),
       clipX: 0,
@@ -4486,7 +4486,6 @@
       draggable: editable,
       startMarker: true,
       color: segmentOptions.startMarkerColor,
-      strokeColor: segmentOptions.strokeColor,
       fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
       fontSize: this._peaks.options.fontSize || defaultFontSize,
       fontStyle: this._peaks.options.fontStyle || defaultFontShape,
@@ -4512,7 +4511,6 @@
       draggable: editable,
       startMarker: false,
       color: segmentOptions.endMarkerColor,
-      strokeColor: segmentOptions.strokeColor,
       fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
       fontSize: this._peaks.options.fontSize || defaultFontSize,
       fontStyle: this._peaks.options.fontStyle || defaultFontShape,
@@ -7446,7 +7444,6 @@
     markers: true,
     startMarkerColor: '#aaaaaa',
     endMarkerColor: '#aaaaaa',
-    strokeColor: '',
     waveformColor: '#0074d9',
     overlayColor: '#ff0000',
     overlayOpacity: 0.3,
