@@ -2460,23 +2460,22 @@
 
     if (self._options.draggable) {
       group.on('dragstart', function () {
-        self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
-        self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
+        // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+        // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
         // if (self._options.startMarker) {
         //   self._label.setX(xPosition - self._label.getWidth());
         // }
 
         // self._label.show();
       });
-
       group.on('dragend', function () {
         // self._label.hide();
       });
     }
     self._handle.on('mouseover touchstart', function () {
       document.body.style.cursor = 'col-resize';
-      self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
-      self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
+      // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+      // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
       // if (self._options.startMarker) {
       //   self._label.setX(xPosition - self._label.getWidth());
       // }
@@ -2486,8 +2485,8 @@
     });
     self._handle.on('mouseout touchend', function () {
       document.body.style.cursor = 'default';
-      self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
-      self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
+      // self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
+      // self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
       // self._label.hide();
       this.parent.parent.draw();
     });
