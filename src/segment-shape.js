@@ -232,7 +232,8 @@ SegmentShape.prototype.update = function(options) {
   this._borderColor = this._segment.bordercolor;
 
   if (this._overlayText) {
-    let labelColor = this._segment.labelColor;
+    const labelColor = this._segment.labelColor;
+
     this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
