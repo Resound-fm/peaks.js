@@ -232,6 +232,8 @@ SegmentShape.prototype.update = function(options) {
   this._borderColor = this._segment.bordercolor;
 
   if (this._overlayText) {
+    let labelColor = this._segment.labelColor;
+    this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
 
@@ -386,8 +388,8 @@ SegmentShape.prototype._createMarkers = function() {
 
 SegmentShape.prototype._onMouseEnter = function(event) {
   if (this._label) {
-    this._label.moveToTop();
-    this._label.show();
+    // this._label.moveToTop();
+    // this._label.show();
   }
 
   this._peaks.emit('segments.mouseenter', {
