@@ -4402,6 +4402,8 @@ SegmentShape.prototype.update = function (options) {
   this._color = this._segment.color;
   this._borderColor = this._segment.bordercolor;
   if (this._overlayText) {
+    var labelColor = this._segment.labelColor;
+    this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
   var segmentOptions = this._view.getViewOptions().segmentOptions;
@@ -4528,10 +4530,7 @@ SegmentShape.prototype._createMarkers = function () {
   }
 };
 SegmentShape.prototype._onMouseEnter = function (event) {
-  if (this._label) {
-    this._label.moveToTop();
-    this._label.show();
-  }
+  if (this._label) ;
   this._peaks.emit('segments.mouseenter', {
     segment: this._segment,
     evt: event.evt
