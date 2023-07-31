@@ -65,6 +65,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
   });
 
   this._handleLineOne = new Rect({
+    name: 'handleLineOne',
     x: handleX + 4.5,
     y: 0,
     width: 0.5,
@@ -75,6 +76,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
   });
 
   this._handleLineTwo = new Rect({
+    name: 'handleLineTwo',
     x: handleX + 9.5,
     y: 0,
     width: 0.5,
@@ -82,6 +84,18 @@ DefaultSegmentMarker.prototype.init = function(group) {
     fill: handleLineColor,
     stroke: handleLineColor,
     strokeWidth: 1
+  });
+
+  this._handleLineSingle = new Rect({
+    name: 'handleLineSingle',
+    x: handleX + 7,
+    y: 0,
+    width: 0.5,
+    height: 16,
+    fill: handleLineColor,
+    stroke: handleLineColor,
+    strokeWidth: 1,
+    visible: false
   });
 
   // Vertical Line - create with default y and points, the real values
@@ -95,11 +109,32 @@ DefaultSegmentMarker.prototype.init = function(group) {
   // group.add(this._line);
   group.add(this._handleLineOne);
   group.add(this._handleLineTwo);
+  group.add(this._handleLineSingle);
   group.add(this._handle);
 
   this.fitToView();
 
   this.bindEventHandlers(group);
+
+  setTimeout(() => {
+    let focusedSegmentShape;
+    const segmentShapes = this._options.layer._segmentShapes;
+
+    for (const [value] of Object.entries(segmentShapes)) {
+      if (value._endMarker !== null) {
+        focusedSegmentShape = value;
+        break;
+      }
+    }
+
+    const segmentShapeWidth = focusedSegmentShape._overlay.width();
+
+    if (segmentShapeWidth <= 32.5) {
+      const markerInfo = this.getMarkerInfo(focusedSegmentShape);
+
+      this.updateMarkersSmall(segmentShapeWidth, markerInfo);
+    }
+  }, 0);
 };
 
 DefaultSegmentMarker.prototype.bindEventHandlers = function(group) {
@@ -151,10 +186,87 @@ DefaultSegmentMarker.prototype.fitToView = function() {
   this._handle.y(height / 2 + 45);
   this._handleLineOne.y(height / 2 + 61);
   this._handleLineTwo.y(height / 2 + 61);
+  this._handleLineSingle.y(height / 2 + 61);
   // this._line.points([0.5, 0, 0.5, height]);
 };
 
+DefaultSegmentMarker.prototype.updateMarkersSmall = function(segmentShapeWidth, markerInfo) {
+  const { endMarkerHandleLineSingle, startMarkerHandleLineSingle } = markerInfo;
+  const newHandleWidth = (segmentShapeWidth / 2) - 0.5;
+
+  markerInfo.endMarker._handle.x(-newHandleWidth + 1);
+  markerInfo.startMarker._handle.attrs.width = newHandleWidth;
+  markerInfo.endMarker._handle.attrs.width = newHandleWidth;
+
+  markerInfo.endMarkerHandleLines.forEach(line => line.hide());
+  endMarkerHandleLineSingle.show();
+  endMarkerHandleLineSingle.x((newHandleWidth / 2) - newHandleWidth);
+  markerInfo.startMarkerHandleLines.forEach(line => line.hide());
+  startMarkerHandleLineSingle.show();
+  startMarkerHandleLineSingle.x(newHandleWidth / 2);
+};
+
+DefaultSegmentMarker.prototype.getMarkerInfo = function(segmentShape) {
+  const { _endMarker, _startMarker } = segmentShape;
+  const endMarker = _endMarker._marker;
+  const endMarkerGroupChildren = _endMarker._group.children;
+  const startMarker = _startMarker._marker;
+  const startMarkerGroupChildren = _startMarker._group.children;
+
+  const endMarkerHandleLines = endMarkerGroupChildren.filter(
+    child => child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo');
+  const endMarkerHandleLineSingle = endMarkerGroupChildren.find(
+    child => child.attrs.name === 'handleLineSingle');
+  const startMarkerHandleLines = startMarkerGroupChildren.filter(
+    child => child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo');
+  const startMarkerHandleLineSingle = startMarkerGroupChildren.find(
+    child => child.attrs.name === 'handleLineSingle');
+
+  return {
+    endMarker,
+    startMarker,
+    endMarkerHandleLines,
+    endMarkerHandleLineSingle,
+    startMarkerHandleLines,
+    startMarkerHandleLineSingle
+  };
+};
+
 DefaultSegmentMarker.prototype.timeUpdated = function(time) {
+  let focusedSegmentShape;
+  const segmentShapes = this._options.layer._segmentShapes;
+
+  for (const [value] of Object.entries(segmentShapes)) {
+    if (value._endMarker !== null) {
+      focusedSegmentShape = value;
+      break;
+    }
+  }
+
+  const markerInfo = this.getMarkerInfo(focusedSegmentShape);
+
+  const segmentShapeWidth = focusedSegmentShape._overlay.width();
+
+  if (segmentShapeWidth <= 32.5) {
+    this.updateMarkersSmall(segmentShapeWidth, markerInfo);
+  }
+  else {
+    const handleX = -(15 / 2) - 8;
+    const startHandleX = handleX * -1 - 14.9;
+    const endHandleX = handleX;
+
+    markerInfo.endMarker._handle.x(endHandleX);
+    markerInfo.startMarker._handle.x(startHandleX);
+
+    markerInfo.startMarker._handle.attrs.width = 15;
+    markerInfo.endMarker._handle.attrs.width = 15;
+
+    markerInfo.endMarkerHandleLines.forEach(line => line.show());
+    markerInfo.endMarkerHandleLineSingle.hide();
+    markerInfo.startMarkerHandleLines.forEach(line => line.show());
+    markerInfo.startMarkerHandleLineSingle.hide();
+  }
+
   this._label.setText(this._options.layer.formatTime(time));
 };
 
