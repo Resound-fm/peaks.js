@@ -2514,8 +2514,9 @@
       for (var _i = 0, _Object$entries = Object.entries(segmentShapes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 1),
           value = _Object$entries$_i[0];
-        if (value._endMarker !== null) {
-          focusedSegmentShape = value;
+        var segmentShape = segmentShapes[value];
+        if (segmentShape._endMarker !== null) {
+          focusedSegmentShape = segmentShape;
           break;
         }
       }
@@ -2626,8 +2627,9 @@
     for (var _i2 = 0, _Object$entries2 = Object.entries(segmentShapes); _i2 < _Object$entries2.length; _i2++) {
       var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i2], 1),
         value = _Object$entries2$_i[0];
-      if (value._endMarker !== null) {
-        focusedSegmentShape = value;
+      var segmentShape = segmentShapes[value];
+      if (segmentShape._endMarker !== null) {
+        focusedSegmentShape = segmentShape;
         break;
       }
     }
