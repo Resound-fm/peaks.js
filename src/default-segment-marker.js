@@ -121,8 +121,10 @@ DefaultSegmentMarker.prototype.init = function(group) {
     const segmentShapes = this._options.layer._segmentShapes;
 
     for (const [value] of Object.entries(segmentShapes)) {
-      if (value._endMarker !== null) {
-        focusedSegmentShape = value;
+      const segmentShape = segmentShapes[value];
+
+      if (segmentShape._endMarker !== null) {
+        focusedSegmentShape = segmentShape;
         break;
       }
     }
@@ -237,8 +239,10 @@ DefaultSegmentMarker.prototype.timeUpdated = function(time) {
   const segmentShapes = this._options.layer._segmentShapes;
 
   for (const [value] of Object.entries(segmentShapes)) {
-    if (value._endMarker !== null) {
-      focusedSegmentShape = value;
+    const segmentShape = segmentShapes[value];
+
+    if (segmentShape._endMarker !== null) {
+      focusedSegmentShape = segmentShape;
       break;
     }
   }
