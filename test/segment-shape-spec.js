@@ -1,7 +1,7 @@
-import Peaks from '../../src/main';
-import SegmentShape from '../../src/segment-shape';
-import { extend } from '../../src/utils';
-import WaveformShape from '../../src/waveform-shape';
+import Peaks from '../src/main';
+import SegmentShape from '../src/segment-shape';
+import { extend } from '../src/utils';
+import WaveformShape from '../src/waveform-shape';
 
 describe('SegmentShape', function() {
   let p;
@@ -48,59 +48,58 @@ describe('SegmentShape', function() {
   });
 
   context('with marker style segments', function() {
-    context('with editable segments', function() {
-      it('should create marker handles', function(done) {
-        createPeaksInstance({
-          segmentOptions: {
-            markers: true,
-            overlay: false
-          }
-        },
-        function() {
-          const spy = sinon.spy(p.options, 'createSegmentMarker');
+    [
+      { name: 'editable',     editable: true  },
+      { name: 'non-editable', editable: false }
+    ].forEach(function(test) {
+      context(`with ${test.name} segments`, function() {
+        it('should create marker handles', function(done) {
+          createPeaksInstance({
+            segmentOptions: {
+              markers: true,
+              overlay: false
+            }
+          },
+          function() {
+            const spy = sinon.spy(p.options, 'createSegmentMarker');
 
-          p.segments.add({
-            startTime: 0,
-            endTime:   10,
-            editable:  true,
-            id:        'segment1'
+            p.segments.add({
+              startTime: 0,
+              endTime:   10,
+              editable:  test.editable,
+              id:        'segment1'
+            });
+
+            // Two markers in both zoomview and overview
+            expect(spy.callCount).to.equal(4);
+
+            let call = spy.getCall(0);
+
+            expect(call.args).to.have.lengthOf(1);
+            expect(call.args[0].segment.startTime).to.equal(0);
+            expect(call.args[0].segment.endTime).to.equal(10);
+            expect(call.args[0].segment.editable).to.equal(test.editable);
+            expect(call.args[0].segment.id).to.equal('segment1');
+            expect(call.args[0].editable).to.equal(false);
+            expect(call.args[0]).to.have.property('startMarker');
+            expect(call.args[0].color).to.equal('#aaaaaa');
+            expect(call.args[0]).to.have.property('layer');
+            expect(call.args[0].view).to.equal('overview');
+
+            call = spy.getCall(2);
+
+            expect(call.args).to.have.lengthOf(1);
+            expect(call.args[0].segment.startTime).to.equal(0);
+            expect(call.args[0].segment.endTime).to.equal(10);
+            expect(call.args[0].segment.editable).to.equal(test.editable);
+            expect(call.args[0].segment.id).to.equal('segment1');
+            expect(call.args[0].editable).to.equal(test.editable);
+            expect(call.args[0]).to.have.property('startMarker');
+            expect(call.args[0].color).to.equal('#aaaaaa');
+            expect(call.args[0]).to.have.property('layer');
+            expect(call.args[0].view).to.equal('zoomview');
+            done();
           });
-
-          // 2 for zoomview, as overview forces segments to be non-editable by default.
-          expect(spy.callCount).to.equal(2);
-
-          const call = spy.getCall(0);
-
-          expect(call.args).to.have.lengthOf(1);
-          expect(call.args[0].segment.startTime).to.equal(0);
-          expect(call.args[0].segment.endTime).to.equal(10);
-          expect(call.args[0].segment.editable).to.equal(true);
-          expect(call.args[0].segment.id).to.equal('segment1');
-          expect(call.args[0].draggable).to.equal(true);
-          expect(call.args[0]).to.have.property('startMarker');
-          expect(call.args[0].color).to.equal('#aaaaaa');
-          expect(call.args[0]).to.have.property('layer');
-          expect(call.args[0].view).to.equal('zoomview');
-          done();
-        });
-      });
-    });
-
-    context('with non-editable segments', function() {
-      it('should not create marker handles', function(done) {
-        createPeaksInstance({
-          segmentOptions: {
-            markers: true,
-            overlay: false
-          }
-        },
-        function() {
-          const spy = sinon.spy(p.options, 'createSegmentMarker');
-
-          p.segments.add({ startTime: 0, endTime: 10, editable: false, id: 'segment1' });
-
-          expect(spy.callCount).to.equal(0);
-          done();
         });
       });
     });
@@ -114,7 +113,7 @@ describe('SegmentShape', function() {
           }
         },
         function() {
-          p.segments.add({
+          const segment = p.segments.add({
             startTime: 0,
             endTime:   10,
             editable:  true,
@@ -123,8 +122,7 @@ describe('SegmentShape', function() {
 
           const zoomview = p.views.getView('zoomview');
 
-          // eslint-disable-next-line dot-notation
-          const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+          const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
           expect(segmentShape).to.be.an.instanceOf(SegmentShape);
 
@@ -145,7 +143,7 @@ describe('SegmentShape', function() {
           }
         },
         function() {
-          p.segments.add({
+          const segment = p.segments.add({
             startTime: 0,
             endTime:   10,
             editable:  true,
@@ -155,8 +153,7 @@ describe('SegmentShape', function() {
 
           const zoomview = p.views.getView('zoomview');
 
-          // eslint-disable-next-line dot-notation
-          const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+          const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
           expect(segmentShape).to.be.an.instanceOf(SegmentShape);
           expect(segmentShape._waveformShape).to.be.an.instanceOf(WaveformShape);
@@ -180,17 +177,16 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
-          startTime:   0,
-          endTime:     10,
-          editable:    true,
-          id:          'segment1'
+        const segment = p.segments.add({
+          startTime: 0,
+          endTime:   10,
+          editable:  true,
+          id:        'segment1'
         });
 
         const zoomview = p.views.getView('zoomview');
 
-        // eslint-disable-next-line dot-notation
-        const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._startMarker._marker._options.color).to.equal('#0f0');
@@ -235,7 +231,7 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
+        const segment = p.segments.add({
           startTime: 0,
           endTime:   10,
           editable:  true,
@@ -244,8 +240,7 @@ describe('SegmentShape', function() {
 
         const zoomview = p.views.getView('zoomview');
 
-        // eslint-disable-next-line dot-notation
-        const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._waveformShape).to.equal(undefined);
@@ -261,7 +256,7 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
+        const segment = p.segments.add({
           startTime: 0,
           endTime:   10,
           editable:  true,
@@ -270,8 +265,7 @@ describe('SegmentShape', function() {
 
         const zoomview = p.views.getView('zoomview');
 
-        // eslint-disable-next-line dot-notation
-        const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayRect.getStroke()).to.equal('#ff0000');
@@ -291,7 +285,7 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
+        const segment = p.segments.add({
           startTime:   0,
           endTime:     10,
           editable:    true,
@@ -302,8 +296,7 @@ describe('SegmentShape', function() {
 
         const zoomview = p.views.getView('zoomview');
 
-        // eslint-disable-next-line dot-notation
-        const segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        const segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayRect.getStroke()).to.equal('#00ff00');
@@ -333,24 +326,22 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
-          startTime:   0,
-          endTime:     10,
-          editable:    true,
-          id:          'segment1'
+        const segment = p.segments.add({
+          startTime: 0,
+          endTime:   10,
+          editable:  true,
+          id:        'segment1'
         });
 
         const zoomview = p.views.getView('zoomview');
         const overview = p.views.getView('overview');
 
-        // eslint-disable-next-line dot-notation
-        let segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        let segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayOffset).to.equal(20);
 
-        // eslint-disable-next-line dot-notation
-        segmentShape = overview._segmentsLayer._segmentShapes['segment1'];
+        segmentShape = overview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayOffset).to.equal(10);
@@ -380,25 +371,23 @@ describe('SegmentShape', function() {
         }
       },
       function() {
-        p.segments.add({
-          startTime:   0,
-          endTime:     10,
-          editable:    true,
-          id:          'segment1'
+        const segment = p.segments.add({
+          startTime: 0,
+          endTime:   10,
+          editable:  true,
+          id:        'segment1'
         });
 
         const zoomview = p.views.getView('zoomview');
         const overview = p.views.getView('overview');
 
-        // eslint-disable-next-line dot-notation
-        let segmentShape = zoomview._segmentsLayer._segmentShapes['segment1'];
+        let segmentShape = zoomview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayRect.getStroke()).to.equal('#222');
         expect(segmentShape._overlayRect.getFill()).to.equal('#444');
 
-        // eslint-disable-next-line dot-notation
-        segmentShape = overview._segmentsLayer._segmentShapes['segment1'];
+        segmentShape = overview._segmentsLayer.getSegmentShape(segment);
 
         expect(segmentShape).to.be.an.instanceOf(SegmentShape);
         expect(segmentShape._overlayRect.getStroke()).to.equal('#222');

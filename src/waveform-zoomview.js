@@ -6,14 +6,13 @@
  * @module waveform-zoomview
  */
 
-import MouseDragHandler from './mouse-drag-handler';
 import PlayheadLayer from './playhead-layer';
 import PointsLayer from './points-layer';
 import SegmentsLayer from './segments-layer';
 import WaveformAxis from './waveform-axis';
 import WaveformShape from './waveform-shape';
-// import AnimatedZoomAdapter from './animated-zoom-adapter';
-// import StaticZoomAdapter from './static-zoom-adapter';
+import InsertSegmentMouseDragHandler from './insert-segment-mouse-drag-handler';
+import ScrollMouseDragHandler from './scroll-mouse-drag-handler';
 import { clamp, formatTime, getMarkerObject, isFinite, isNumber, isValidTime,
   objectHasProperty } from './utils';
 
@@ -45,7 +44,6 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._onTimeUpdate = self._onTimeUpdate.bind(self);
   self._onPlaying = self._onPlaying.bind(self);
   self._onPause = self._onPause.bind(self);
-  self._onWindowResize = self._onWindowResize.bind(self);
   self._onKeyboardLeft = self._onKeyboardLeft.bind(self);
   self._onKeyboardRight = self._onKeyboardRight.bind(self);
   self._onKeyboardShiftLeft  = self._onKeyboardShiftLeft.bind(self);
@@ -55,19 +53,21 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._peaks.on('player.timeupdate', self._onTimeUpdate);
   self._peaks.on('player.playing', self._onPlaying);
   self._peaks.on('player.pause', self._onPause);
-  self._peaks.on('window_resize', self._onWindowResize);
   self._peaks.on('keyboard.left', self._onKeyboardLeft);
   self._peaks.on('keyboard.right', self._onKeyboardRight);
   self._peaks.on('keyboard.shift_left', self._onKeyboardShiftLeft);
   self._peaks.on('keyboard.shift_right', self._onKeyboardShiftRight);
 
-  self._enableAutoScroll = true;
+  self._autoScroll = self._viewOptions.autoScroll;
+  self._autoScrollOffset = self._viewOptions.autoScrollOffset;
+
   self._amplitudeScale = 1.0;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
   self._enableSeek = true;
   self._enableSegmentDragging = false;
   self._segmentDragMode = 'overlap';
   self._minSegmentDragWidth = 0;
+  self._insertSegmentShape = null;
 
   if (self._viewOptions.formatPlayheadTime) {
     self._formatPlayheadTime = self._viewOptions.formatPlayheadTime;
@@ -88,7 +88,6 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._zoomLevelAuto = false;
   self._zoomLevelSeconds = null;
 
-  self._resizeTimeoutId = null;
   self._resampleData({ scale: initialZoomLevel });
 
   self._width = container.clientWidth;
@@ -108,11 +107,15 @@ function WaveformZoomView(waveformData, container, peaks) {
 
   self._createWaveform();
 
-  self._segmentsLayer = new SegmentsLayer(peaks, self, true);
-  self._segmentsLayer.addToStage(self._stage);
+  if (self._viewOptions.enableSegments) {
+    self._segmentsLayer = new SegmentsLayer(peaks, self, true);
+    self._segmentsLayer.addToStage(self._stage);
+  }
 
-  self._pointsLayer = new PointsLayer(peaks, self, true);
-  self._pointsLayer.addToStage(self._stage);
+  if (self._viewOptions.enablePoints) {
+    self._pointsLayer = new PointsLayer(peaks, self, true);
+    self._pointsLayer.addToStage(self._stage);
+  }
 
   self._createAxisLabels();
 
@@ -133,16 +136,16 @@ function WaveformZoomView(waveformData, container, peaks) {
 
   self._syncPlayhead(time);
 
-  self._createMouseDragHandler();
+  self._mouseDragHandler = new ScrollMouseDragHandler(self._peaks, self);
 
   self._onWheel = self._onWheel.bind(self);
   self._onWheelCaptureVerticalScroll = self._onWheelCaptureVerticalScroll.bind(self);
   self.setWheelMode(self._viewOptions.wheelMode);
 
-  self._onClick = self._onClick.bind(this);
-  self._onDblClick = self._onDblClick.bind(this);
-  self._onMouseDown = self._onMouseDown.bind(this);
-  self._onContextMenu = self._onContextMenu.bind(this);
+  self._onClick = self._onClick.bind(self);
+  self._onDblClick = self._onDblClick.bind(self);
+  self._onMouseDown = self._onMouseDown.bind(self);
+  self._onContextMenu = self._onContextMenu.bind(self);
 
   self._stage.on('click', self._onClick);
   self._stage.on('dblclick', self._onDblClick);
@@ -158,111 +161,12 @@ WaveformZoomView.prototype._initWaveformCache = function() {
   }
 };
 
-WaveformZoomView.prototype._createMouseDragHandler = function() {
-  const self = this;
-
-  self._mouseDragHandler = new MouseDragHandler(self._stage, {
-    onMouseDown: function(mousePosX, segment) {
-      this._seeking = false;
-      this._segment = segment;
-
-      const playheadOffset = self._playheadLayer.getPlayheadOffset();
-
-      if (self._enableSeek &&
-          Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
-        this._seeking = true;
-
-        // The user has clicked near the playhead, and the playhead is within
-        // a segment. In this case we want to allow the playhead to move, but
-        // prevent the segment from being dragged. So we temporarily make the
-        // segment non-draggable, and restore its draggable state in onMouseUp().
-        if (this._segment) {
-          this._segmentIsDraggable = this._segment.draggable();
-          this._segment.draggable(false);
-        }
-      }
-
-      if (this._seeking) {
-        this._seek(mousePosX);
-      }
-      else {
-        this.initialFrameOffset = self._frameOffset;
-        this.mouseDownX = mousePosX;
-      }
-    },
-
-    onMouseMove: function(mousePosX) {
-      // Prevent scrolling the waveform if the user is dragging a segment.
-      if (this._segment && !this._seeking) {
-        return;
-      }
-
-      if (this._seeking) {
-        this._seek(mousePosX);
-      }
-      else {
-        // Moving the mouse to the left increases the time position of the
-        // left-hand edge of the visible waveform.
-        const diff = this.mouseDownX - mousePosX;
-        const newFrameOffset = this.initialFrameOffset + diff;
-
-        if (newFrameOffset !== this.initialFrameOffset) {
-          self.updateWaveform(newFrameOffset);
-        }
-      }
-    },
-
-    onMouseUp: function(/* mousePosX */) {
-      if (!this._seeking) {
-        // Set playhead position only on click release, when not dragging.
-        if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
-          let time = self.pixelOffsetToTime(this.mouseDownX);
-          const duration = self._getDuration();
-
-          // Prevent the playhead position from jumping by limiting click
-          // handling to the waveform duration.
-          if (time > duration) {
-            time = duration;
-          }
-
-          self._playheadLayer.updatePlayheadTime(time);
-
-          self._peaks.player.seek(time);
-        }
-      }
-
-      // If the user was dragging the playhead while the playhead is within
-      // a segment, restore the segment's original draggable state.
-      if (this._segment && this._seeking) {
-        if (this._segmentIsDraggable) {
-          this._segment.draggable(true);
-        }
-      }
-    },
-
-    _seek: function(mousePosX) {
-      mousePosX = clamp(mousePosX, 0, self._width);
-
-      let time = self.pixelsToTime(mousePosX + self._frameOffset);
-      const duration = self._getDuration();
-
-      // Prevent the playhead position from jumping by limiting click
-      // handling to the waveform duration.
-      if (time > duration) {
-        time = duration;
-      }
-
-      // Update the playhead position. This gives a smoother visual update
-      // than if we only use the player.timeupdate event.
-      self._playheadLayer.updatePlayheadTime(time);
-
-      self._peaks.player.seek(time);
-    }
-  });
-};
-
 WaveformZoomView.prototype.enableSeek = function(enable) {
   this._enableSeek = enable;
+};
+
+WaveformZoomView.prototype.isSeekEnabled = function() {
+  return this._enableSeek;
 };
 
 WaveformZoomView.prototype._onClick = function(event) {
@@ -313,7 +217,9 @@ WaveformZoomView.prototype._clickHandler = function(event, eventName) {
             }
           };
 
-          this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          if (this._segmentsLayer) {
+            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          }
         }
       }
     }
@@ -408,11 +314,26 @@ WaveformZoomView.prototype._onWheelCaptureVerticalScroll = function(event) {
   this.updateWaveform(newFrameOffset);
 };
 
+WaveformZoomView.prototype.setWaveformDragMode = function(mode) {
+  if (this._viewOptions.enableSegments) {
+    this._mouseDragHandler.destroy();
+
+    if (mode === 'insert-segment') {
+      this._mouseDragHandler = new InsertSegmentMouseDragHandler(this._peaks, this);
+    }
+    else {
+      this._mouseDragHandler = new ScrollMouseDragHandler(this._peaks, this);
+    }
+  }
+};
+
 WaveformZoomView.prototype.enableSegmentDragging = function(enable) {
   this._enableSegmentDragging = enable;
 
   // Update all existing segments
-  this._segmentsLayer.enableSegmentDragging(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableSegmentDragging(enable);
+  }
 };
 
 WaveformZoomView.prototype.isSegmentDraggingEnabled = function() {
@@ -445,40 +366,6 @@ WaveformZoomView.prototype._onPlaying = function(time) {
 
 WaveformZoomView.prototype._onPause = function(time) {
   this._playheadLayer.stop(time);
-};
-
-WaveformZoomView.prototype._onWindowResize = function() {
-  const self = this;
-
-  const width = self._container.clientWidth;
-
-  if (!self._zoomLevelAuto) {
-    if (width !== 0) {
-      self._width = width;
-      self._stage.width(width);
-      self.updateWaveform(self._frameOffset);
-    }
-  }
-  else {
-    if (self._resizeTimeoutId) {
-      clearTimeout(self._resizeTimeoutId);
-      self._resizeTimeoutId = null;
-    }
-
-    // Avoid resampling waveform data to zero width
-    if (width !== 0) {
-      self._width = width;
-      self._stage.width(width);
-
-      self._resizeTimeoutId = setTimeout(function() {
-        self._width = width;
-        self._data = self._originalWaveformData.resample(width);
-        self._stage.width(width);
-
-        self.updateWaveform(self._frameOffset);
-      }, 500);
-    }
-  }
 };
 
 WaveformZoomView.prototype._onKeyboardLeft = function() {
@@ -518,6 +405,21 @@ WaveformZoomView.prototype.setWaveformData = function(waveformData) {
   // Don't update the UI here, call setZoom().
 };
 
+/**
+ * Returns the position of the playhead marker, in pixels relative to the
+ * left hand side of the waveform view.
+ *
+ * @return {Number}
+ */
+
+WaveformZoomView.prototype.getPlayheadOffset = function() {
+  return this._playheadLayer.getPlayheadPixel() - this._frameOffset;
+};
+
+WaveformZoomView.prototype.getPlayheadClickTolerance = function() {
+  return this._playheadClickTolerance;
+};
+
 WaveformZoomView.prototype.playheadPosChanged = function(time) {
   if (this._playedWaveformShape) {
     this._playedSegment.endTime = time;
@@ -527,10 +429,14 @@ WaveformZoomView.prototype.playheadPosChanged = function(time) {
   }
 };
 
+WaveformZoomView.prototype.updatePlayheadTime = function(time) {
+  this._playheadLayer.updatePlayheadTime(time);
+};
+
 WaveformZoomView.prototype._syncPlayhead = function(time) {
   this._playheadLayer.updatePlayheadTime(time);
 
-  if (this._enableAutoScroll) {
+  if (this._autoScroll) {
     // Check for the playhead reaching the right-hand side of the window.
 
     const pixelIndex = this.timeToPixels(time);
@@ -538,10 +444,10 @@ WaveformZoomView.prototype._syncPlayhead = function(time) {
     // TODO: move this code to animation function?
     // TODO: don't scroll if user has positioned view manually (e.g., using
     // the keyboard)
-    const endThreshold = this._frameOffset + this._width - (this._width / 2);
+    const endThreshold = this._frameOffset + this._width - (this._width / 2) - this._autoScrollOffset;
 
     if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
-      this._frameOffset = pixelIndex - Math.round(this._width / 2);
+      this._frameOffset = pixelIndex - Math.round(this._width / 2) - this._autoScrollOffset;
 
       if (this._frameOffset < 0) {
         this._frameOffset = 0;
@@ -618,7 +524,7 @@ WaveformZoomView.prototype.setZoom = function(options) {
 
   const currentTime = this._peaks.player.getCurrentTime();
   let apexTime;
-  let playheadOffsetPixels = this._playheadLayer.getPlayheadOffset();
+  let playheadOffsetPixels = this.getPlayheadOffset();
 
   if (playheadOffsetPixels >= 0 && playheadOffsetPixels < this._width) {
     // Playhead is visible. Change the zoom level while keeping the
@@ -647,11 +553,10 @@ WaveformZoomView.prototype.setZoom = function(options) {
   // Update the playhead position after zooming.
   this._playheadLayer.updatePlayheadTime(currentTime);
 
-  // const adapter = this.createZoomAdapter(currentScale, previousScale);
-
-  // adapter.start(relativePosition);
-
-  this._peaks.emit('zoom.update', scale, prevScale);
+  this._peaks.emit('zoom.update', {
+    currentZoom: scale,
+    previousZoom: prevScale
+  });
 
   return true;
 };
@@ -752,21 +657,6 @@ WaveformZoomView.prototype.timeToPixelOffset = function(time) {
   return Math.floor(time * this._data.sample_rate / this._data.scale) - this._frameOffset;
 };
 
-/* const zoomAdapterMap = {
-  'animated': AnimatedZoomAdapter,
-  'static': StaticZoomAdapter
-};
-
-WaveformZoomView.prototype.createZoomAdapter = function(currentScale, previousScale) {
-  const ZoomAdapter = zoomAdapterMap[this._viewOptions.zoomAdapter];
-
-  if (!ZoomAdapter) {
-    throw new Error('Invalid zoomAdapter: ' + this._viewOptions.zoomAdapter);
-  }
-
-  return ZoomAdapter.create(this, currentScale, previousScale);
-}; */
-
 /**
  * @returns {Number} The start position of the waveform shown in the view,
  *   in pixels.
@@ -822,7 +712,10 @@ WaveformZoomView.prototype.setAmplitudeScale = function(scale) {
   this._amplitudeScale = scale;
 
   this._drawWaveformLayer();
-  this._segmentsLayer.draw();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.draw();
+  }
 };
 
 WaveformZoomView.prototype.getAmplitudeScale = function() {
@@ -956,8 +849,13 @@ WaveformZoomView.prototype.updateWaveform = function(frameOffset) {
   const frameStartTime = this.getStartTime();
   const frameEndTime   = this.getEndTime();
 
-  this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-  this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  if (this._pointsLayer) {
+    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+  }
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  }
 
   this._peaks.emit('zoomview.displaying', frameStartTime, frameEndTime);
 };
@@ -1001,22 +899,31 @@ WaveformZoomView.prototype.formatTime = function(time) {
   return this._formatPlayheadTime(time);
 };
 
-WaveformZoomView.prototype.showAxisLabels = function(show) {
-  this._axis.showAxisLabels(show);
+WaveformZoomView.prototype.showAxisLabels = function(show, options) {
+  this._axis.showAxisLabels(show, options);
   this._axisLayer.draw();
 };
 
-WaveformZoomView.prototype.enableAutoScroll = function(enable) {
-  this._enableAutoScroll = enable;
+WaveformZoomView.prototype.enableAutoScroll = function(enable, options) {
+  this._autoScroll = enable;
+
+  if (objectHasProperty(options, 'offset')) {
+    this._autoScrollOffset = options.offset;
+  }
 };
 
 WaveformZoomView.prototype.enableMarkerEditing = function(enable) {
-  this._segmentsLayer.enableEditing(enable);
-  this._pointsLayer.enableEditing(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableEditing(enable);
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.enableEditing(enable);
+  }
 };
 
 WaveformZoomView.prototype.getMinSegmentDragWidth = function() {
-  return this._minSegmentDragWidth;
+  return this._insertSegmentShape ? 0 : this._minSegmentDragWidth;
 };
 
 WaveformZoomView.prototype.setMinSegmentDragWidth = function(width) {
@@ -1057,71 +964,60 @@ WaveformZoomView.prototype.fitToContainer = function() {
     }
   }
 
-  this._height = this._container.clientHeight;
-  this._stage.height(this._height);
+  if (this._container.clientHeight !== this._height) {
+    this._height = this._container.clientHeight;
+    this._stage.height(this._height);
 
-  this._waveformShape.fitToView();
-  this._playheadLayer.fitToView();
-  this._segmentsLayer.fitToView();
-  this._pointsLayer.fitToView();
+    this._waveformShape.fitToView();
+    this._playheadLayer.fitToView();
+
+    if (this._segmentsLayer) {
+      this._segmentsLayer.fitToView();
+    }
+
+    if (this._pointsLayer) {
+      this._pointsLayer.fitToView();
+    }
+  }
 
   if (updateWaveform) {
     this.updateWaveform(this._frameOffset);
   }
+};
 
-  this._stage.draw();
+WaveformZoomView.prototype.getStage = function() {
+  return this._stage;
+};
+
+WaveformZoomView.prototype.getSegmentsLayer = function() {
+  return this._segmentsLayer;
 };
 
 WaveformZoomView.prototype.getViewOptions = function() {
   return this._viewOptions;
 };
 
-/* WaveformZoomView.prototype.beginZoom = function() {
-  // Fade out the time axis and the segments
-  // this._axis.axisShape.setAttr('opacity', 0);
-
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(false);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(false);
-  }
-};
-
-WaveformZoomView.prototype.endZoom = function() {
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(true);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(true);
-  }
-
-  const time = this._peaks.player.getCurrentTime();
-
-  this.seekFrame(this.timeToPixels(time));
-}; */
-
 WaveformZoomView.prototype.destroy = function() {
-  if (this._resizeTimeoutId) {
-    clearTimeout(this._resizeTimeoutId);
-    this._resizeTimeoutId = null;
-  }
-
   // Unregister event handlers
   this._peaks.off('player.timeupdate', this._onTimeUpdate);
   this._peaks.off('player.playing', this._onPlaying);
   this._peaks.off('player.pause', this._onPause);
-  this._peaks.off('window_resize', this._onWindowResize);
   this._peaks.off('keyboard.left', this._onKeyboardLeft);
   this._peaks.off('keyboard.right', this._onKeyboardRight);
   this._peaks.off('keyboard.shift_left', this._onKeyboardShiftLeft);
   this._peaks.off('keyboard.shift_right', this._onKeyboardShiftRight);
 
+  this._mouseDragHandler.destroy();
+
   this._playheadLayer.destroy();
-  this._segmentsLayer.destroy();
-  this._pointsLayer.destroy();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.destroy();
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.destroy();
+  }
 
   if (this._stage) {
     this._stage.destroy();

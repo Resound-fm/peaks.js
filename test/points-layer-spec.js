@@ -1,4 +1,4 @@
-import Peaks from '../../src/main';
+import Peaks from '../src/main';
 
 describe('PointsLayer', function() {
   let p;
@@ -65,26 +65,26 @@ describe('PointsLayer', function() {
 
       const point = p.points.add({ time: 0, editable: true });
 
-      const zoomviewPointMarker = zoomview._pointsLayer._pointMarkers[point.id];
+      const zoomviewPointMarker = zoomview._pointsLayer.getPointMarker(point);
       expect(zoomviewPointMarker).to.be.ok;
 
       expect(zoomviewPointMarker.getX()).to.equal(0);
 
-      const overviewPointMarker = overview._pointsLayer._pointMarkers[point.id];
+      const overviewPointMarker = overview._pointsLayer.getPointMarker(point);
       expect(overviewPointMarker).to.be.ok;
 
       expect(overviewPointMarker.getX()).to.equal(0);
 
-      const zoomviewPointMarkerTimeUpdated = sinon.spy(zoomviewPointMarker, 'timeUpdated');
-      const overviewPointMarkerTimeUpdated = sinon.spy(overviewPointMarker, 'timeUpdated');
+      const zoomviewPointMarkerUpdate = sinon.spy(zoomviewPointMarker, 'update');
+      const overviewPointMarkerUpdate = sinon.spy(overviewPointMarker, 'update');
 
       point.update({ time: 5.0 });
 
       expect(zoomviewPointMarker.getX()).to.equal(Math.floor(5.0 * 44100 / p.zoom.getZoomLevel()));
-      expect(zoomviewPointMarkerTimeUpdated.callCount).to.equal(1);
+      expect(zoomviewPointMarkerUpdate).calledOnceWithExactly({ time: 5.0 });
 
       expect(overviewPointMarker.getX()).to.equal(Math.floor(5.0 * 44100 / overview._data.scale));
-      expect(overviewPointMarkerTimeUpdated.callCount).to.equal(1);
+      expect(overviewPointMarkerUpdate).calledOnceWithExactly({ time: 5.0 });
     });
 
     it('should remove the point marker if its time has changed and is no longer visible', function() {
@@ -96,7 +96,7 @@ describe('PointsLayer', function() {
 
       const point = p.points.add({ time: 0, editable: true });
 
-      const pointMarker = zoomview._pointsLayer._pointMarkers[point.id];
+      const pointMarker = zoomview._pointsLayer.getPointMarker(point);
       expect(pointMarker).to.be.ok;
 
       const pointMarkerDestroy = sinon.spy(pointMarker, 'destroy');
@@ -116,7 +116,7 @@ describe('PointsLayer', function() {
 
       const point = p.points.add({ time: 0, editable: true });
 
-      const pointMarker = zoomview._pointsLayer._pointMarkers[point.id];
+      const pointMarker = zoomview._pointsLayer.getPointMarker(point);
       expect(pointMarker).to.be.ok;
 
       const pointMarkerUpdate = sinon.spy(pointMarker, 'update');
@@ -137,7 +137,7 @@ describe('PointsLayer', function() {
 
       expect(createPointMarker.callCount).to.equal(0);
 
-      const pointMarker = zoomview._pointsLayer._pointMarkers[point.id];
+      const pointMarker = zoomview._pointsLayer.getPointMarker(point);
       expect(pointMarker).to.equal(undefined);
 
       point.update({ time: 0, labelText: 'test' });
@@ -154,7 +154,7 @@ describe('PointsLayer', function() {
 
       const point = p.points.add({ time: 0, editable: true });
 
-      const pointMarker = zoomview._pointsLayer._pointMarkers[point.id];
+      const pointMarker = zoomview._pointsLayer.getPointMarker(point);
       expect(pointMarker).to.be.ok;
 
       const pointMarkerDestroy = sinon.spy(pointMarker, 'destroy');

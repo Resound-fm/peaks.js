@@ -1,5 +1,5 @@
-import Peaks from '../../src/main';
-import { Point } from '../../src/point';
+import Peaks from '../src/main';
+import { Point } from '../src/point';
 
 describe('Peaks.points', function() {
   let p;
@@ -13,7 +13,9 @@ describe('Peaks.points', function() {
         container: document.getElementById('zoomview-container')
       },
       mediaElement: document.getElementById('media'),
-      dataUri: 'base/test_data/sample.json'
+      dataUri: {
+        arraybuffer: '/base/test_data/sample.dat'
+      }
     };
 
     Peaks.init(options, function(err, instance) {
@@ -170,10 +172,10 @@ describe('Peaks.points', function() {
     });
 
     it('should emit an event with an array containing a single point object', function(done) {
-      p.on('points.add', function(points) {
-        expect(points).to.have.lengthOf(1);
-        expect(points[0]).to.be.an.instanceOf(Point);
-        expect(points[0].time).to.equal(0);
+      p.on('points.add', function(event) {
+        expect(event.points).to.have.lengthOf(1);
+        expect(event.points[0]).to.be.an.instanceOf(Point);
+        expect(event.points[0].time).to.equal(0);
         done();
       });
 
@@ -181,12 +183,12 @@ describe('Peaks.points', function() {
     });
 
     it('should emit an event with multiple point objects', function(done) {
-      p.on('points.add', function(points) {
-        expect(points).to.have.lengthOf(2);
-        expect(points[0]).to.be.an.instanceOf(Point);
-        expect(points[0].time).to.equal(0);
-        expect(points[1]).to.be.an.instanceOf(Point);
-        expect(points[1].time).to.equal(20);
+      p.on('points.add', function(event) {
+        expect(event.points).to.have.lengthOf(2);
+        expect(event.points[0]).to.be.an.instanceOf(Point);
+        expect(event.points[0].time).to.equal(0);
+        expect(event.points[1]).to.be.an.instanceOf(Point);
+        expect(event.points[1].time).to.equal(20);
         done();
       });
 
@@ -265,6 +267,7 @@ describe('Peaks.points', function() {
       'isVisible',
       'peaks',
       '_id',
+      '_pid',
       '_time',
       '_labelText',
       '_color',
@@ -344,11 +347,11 @@ describe('Peaks.points', function() {
     });
 
     it('should emit an event with the removed points', function(done) {
-      p.on('points.remove', function(points) {
-        expect(points).to.be.an.instanceOf(Array);
-        expect(points).to.have.lengthOf(1);
-        expect(points[0]).to.be.an.instanceOf(Point);
-        expect(points[0].id).to.equal('point2');
+      p.on('points.remove', function(event) {
+        expect(event.points).to.be.an.instanceOf(Array);
+        expect(event.points).to.have.lengthOf(1);
+        expect(event.points[0]).to.be.an.instanceOf(Point);
+        expect(event.points[0].id).to.equal('point2');
 
         done();
       });
@@ -403,13 +406,13 @@ describe('Peaks.points', function() {
     });
 
     it('should emit an event with the removed points', function(done) {
-      p.on('points.remove', function(points) {
-        expect(points).to.be.an.instanceOf(Array);
-        expect(points).to.have.lengthOf(2);
-        expect(points[0]).to.be.an.instanceOf(Point);
-        expect(points[0].time).to.equal(3);
-        expect(points[1]).to.be.an.instanceOf(Point);
-        expect(points[1].time).to.equal(3);
+      p.on('points.remove', function(event) {
+        expect(event.points).to.be.an.instanceOf(Array);
+        expect(event.points).to.have.lengthOf(2);
+        expect(event.points[0]).to.be.an.instanceOf(Point);
+        expect(event.points[0].time).to.equal(3);
+        expect(event.points[1]).to.be.an.instanceOf(Point);
+        expect(event.points[1].time).to.equal(3);
 
         done();
       });
@@ -445,12 +448,12 @@ describe('Peaks.points', function() {
     });
 
     it('should emit an event with the removed points', function(done) {
-      p.on('points.remove', function(points) {
-        expect(points).to.be.an.instanceOf(Array);
-        expect(points.length).to.equal(1);
-        expect(points[0]).to.be.an.instanceOf(Point);
-        expect(points[0].time).to.equal(15);
-        expect(points[0].id).to.equal('point_id.2');
+      p.on('points.remove', function(event) {
+        expect(event.points).to.be.an.instanceOf(Array);
+        expect(event.points.length).to.equal(1);
+        expect(event.points[0]).to.be.an.instanceOf(Point);
+        expect(event.points[0].time).to.equal(15);
+        expect(event.points[0].id).to.equal('point_id.2');
 
         done();
       });

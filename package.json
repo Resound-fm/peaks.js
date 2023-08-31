@@ -1,6 +1,6 @@
 {
   "name": "peaks.js",
-  "version": "3.0.0-beta.11",
+  "version": "3.0.0",
   "description": "JavaScript UI component for displaying audio waveforms",
   "main": "./dist/peaks.min.js",
   "module": "./dist/peaks.esm.js",
@@ -48,7 +48,7 @@
     "build": "rollup -c",
     "postbuild": "copyfiles --up 1 dist/peaks.js dist/peaks.js.map dist/peaks.min.js dist/peaks.min.js.map dist/peaks.esm.js dist/peaks.esm.js.map dist/peaks.ext.js dist/peaks.ext.js.map dist/peaks.ext.min.js dist/peaks.ext.min.js.map demo",
     "doc": "jsdoc --private --destination docs --recurse src",
-    "lint": "eslint src/*.js test/**/*.js test/*.cjs karma.conf.cjs rollup.config.js",
+    "lint": "eslint src/*.js test/*.js test/*.cjs karma.conf.cjs rollup.config.js",
     "pretest": "npm run lint",
     "test": "karma start karma.conf.cjs",
     "test-watch": "npm test -- --auto-watch --no-single-run",
@@ -59,7 +59,7 @@
     "prepack": "npm run build"
   },
   "devDependencies": {
-    "@babel/preset-env": "~7.21.5",
+    "@babel/preset-env": "~7.22.6",
     "@rollup/plugin-babel": "~5.3.1",
     "@rollup/plugin-commonjs": "~22.0.2",
     "@rollup/plugin-json": "~4.1.0",
@@ -68,9 +68,9 @@
     "babel-plugin-istanbul": "~6.1.1",
     "chai": "~4.3.7",
     "copyfiles": "~2.4.1",
-    "eslint": "~8.41.0",
+    "eslint": "~8.44.0",
     "jsdoc": "~4.0.2",
-    "karma": "~6.4.1",
+    "karma": "~6.4.2",
     "karma-chai-sinon": "~0.1.5",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
@@ -84,7 +84,7 @@
     "rollup": "~2.78.1",
     "rollup-plugin-peer-deps-external": "~2.2.4",
     "serve": "~14.2.0",
-    "sinon": "~15.1.0",
+    "sinon": "~15.2.0",
     "sinon-chai": "~3.7.0",
     "watchify": "~4.0.0"
   },

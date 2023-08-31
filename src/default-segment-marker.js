@@ -21,6 +21,7 @@ import { Text } from 'konva/lib/shapes/Text';
 
 function DefaultSegmentMarker(options) {
   this._options = options;
+  this._editable = options.editable;
 }
 
 DefaultSegmentMarker.prototype.init = function(group) {
@@ -44,7 +45,8 @@ DefaultSegmentMarker.prototype.init = function(group) {
     fontSize:   this._options.fontSize,
     fontStyle:  this._options.fontStyle,
     fill:       '#000',
-    textAlign:  'center'
+    textAlign:  'center',
+    visible:    this._editable
   });
 
   this._label.hide();
@@ -59,6 +61,7 @@ DefaultSegmentMarker.prototype.init = function(group) {
     stroke:      this._options.color,
     strokeWidth: 1,
     cornerRadius: 2
+    visible:     this._editable
   });
 
   // Vertical Line - create with default y and points, the real values
@@ -67,7 +70,8 @@ DefaultSegmentMarker.prototype.init = function(group) {
     x:           0,
     y:           0,
     stroke:      this._options.color,
-    strokeWidth: 1
+    strokeWidth: 1,
+    visible:     this._editable
   });
 
   group.add(this._label);
@@ -127,8 +131,22 @@ DefaultSegmentMarker.prototype.fitToView = function() {
   this._line.points([0.5, 0, 0.5, height]);
 };
 
-DefaultSegmentMarker.prototype.timeUpdated = function(time) {
-  this._label.setText(this._options.layer.formatTime(time));
+DefaultSegmentMarker.prototype.update = function(options) {
+  if (options.startTime !== undefined && this._options.startMarker) {
+    this._label.text(this._options.layer.formatTime(options.startTime));
+  }
+
+  if (options.endTime !== undefined && !this._options.startMarker) {
+    this._label.text(this._options.layer.formatTime(options.endTime));
+  }
+
+  if (options.editable !== undefined) {
+    this._editable = options.editable;
+
+    this._label.visible(this._editable);
+    this._handle.visible(this._editable);
+    this._line.visible(this._editable);
+  }
 };
 
 export default DefaultSegmentMarker;

@@ -1,16 +1,10 @@
-import Peaks from '../../src/main';
-import CueEmitter from '../../src/cue-emitter';
-import Cue from '../../src/cue';
+import Peaks from '../src/main';
+import CueEmitter from '../src/cue-emitter';
+import Cue from '../src/cue';
 
 describe('CueEmitter', function() {
   let p;
   let cueEmitter;
-
-  const event = {
-    POINT: 'points.enter',
-    SEGMENT_IN: 'segments.enter',
-    SEGMENT_OUT: 'segments.exit'
-  };
 
   beforeEach(function(done) {
     const options = {
@@ -21,7 +15,9 @@ describe('CueEmitter', function() {
         container: document.getElementById('zoomview-container')
       },
       mediaElement: document.getElementById('media'),
-      dataUri: 'base/test_data/sample.json',
+      dataUri: {
+        arraybuffer: 'base/test_data/sample.dat'
+      },
       emitCueEvents: false
     };
 
@@ -47,7 +43,7 @@ describe('CueEmitter', function() {
   it('should initialise correctly', function() {
     expect(p._cueEmitter).to.be.undefined;
     expect(cueEmitter._peaks).equals(p, 'instance did not match');
-    expect(cueEmitter._cues.length).equals(0, 'mark array not empty');
+    expect(cueEmitter._cues.length).equals(0, 'marker array not empty');
   });
 
   it('should initialise with already existing points', function(done) {
@@ -59,7 +55,9 @@ describe('CueEmitter', function() {
         container: document.getElementById('zoomview-container')
       },
       mediaElement: document.getElementById('media'),
-      dataUri: 'base/test_data/sample.json',
+      dataUri: {
+        arraybuffer: 'base/test_data/sample.dat'
+      },
       emitCueEvents: true,
       points: [{ time: 1.0 }],
       segments: [{ startTime: 1.1, endTime: 1.2 }]
@@ -83,7 +81,9 @@ describe('CueEmitter', function() {
         container: document.getElementById('zoomview-container')
       },
       mediaElement: document.getElementById('media'),
-      dataUri: 'base/test_data/sample.json',
+      dataUri: {
+        arraybuffer: 'base/test_data/sample.dat'
+      },
       emitCueEvents: true
     };
 
@@ -213,8 +213,10 @@ describe('CueEmitter', function() {
       p.points.add({ time: 1.07, id: 'p2' });
       p.points.add({ time: 1.09, id: 'p3' });
 
-      p.on(event.POINT, function(point) {
-        emitted.push(point.id);
+      p.on('points.enter', function(event) {
+        emitted.push(event.point.id);
+
+        expect(event.time).to.equal(1.1);
 
         if (emitted.length === 3) {
           expect(emitted).to.deep.equal(['p1', 'p2', 'p3']);
@@ -232,8 +234,10 @@ describe('CueEmitter', function() {
       p.points.add({ time: 1.07, id: 'p2' });
       p.points.add({ time: 1.09, id: 'p3' });
 
-      p.on(event.POINT, function(point) {
-        emitted.push(point.id);
+      p.on('points.enter', function(event) {
+        emitted.push(event.point.id);
+
+        expect(event.time).to.equal(1.0);
 
         if (emitted.length === 3) {
           expect(emitted).to.deep.equal(['p3', 'p2', 'p1']);
@@ -249,19 +253,21 @@ describe('CueEmitter', function() {
 
       p.segments.add({ startTime: 1.05, endTime: 1.09, id: 'seg1' });
 
-      p.on(event.SEGMENT_IN, function(segment) {
-        expect(segment.id).equals('seg1', 'segment id did not match');
+      p.on('segments.enter', function(event) {
+        expect(event.segment.id).equals('seg1', 'segment id did not match');
+        expect(event.time).to.equal(1.1);
         emitted.push(1.05);
       });
 
-      p.on(event.SEGMENT_OUT, function(segment) {
-        expect(segment.id).equals('seg1', 'segment id did not match');
+      p.on('segments.exit', function(event) {
+        expect(event.segment.id).equals('seg1', 'segment id did not match');
+        expect(event.time).to.equal(1.1);
         emitted.push(1.09);
         expect(emitted).to.deep.equal([1.05, 1.09]);
         done();
       });
 
-      cueEmitter._onUpdate(1.0, 1.1);
+      cueEmitter._onUpdate(1.1, 1.0);
     });
 
     it('should emit segment events during reverse playback', function(done) {
@@ -269,13 +275,13 @@ describe('CueEmitter', function() {
 
       p.segments.add({ startTime: 1.05, endTime: 1.09, id: 'seg1' });
 
-      p.on(event.SEGMENT_IN, function(segment) {
-        expect(segment.id).equals('seg1', 'segment id did not match');
+      p.on('segments.enter', function(event) {
+        expect(event.segment.id).equals('seg1', 'segment id did not match');
         emitted.push(1.09);
       });
 
-      p.on(event.SEGMENT_OUT, function(segment) {
-        expect(segment.id).equals('seg1', 'segment id did not match');
+      p.on('segments.exit', function(event) {
+        expect(event.segment.id).equals('seg1', 'segment id did not match');
         emitted.push(1.05);
         expect(emitted).to.deep.equal([1.09, 1.05]);
         done();
@@ -333,7 +339,9 @@ describe('CueEmitter', function() {
         zoomview: {
           container: document.getElementById('zoomview-container')
         },
-        dataUri: 'base/test_data/sample.json',
+        dataUri: {
+          arraybuffer: 'base/test_data/sample.dat'
+        },
         player: player,
         emitCueEvents: true
       };
@@ -358,21 +366,24 @@ describe('CueEmitter', function() {
           else {
             expect(events.length).to.equal(3);
             expect(events[0].type).to.equal('segments.enter');
-            expect(events[0].segment.id).to.equal('segment.1');
+            expect(events[0].event.segment.id).to.equal('segment.1');
+            expect(events[0].event.time).to.equal(3);
             expect(events[1].type).to.equal('segments.exit');
-            expect(events[1].segment.id).to.equal('segment.1');
+            expect(events[1].event.segment.id).to.equal('segment.1');
+            expect(events[1].event.time).to.equal(11);
             expect(events[2].type).to.equal('segments.enter');
-            expect(events[2].segment.id).to.equal('segment.3');
+            expect(events[2].event.segment.id).to.equal('segment.3');
+            expect(events[2].event.time).to.equal(11);
             done();
           }
         });
 
-        peaks.on('segments.enter', function(segment) {
-          events.push({ type: 'segments.enter', segment: segment });
+        peaks.on('segments.enter', function(event) {
+          events.push({ type: 'segments.enter', event: event });
         });
 
-        peaks.on('segments.exit', function(segment) {
-          events.push({ type: 'segments.exit', segment: segment });
+        peaks.on('segments.exit', function(event) {
+          events.push({ type: 'segments.exit', event: event });
         });
 
         const time = seekTimes.shift();

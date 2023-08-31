@@ -1,12 +1,12 @@
-import Peaks from '../../src/main';
+import Peaks from '../src/main';
+import Scrollbar from '../src/scrollbar';
+import WaveformOverview from '../src/waveform-overview';
+import WaveformZoomView from '../src/waveform-zoomview';
+
+import sampleJsonData from '../test_data/sample.json';
+
 import WaveformData from 'waveform-data';
 import Konva from 'konva';
-
-import sampleJsonData from '../../test_data/sample.json';
-
-import Scrollbar from '../../src/scrollbar';
-import WaveformOverview from '../../src/waveform-overview';
-import WaveformZoomView from '../../src/waveform-zoomview';
 
 const TestAudioContext = window.AudioContext || window.mozAudioContext || window.webkitAudioContext;
 
@@ -165,12 +165,16 @@ describe('Peaks', function() {
         });
 
         it('should use view-specific options', function(done) {
+          function overviewFormatPlayheadTime() { }
+          function zoomviewFormatPlayheadTime() { }
+
           Peaks.init({
             overview: {
               container: document.getElementById('overview-container'),
               playheadColor: '#ff0000',
               playheadTextColor: '#00ff00',
               showPlayheadTime: true,
+              formatPlayheadTime: overviewFormatPlayheadTime,
               axisLabelColor: '#0000ff',
               axisGridlineColor: '#000000',
               highlightColor: '#808080',
@@ -184,6 +188,7 @@ describe('Peaks', function() {
               playheadColor: '#00ff00',
               playheadTextColor: '#0000ff',
               showPlayheadTime: false,
+              formatPlayheadTime: zoomviewFormatPlayheadTime,
               axisLabelColor: '#ff0000',
               axisGridlineColor: '#808080'
             },
@@ -202,6 +207,8 @@ describe('Peaks', function() {
             expect(zoomview._playheadLayer._playheadTextColor).to.equal('#0000ff');
             expect(overview._playheadLayer._playheadText).to.be.an.instanceOf(Konva.Text);
             expect(zoomview._playheadLayer._playheadText).to.equal(undefined);
+            expect(overview._formatPlayheadTime).to.equal(overviewFormatPlayheadTime);
+            expect(zoomview._formatPlayheadTime).to.equal(zoomviewFormatPlayheadTime);
             expect(overview._axis._axisLabelColor).to.equal('#0000ff');
             expect(zoomview._axis._axisLabelColor).to.equal('#ff0000');
             expect(overview._axis._axisGridlineColor).to.equal('#000000');
@@ -315,7 +322,7 @@ describe('Peaks', function() {
           }, function(err, instance) {
             expect(err).to.equal(null);
             expect(instance).to.be.an.instanceof(Peaks);
-            expect(instance._scrollbar).to.be.an.instanceOf(Scrollbar);
+            expect(instance.views._scrollbar).to.be.an.instanceOf(Scrollbar);
             done();
           });
         });
@@ -342,7 +349,7 @@ describe('Peaks', function() {
         });
       });
 
-      context('with valid json waveform data', function() {
+      context('with valid JSON waveform data', function() {
         it('should initialise correctly', function(done) {
           Peaks.init({
             overview: {
@@ -579,7 +586,7 @@ describe('Peaks', function() {
         });
       });
 
-      it('should invoke callback with an error if provided json waveform data is invalid', function(done) {
+      it('should invoke callback with an error if the provided JSON waveform data is invalid', function(done) {
         Peaks.init({
           overview: {
             container: document.getElementById('overview-container')
@@ -635,18 +642,6 @@ describe('Peaks', function() {
         });
       });
 
-      /* it('should invoke callback with an error if the container option is used', function(done) {
-        Peaks.init({
-          container: document.createElement('div'),
-          mediaElement: document.getElementById('media'),
-          dataUri: { arraybuffer: '/base/test_data/sample.dat' }
-        }, function(err, instance) {
-          expect(err).to.be.an.instanceOf(Error);
-          expect(instance).to.equal(undefined);
-          done();
-        });
-      }); */
-
       it('should invoke callback with an error if the logger is defined and not a function', function(done) {
         Peaks.init({
           overview: {
@@ -656,7 +651,9 @@ describe('Peaks', function() {
             container: document.getElementById('zoomview-container')
           },
           mediaElement: document.getElementById('media'),
-          dataUri: '/base/test_data/sample.json',
+          dataUri: {
+            arraybuffer: 'base/test_data/sample.dat'
+          },
           logger: 'foo'
         }, function(err, instance) {
           expect(err).to.be.an.instanceOf(TypeError);
@@ -675,7 +672,9 @@ describe('Peaks', function() {
             container: document.getElementById('zoomview-container')
           },
           mediaElement: document.getElementById('media'),
-          dataUri: '/base/test_data/sample.json',
+          dataUri: {
+            arraybuffer: 'base/test_data/sample.dat'
+          },
           zoomLevels: null
         }, function(err, instance) {
           expect(err).to.be.an.instanceOf(Error);
@@ -694,7 +693,9 @@ describe('Peaks', function() {
             container: document.getElementById('zoomview-container')
           },
           mediaElement: document.getElementById('media'),
-          dataUri: '/base/test_data/sample.json',
+          dataUri: {
+            arraybuffer: 'base/test_data/sample.dat'
+          },
           zoomLevels: []
         }, function(err, instance) {
           expect(err).to.be.an.instanceOf(Error);
@@ -713,7 +714,9 @@ describe('Peaks', function() {
             container: document.getElementById('zoomview-container')
           },
           mediaElement: document.getElementById('media'),
-          dataUri: '/base/test_data/sample.json',
+          dataUri: {
+            arraybuffer: 'base/test_data/sample.dat'
+          },
           zoomLevels: [1024, 512]
         }, function(err, instance) {
           expect(err).to.be.an.instanceOf(Error);
@@ -733,7 +736,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 
@@ -755,7 +758,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 
@@ -777,7 +780,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 
@@ -799,7 +802,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 
@@ -820,7 +823,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 
@@ -843,7 +846,7 @@ describe('Peaks', function() {
           },
           mediaElement: document.getElementById('media'),
           dataUri: {
-            json: 'base/test_data/sample.json'
+            arraybuffer: 'base/test_data/sample.dat'
           }
         };
 

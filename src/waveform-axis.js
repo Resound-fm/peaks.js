@@ -6,7 +6,7 @@
  * @module waveform-axis
  */
 
-import { formatTime, roundUpToNearest } from './utils';
+import { formatTime, objectHasProperty, roundUpToNearest } from './utils';
 import Konva from 'konva/lib/Core';
 
 /**
@@ -29,9 +29,11 @@ import Konva from 'konva/lib/Core';
 function WaveformAxis(view, options) {
   const self = this;
 
-  self._axisGridlineColor = options.axisGridlineColor;
-  self._axisLabelColor    = options.axisLabelColor;
-  self._showAxisLabels    = options.showAxisLabels;
+  self._axisGridlineColor      = options.axisGridlineColor;
+  self._axisLabelColor         = options.axisLabelColor;
+  self._showAxisLabels         = options.showAxisLabels;
+  self._axisTopMarkerHeight    = options.axisTopMarkerHeight;
+  self._axisBottomMarkerHeight = options.axisBottomMarkerHeight;
 
   if (options.formatAxisTime) {
     self._formatAxisTime = options.formatAxisTime;
@@ -76,8 +78,18 @@ WaveformAxis.prototype.addToLayer = function(layer) {
   layer.add(this._axisShape);
 };
 
-WaveformAxis.prototype.showAxisLabels = function(show) {
+WaveformAxis.prototype.showAxisLabels = function(show, options) {
   this._showAxisLabels = show;
+
+  if (options) {
+    if (objectHasProperty(options, 'topMarkerHeight')) {
+      this._axisTopMarkerHeight = options.topMarkerHeight;
+    }
+
+    if (objectHasProperty(options, 'bottomMarkerHeight')) {
+      this._axisBottomMarkerHeight = options.bottomMarkerHeight;
+    }
+  }
 };
 
 /**
@@ -126,9 +138,6 @@ WaveformAxis.prototype._getAxisLabelScale = function(view) {
 
 WaveformAxis.prototype._drawAxis = function(context, view) {
   const currentFrameStartTime = view.getStartTime();
-
-  // Draw axis markers
-  const markerHeight = 10;
 
   // Time interval between axis markers (seconds)
   const axisLabelIntervalSecs = this._getAxisLabelScale(view);

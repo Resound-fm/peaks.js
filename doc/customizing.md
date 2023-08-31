@@ -12,8 +12,7 @@ This document describes how to customize various aspects of the waveform renderi
     - [marker.constructor()](#markerconstructoroptions)
     - [marker.init()](#markerinitgroup)
     - [marker.fitToView()](#markerfittoview)
-    - [marker.timeUpdated()](#markertimeupdatedtime)
-    - [marker.update()](#markerupdate)
+    - [marker.update()](#markerupdateoptions)
     - [marker.destroy()](#markerdestroy)
   - [Layer API](#layer-api)
     - [layer.getHeight()](#layergetheight)
@@ -102,8 +101,8 @@ options:
 | `point`      | `Point`       | The `Point` object associated with this marker. This provides access to the `time`, `color`, and `labelText` attributes, etc. |
 | `view`       | `string`      | The name of the view that the marker is being created in, either `zoomview` or `overview`.                                    |
 | `layer`      | `PointsLayer` | The rendering layer, see [Layer API](#layer-api) for details.                                                                 |
-| `draggable`  | `boolean`     | If `true`, the marker is draggable.                                                                                           |
-| `color`      | `string`      | Color for the marker (set by the `pointMarkerColor` option in `Peaks.init()`.                                                 |
+| `editable`   | `boolean`     | If `true`, the `Point` time can be changed by dragging the mouse.                                                             |
+| `color`      | `string`      | Color for the marker (set by the `pointMarkerColor` option in `Peaks.init()`).                                                |
 | `fontFamily` | `string`      | Font family for the marker text (set by the `fontFamily` option in `Peaks.init()`, default: `'sans-serif'`).                  |
 | `fontSize`   | `number`      | Font size, in px, for the marker text (set by the `fontSize` option in `Peaks.init()`, default: `10`)                         |
 | `fontShape`  | `string`      | Font shape for the marker text (set by the `fontShape` option in `Peaks.init()`, default: `'normal'`).                        |
@@ -128,11 +127,7 @@ class CustomPointMarker {
     // (required, see below)
   }
 
-  timeUpdated(time) {
-    // (optional, see below)
-  }
-
-  update() {
+  update(options) {
     // (optional, see below)
   }
 
@@ -147,8 +142,8 @@ function createPointMarker(options) {
 ```
 
 Your custom point marker object must implement the `init` and
-`fitToView` methods. It may also optionally implement `timeUpdated`,
-`update`, and `destroy`. Refer to the [Marker API](#marker-api)
+`fitToView` methods. It may also optionally implement `update`
+and `destroy`. Refer to the [Marker API](#marker-api)
 section for details.
 
 ### `createSegmentMarker(options)`
@@ -162,7 +157,7 @@ following options:
 | `segment`        | `Segment`       | The `Segment` object associated with this marker. This provides access to the `startTime`, `endTime`, `color`, and `labelText` attributes, etc. |
 | `view`           | `string`        | The name of the view that the marker is being created in, either `zoomview` or `overview`.                                                      |
 | `layer`          | `SegmentsLayer` | The rendering layer, see [Layer API](#layer-api) for details.                                                                                   |
-| `draggable`      | `boolean`       | This value is always `true` for segment markers.                                                                                                |
+| `editable`       | `boolean`       | If `true`, the `Segment` start and end times can be changed by dragging the mouse.                                                              |
 | `color`          | `string`        | Color for the marker (set by the `segmentOptions.startMarkerColor` or `segmentOptions.endMarkerColor` option in `Peaks.init()`.                 |
 | `fontFamily`     | `string`        | Font family for the marker text (set by the `fontFamily` option in `Peaks.init()`, default: `'sans-serif'`).                                    |
 | `fontSize`       | `number`        | Font size, in px, for the marker text (set by the `fontSize` option in `Peaks.init()`, default: `10`)                                           |
@@ -191,11 +186,7 @@ class CustomSegmentMarker {
     // (required, see below)
   }
 
-  timeUpdated(time) {
-    // (optional, see below)
-  }
-
-  update() {
+  update(options) {
     // (optional, see below)
   }
 
@@ -210,8 +201,8 @@ function createSegmentMarker(options) {
 ```
 
 Your custom segment marker object must implement the `init` and
-`fitToView` methods. It may also optionally implement `timeUpdated`,
-`update`, and `destroy`. Refer to the [Marker API](#marker-api)
+`fitToView` methods. It may also optionally implement `update`
+and `destroy`. Refer to the [Marker API](#marker-api)
 section for details.
 
 ### Marker API
@@ -315,37 +306,45 @@ fitToView() {
 }
 ```
 
-#### `marker.timeUpdated(time)`
-
-The `timeUpdated` method is called when the marker's time position has changed.
-For point markers, this is the marker's `time` attribute, and for segment
-markers the `startTime` or `endTime` attribute.
-
-| Name   | Type     | Description                      |
-| ------ | -------- | -------------------------------- |
-| `time` | `number` | Marker time position, in seconds |
-
-```javascript
-timeUpdated(time) {
-  console.log('Marker time', time);
-}
-```
-
-#### `marker.update()`
+#### `marker.update(options)`
 
 The `update` method is called when any of the point or segment attributes
-have changed, e.g., by calling `point.update()` or `segment.update()`.
-You should use this method to update the marker as needed.
+have changed, e.g., by calling `point.update()` or `segment.update()`, or
+when the marker's time position has changed. You should use this method to
+update the marker as needed.
 
-Note that `update()` is called in addition to `timeUpdated()` if the
-marker's time position (`point.time`, `segment.startTime`, or
-`segment.endTime`) has changed.
+| Name      | Type     | Description                     |
+| --------- | -------- | ------------------------------- |
+| `options` | `object` | Contains the updated attributes |
 
 ```javascript
-update() {
-  const point = this._options.point;
+update(options) {
+  // For a point marker:
+  if (options.time !== undefined) {
+    console.log('Updated point marker time', options.time);
+  }
 
-  console.log('Label text', point.labelText);
+  // For a segment start/end marker:
+  if (options.startTime !== undefined && this._options.startMarker) {
+    console.log('Updated segment start marker time', options.startTime);
+  }
+
+  if (options.endTime !== undefined && !this._options.startMarker) {
+    console.log('Updated segment end marker time', options.endTime);
+  }
+
+  if (options.labelText !== undefined) {
+    console.log('Updated label text', options.labelText);
+  }
+
+  if (options.color !== undefined) {
+    this._line.stroke(options.color);
+  }
+
+  if (options.editable !== undefined) {
+    // Show or hide the Konva shapes that draw the marker
+    console.log('Updated editable state', options.editable);
+  }
 }
 ```
 

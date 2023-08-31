@@ -61,11 +61,15 @@ SegmentsLayer.prototype.isEditingEnabled = function() {
 };
 
 SegmentsLayer.prototype.enableSegmentDragging = function(enable) {
-  for (const segmentId in this._segmentShapes) {
-    if (objectHasProperty(this._segmentShapes, segmentId)) {
-      this._segmentShapes[segmentId].enableSegmentDragging(enable);
+  for (const segmentPid in this._segmentShapes) {
+    if (objectHasProperty(this._segmentShapes, segmentPid)) {
+      this._segmentShapes[segmentPid].enableSegmentDragging(enable);
     }
   }
+};
+
+SegmentsLayer.prototype.getSegmentShape = function(segment) {
+  return this._segmentShapes[segment.pid];
 };
 
 SegmentsLayer.prototype.formatTime = function(time) {
@@ -76,7 +80,7 @@ SegmentsLayer.prototype._onSegmentsUpdate = function(segment, options) {
   const frameStartTime = this._view.getStartTime();
   const frameEndTime = this._view.getEndTime();
 
-  let segmentShape = this._segmentShapes[segment.id];
+  let segmentShape = this.getSegmentShape(segment);
   const isVisible = segment.isVisible(frameStartTime, frameEndTime);
 
   if (segmentShape && !isVisible) {
@@ -88,7 +92,6 @@ SegmentsLayer.prototype._onSegmentsUpdate = function(segment, options) {
   }
   else if (!segmentShape && isVisible) {
     // Add segment shape for visible segment.
-    // segmentShape = this._addSegmentShape(segment);
     segmentShape = this._updateSegment(segment);
   }
   else if (segmentShape && isVisible) {
@@ -97,25 +100,28 @@ SegmentsLayer.prototype._onSegmentsUpdate = function(segment, options) {
   }
 };
 
-SegmentsLayer.prototype._onSegmentsAdd = function(segments) {
+SegmentsLayer.prototype._onSegmentsAdd = function(event) {
   const self = this;
 
   const frameStartTime = self._view.getStartTime();
   const frameEndTime   = self._view.getEndTime();
 
-  segments.forEach(function(segment) {
+  event.segments.forEach(function(segment) {
     if (segment.isVisible(frameStartTime, frameEndTime)) {
       const segmentShape = self._addSegmentShape(segment);
 
       segmentShape.update();
     }
   });
+
+  // Ensure segment markers are always draggable.
+  this.moveSegmentMarkersToTop();
 };
 
-SegmentsLayer.prototype._onSegmentsRemove = function(segments) {
+SegmentsLayer.prototype._onSegmentsRemove = function(event) {
   const self = this;
 
-  segments.forEach(function(segment) {
+  event.segments.forEach(function(segment) {
     self._removeSegment(segment);
   });
 };
@@ -154,7 +160,7 @@ SegmentsLayer.prototype._addSegmentShape = function(segment) {
 
   segmentShape.addToLayer(this._layer);
 
-  this._segmentShapes[segment.id] = segmentShape;
+  this._segmentShapes[segment.pid] = segmentShape;
 
   return segmentShape;
 };
@@ -184,24 +190,13 @@ SegmentsLayer.prototype.updateSegments = function(startTime, endTime) {
  */
 
 SegmentsLayer.prototype._updateSegment = function(segment) {
-  const segmentShape = this._findOrAddSegmentShape(segment);
-
-  segmentShape.update();
-};
-
-/**
- * @private
- * @param {Segment} segment
- */
-
-SegmentsLayer.prototype._findOrAddSegmentShape = function(segment) {
-  let segmentShape = this._segmentShapes[segment.id];
+  let segmentShape = this.getSegmentShape(segment);
 
   if (!segmentShape) {
     segmentShape = this._addSegmentShape(segment);
   }
 
-  return segmentShape;
+  segmentShape.update();
 };
 
 /**
@@ -214,9 +209,9 @@ SegmentsLayer.prototype._findOrAddSegmentShape = function(segment) {
  */
 
 SegmentsLayer.prototype._removeInvisibleSegments = function(startTime, endTime) {
-  for (const segmentId in this._segmentShapes) {
-    if (objectHasProperty(this._segmentShapes, segmentId)) {
-      const segment = this._segmentShapes[segmentId].getSegment();
+  for (const segmentPid in this._segmentShapes) {
+    if (objectHasProperty(this._segmentShapes, segmentPid)) {
+      const segment = this._segmentShapes[segmentPid].getSegment();
 
       if (!segment.isVisible(startTime, endTime)) {
         this._removeSegment(segment);
@@ -232,11 +227,24 @@ SegmentsLayer.prototype._removeInvisibleSegments = function(startTime, endTime) 
  */
 
 SegmentsLayer.prototype._removeSegment = function(segment) {
-  const segmentShape = this._segmentShapes[segment.id];
+  const segmentShape = this._segmentShapes[segment.pid];
 
   if (segmentShape) {
     segmentShape.destroy();
-    delete this._segmentShapes[segment.id];
+    delete this._segmentShapes[segment.pid];
+  }
+};
+
+/**
+ * Moves all segment markers to the top of the z-order,
+ * so the user can always drag them.
+ */
+
+SegmentsLayer.prototype.moveSegmentMarkersToTop = function() {
+  for (const segmentPid in this._segmentShapes) {
+    if (objectHasProperty(this._segmentShapes, segmentPid)) {
+      this._segmentShapes[segmentPid].moveMarkersToTop();
+    }
   }
 };
 
@@ -251,7 +259,7 @@ SegmentsLayer.prototype.setVisible = function(visible) {
 };
 
 SegmentsLayer.prototype.segmentClicked = function(eventName, event) {
-  const segmentShape = this._segmentShapes[event.segment.id];
+  const segmentShape = this._segmentShapes[event.segment.pid];
 
   if (segmentShape) {
     segmentShape.segmentClicked(eventName, event);
@@ -267,9 +275,9 @@ SegmentsLayer.prototype.destroy = function() {
 };
 
 SegmentsLayer.prototype.fitToView = function() {
-  for (const segmentId in this._segmentShapes) {
-    if (objectHasProperty(this._segmentShapes, segmentId)) {
-      const segmentShape = this._segmentShapes[segmentId];
+  for (const segmentPid in this._segmentShapes) {
+    if (objectHasProperty(this._segmentShapes, segmentPid)) {
+      const segmentShape = this._segmentShapes[segmentPid];
 
       segmentShape.fitToView();
     }

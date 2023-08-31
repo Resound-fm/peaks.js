@@ -22,6 +22,7 @@ This document describes the Peaks.js API, including configuration options, funct
     - [instance.player.playSegment()](#instanceplayerplaysegmentsegment-loop)
   - [Views API](#views-api)
     - [instance.views.getView()](#instanceviewsgetviewname)
+    - [instance.views.getScrollbar()](#instanceviewsgetscrollbar)
     - [instance.views.createZoomview()](#instanceviewscreatezoomviewcontainer)
     - [instance.views.createOverview()](#instanceviewscreateoverviewcontainer)
     - [instance.views.destroyZoomview()](#instanceviewsdestroyzoomview)
@@ -32,16 +33,20 @@ This document describes the Peaks.js API, including configuration options, funct
     - [view.setPlayedWaveformColor()](#viewsetplayedwaveformcolorcolor)
     - [view.showPlayheadTime()](#viewshowplayheadtimeshow)
     - [view.setTimeLabelPrecision()](#viewsettimeLabelPrecisionprecision)
-    - [view.enableAutoScroll()](#viewenableautoscrollenable)
+    - [view.showAxisLabels()](#viewshowaxislabelsshow-options)
+    - [view.enableAutoScroll()](#viewenableautoscrollenable-options)
     - [view.enableMarkerEditing()](#viewenablemarkereditingenable)
     - [view.enableSegmentDragging()](#viewenablesegmentdraggingenable)
     - [view.setSegmentDragMode()](#viewsetsegmentdragmodemode)
     - [view.setMinSegmentDragWidth()](#viewsetminsegmentdragwidthwidth)
+    - [view.setWaveformDragMode()](#viewsetwaveformdragmodemode)
     - [view.fitToContainer()](#viewfittocontainer)
     - [view.setZoom()](#viewsetzoomoptions)
     - [view.setStartTime()](#viewsetstarttimetime)
     - [view.setWheelMode()](#viewsetwheelmodemode-options)
     - [view.enableSeek()](#viewenableseekenable)
+  - [Scrollbar API](#scrollbar-api)
+    - [scrollbar.fitToContainer()](#scrollbarfittocontainer)
   - [Zoom API](#zoom-api)
     - [instance.zoom.zoomIn()](#instancezoomzoomin)
     - [instance.zoom.zoomOut()](#instancezoomzoomout)
@@ -55,7 +60,7 @@ This document describes the Peaks.js API, including configuration options, funct
     - [instance.segments.removeById()](#instancesegmentsremovebyidsegmentid)
     - [instance.segments.removeAll()](#instancesegmentsremoveall)
   - [Segment API](#segment-api)
-    - [segment.update()](#segmentupdate-starttime-endtime-labeltext-color-editable--)
+    - [segment.update()](#segmentupdateoptions)
   - [Points API](#points-api)
     - [instance.points.add()](#instancepointsaddpoint)
     - [instance.points.getPoints()](#instancepointsgetpoints)
@@ -64,7 +69,7 @@ This document describes the Peaks.js API, including configuration options, funct
     - [instance.points.removeById()](#instancepointsremovebyidpointid)
     - [instance.points.removeAll()](#instancepointsremoveall)
   - [Point API](#point-api)
-    - [point.update()](#pointupdate-time-labeltext-color-editable--)
+    - [point.update()](#pointupdateoptions)
   - [Event Handling](#event-handling)
     - [instance.on()](#instanceonevent-callback)
     - [instance.once()](#instanceonceevent-callback)
@@ -105,6 +110,7 @@ This document describes the Peaks.js API, including configuration options, funct
     - [points.enter](#pointsenter)
   - [Segment Events](#segment-events)
     - [segments.add](#segmentsadd)
+    - [segments.insert](#segmentsinsert)
     - [segments.remove](#segmentsremove)
     - [segments.remove_all](#segmentsremove_all)
     - [segments.dragstart](#segmentsdragstart)
@@ -174,6 +180,12 @@ var options = {
     // Show or hide the axis label timestamps
     showAxisLabels: true,
 
+    // Height of the axis markers at the top of the waveform
+    axisTopMarkerHeight: 10,
+
+    // Height of the axis markers at the top of the waveform
+    axisBottomMarkerHeight: 10,
+
     // Font family for axis labels, playhead, and point and segment markers
     fontFamily: 'sans-serif',
 
@@ -186,6 +198,20 @@ var options = {
 
     // Mouse-wheel mode: either 'none' or 'scroll'
     wheelMode: 'none',
+
+    // Auto-scroll the waveform when the playhead reaches the edge of
+    // the visible waveform
+    autoScroll: true,
+
+    // The offset in pixels edge of the visible waveform to trigger
+    // auto-scroll
+    autoScrollOffset: 100,
+
+    // Enables point markers to be shown on the zoomable waveform
+    enablePoints: true,
+
+    // Enables segments to be shown on the zoomable waveform
+    enableSegments: true,
 
     segmentOptions: {
       // Some segment options can be overridden for the zoomable waveform,
@@ -235,10 +261,10 @@ var options = {
     // Returns a string for the playhead timestamp label
     formatPlayheadTime: function,
 
-    // Show current time next to the play head
+    // Show current time next to the playhead
     showPlayheadTime: false,
 
-    // Precision of time label of play head and point/segment markers
+    // Precision of time label of playhead and point/segment markers
     timeLabelPrecision: 2,
 
     // Color of the axis gridlines
@@ -253,6 +279,12 @@ var options = {
     // Show or hide the axis label timestamps
     showAxisLabels: true,
 
+    // Height of the axis markers at the top of the waveform
+    axisTopMarkerHeight: 10,
+
+    // Height of the axis markers at the top of the waveform
+    axisBottomMarkerHeight: 10,
+
     // Font family for axis labels, playhead, and point and segment markers
     fontFamily: 'sans-serif',
 
@@ -262,6 +294,12 @@ var options = {
     // Font style for axis labels, playhead, and point and segment markers
     // (either 'normal', 'bold', or 'italic')
     fontStyle: 'normal',
+
+    // Enables point markers to be shown on the overview waveform
+    enablePoints: true,
+
+    // Enables segments to be shown on the overview waveform
+    enableSegments: true,
 
     segmentOptions: {
       // Some segment options can be overridden for the overview waveform,
@@ -363,10 +401,10 @@ var options = {
   // You can also use a 2 stop gradient here. See setWaveformColor()
   playedWaveformColor: 'rgba(0, 225, 128, 1)',
 
-  // Color of the play head
+  // Color of the playhead
   playheadColor: 'rgba(0, 0, 0, 1)',
 
-  // Color of the play head text
+  // Color of the playhead text
   playheadTextColor: '#aaa',
 
   // Color of the axis gridlines
@@ -385,10 +423,10 @@ var options = {
   // (either 'normal', 'bold', or 'italic')
   fontStyle: 'normal',
 
-  // Precision of time label of play head and point/segment markers
+  // Precision of time label of playhead and point/segment markers
   timeLabelPrecision: 2,
 
-  // Show current time next to the play head (zoomview only)
+  // Show current time next to the playhead (zoomview only)
   showPlayheadTime: false,
 
   //
@@ -400,6 +438,12 @@ var options = {
 
   // if true, emit cue events on the Peaks instance (see Cue Events)
   emitCueEvents: false,
+
+  // Enables point markers to be shown on the waveform views
+  enablePoints: true,
+
+  // Enables segments to be shown on the waveform views
+  enableSegments: true,
 
   segmentOptions: {
     // Enable segment markers
@@ -693,10 +737,18 @@ The Views API allows you to create or obtain references to these views.
 
 ### `instance.views.getView(name)`
 
-Returns a reference to one of the views. The `name` parameter can be omitted if there is only one view, otherwise it should be set to either `'zoomview'` or `'overview'`.
+Returns a reference to one of the views, or `null` if the requested view is not available. The `name` parameter can be omitted if there is only one view, otherwise it should be set to either `'zoomview'` or `'overview'`. See [View API](#view-api) for methods available on the returned view object.
 
 ```js
 const view = instance.views.getView('zoomview');
+```
+
+### `instance.views.getScrollbar()`
+
+Returns a reference to the scrollbar, or `null` if there is no scrollbar. See [Scrollbar API](#scrollbar-api) for methods available on the returned scrollbar object.
+
+```js
+const scrollbar = instance.views.getScrollbar();
 ```
 
 ### `instance.views.createZoomview(container)`
@@ -814,25 +866,50 @@ const view = instance.views.getView('zoomview');
 view.setTimeLabelPrecision(3); // Displays time of playhead/marker as hh:mm:ss.sss
 ```
 
-### `view.showAxisLabels(show)`
+### `view.showAxisLabels(show[, options])`
 
 Shows or hides the time axis timestamp labels.
 
+The `options` object can be used to set the the height of the time axis markers on the top and bottom of the waveform.
+
+
 The initial setting is controlled by the `showAxisLabels` configuration option
-(default: `true`).
+(default: `true`) and the `axisTopMarkerHeight` and `axisBottomMarkerHeight` options (default: 10).
 
 ```js
 const view = instance.views.getView('zoomview');
-view.showAxisLabels(false); // Remove the time axis labels.
+
+// Remove the time axis labels.
+view.showAxisLabels(false);
+
+// Show the time axis labels with default markers.
+view.showAxisLabels(true);
+
+// Show the time axis labels but remove the markers.
+view.showAxisLabels(true, {
+  topMarkerHeight: 0,
+  bottomMarkerHeight: 0
+});
+
+// Show the time axis labels and set the marker height.
+view.showAxisLabels(true, {
+  topMarkerHeight: 10,
+  bottomMarkerHeight: 10
+});
 ```
 
-### `view.enableAutoScroll(enable)`
+### `view.enableAutoScroll(enable[, options])`
 
 Enables or disables auto-scroll behavior (enabled by default). This only applies to the zoomable waveform view.
+
+The optional `options` parameter allows the behavior to be customized. If present, `options` should be an object with one of the following keys:
+
+* `offset`: The offset in pixels from the edge of the visible waveform to trigger auto-scroll (`number`, defaults to 100)
 
 ```js
 const view = instance.views.getView('zoomview');
 view.enableAutoScroll(false);
+view.enableAutoScroll(true, { offset: 0 });
 ```
 
 ### `view.enableMarkerEditing(enable)`
@@ -890,6 +967,18 @@ const view = instance.views.getView('zoomview');
 view.setMinSegmentDragWidth(50);
 ```
 
+### `view.setWaveformDragMode(mode)`
+
+Controls the behaviour of mouse drag operations. Possible values for the `mode` parameter are:
+
+* `'scroll'` (default): Dragging scrolls the waveform
+* `'insert-segment'`: Dragging inserts a new segment
+
+```js
+const view = instance.views.getView('zoomview');
+view.setWaveformDragMode('insert-segment');
+```
+
 ### `view.fitToContainer()`
 
 Resizes the waveform view to fit the container. You should call this method
@@ -902,17 +991,49 @@ function (such as lodash's [_.debounce()](https://lodash.com/docs/#debounce))
 when changing the container's width.
 
 ```js
-const container = document.getElementById('zoomview-container');
-const view = instance.views.getView('zoomview');
+const zoomviewContainer = document.getElementById('zoomview-container');
+const scrollbarContainer = document.getElementById('scrollbar-container');
+const overviewContainer = document.getElementById('overview-container');
 
-container.setAttribute('style', 'height: 300px');
-view.fitToContainer();
+let firstResize = true;
 
-// or, with debounce of 500ms:
+function onResize(entries) {
+  if (firstResize) {
+    firstResize = false;
+    return;
+  }
 
-window.addEventListener('resize', _.debounce(function() {
-  view.fitToContainer();
-}, 500);
+  for (const entry of entries) {
+    if (entry.target === zoomviewContainer) {
+      const view = peaksInstance.views.getView('zoomview');
+
+      if (view) {
+        view.fitToContainer();
+      }
+    }
+    else if (entry.target === scrollbarContainer) {
+      const scrollbar = peaksInstance.views.getScrollbar();
+
+      if (scrollbar) {
+        scrollbar.fitToContainer();
+      }
+    }
+    else if (entry.target === overviewContainer) {
+      const view = peaksInstance.views.getView('overview');
+
+      if (view) {
+        view.fitToContainer();
+      }
+    }
+  }
+}
+
+const resizeObserver = new ResizeObserver(_.debounce(onResize, 500));
+
+resizeObserver.observe(zoomviewContainer);
+resizeObserver.observe(overviewContainer);
+
+zoomviewContainer.style.height = '300px';
 ```
 
 ### `view.setZoom(options)`
@@ -996,6 +1117,15 @@ const zoomview = peaksInstance.views.getView('zoomview');
 overview.enableSeek(false); // or true to re-enable
 zoomview.enableSeek(false);
 ```
+
+## Scrollbar API
+
+### `scrollbar.fitToContainer()`
+
+Resizes the scrollbar to fit the container. You should call this method
+after changing the width or height of the scrollbar's container HTML element.
+
+See [`view.fitToContainer`](#viewfittocontainer) for example code.
 
 ## Zoom API
 
@@ -1171,12 +1301,13 @@ instance.segments.removeAll();
 
 A **segment**'s properties can be updated programatically.
 
-### `segment.update({ startTime, endTime, labelText, color, editable[, ...] })`
+### `segment.update(options)`
 
 Updates an existing segment. Accepts a single `options` parameter, with the following keys:
 
+* `id`: (optoinal) the segment identifer
 * `startTime`: (optional) the segment start time (seconds, defaults to current value)
-* `endTime`: (optional)  the segment end time (seconds, defaults to current value)
+* `endTime`: (optional) the segment end time (seconds, defaults to current value)
 * `editable`: (optional) sets whether the segment is user editable (boolean, defaults to current value)
 * `color`: (optional) the segment color (defaults to current value)
 * `labelText`: (optional) a text label which is displayed when the user hovers the mouse pointer over the segment (defaults to current value)
@@ -1289,10 +1420,11 @@ instance.points.removeAll();
 
 A **point**'s properties can be updated programatically.
 
-### `point.update({ time, labelText, color, editable[, ...] })`
+### `point.update(options)`
 
 Updates an existing point. Accepts a single `options` parameter with the following keys:
 
+* `id`: (optional) the point identifier
 * `time`: (optional) the point's time (seconds, defaults to current value)
 * `editable`: (optional) sets whether the point is user editable (boolean, defaults to current value)
 * `color`: (optional) the point color (defaults to current value)
@@ -1560,11 +1692,16 @@ instance.on('zoomview.contextmenu', function(event) {
 
 ### `zoom.update`
 
-This event is emitted when the zoom level in the zoomable waveform view changes. Event handler functions receive the current and previous zoom levels, in samples per pixel.
+This event is emitted when the zoom level in the zoomable waveform view changes.
+
+The `event` parameter contains:
+
+* `currentZoom`: The current zoom level, in samples per pixel
+* `previousZoom`: The previous zoom level, in samples per pixel
 
 ```js
-instance.on('zoom.update', function(currentZoom, previousZoom) {
-  console.log(`Zoom changed from ${previousZoom} to ${currentZoom}`);
+instance.on('zoom.update', function(event) {
+  console.log(`Zoom changed from ${event.previousZoom} to ${event.currentZoom}`);
 });
 ```
 
@@ -1572,11 +1709,15 @@ instance.on('zoom.update', function(currentZoom, previousZoom) {
 
 ### `points.add`
 
-This event is emitted one or more points are added, by calling [`instance.points.add()`](#instancepointsaddpoint). The event contains an array of the Points added.
+This event is emitted one or more points are added, by calling [`instance.points.add()`](#instancepointsaddpoint).
+
+The `event` parameter contains:
+
+* `points`: An array of the [Point](#point-api) objects added
 
 ```js
-instance.on('points.add', function(points) {
-  points.forEach(function(point)) {
+instance.on('points.add', function(event) {
+  event.points.forEach(function(point)) {
     console.log(`Added point: ${point.id}`);
   });
 });
@@ -1584,11 +1725,15 @@ instance.on('points.add', function(points) {
 
 ### `points.remove`
 
-This event is emitted one or more points are removed, by calling [`instance.points.removeById()`](#instancepointtsremovebyidpointid) or [`instance.points.removeByTime`](#instancepointsremovebytimetime)). The event contains an array of the Points removed.
+This event is emitted one or more points are removed, by calling [`instance.points.removeById()`](#instancepointtsremovebyidpointid) or [`instance.points.removeByTime`](#instancepointsremovebytimetime)).
+
+The `event` parameter contains:
+
+* `points`: An array of the [Point](#point-api) objects removed
 
 ```js
-instance.on('points.remove', function(points) {
-  points.forEach(function(point)) {
+instance.on('points.remove', function(event) {
+  event.points.forEach(function(point)) {
     console.log(`Removed point: ${point.id}`);
   });
 });
@@ -1740,13 +1885,16 @@ instance.on('points.contextmenu', function(event) {
 
 This event is emitted when playback of the audio or video passes through a point.
 
-When the playhead reaches a point or segment boundary, a cue event is emitted.
+The `event` parameter contains:
+
+* `point`: The point that was passed through
+* `time`: The current playback time, in seconds
 
 This event is not emitted by default. To enable it, call `Peaks.init()` with the `emitCueEvents` option set to `true`.
 
 ```js
-instance.on('points.enter', function(point) {
-  console.log(`Entered point: ${point.id}`);
+instance.on('points.enter', function(event) {
+  console.log(`Entered point: ${event.point.id}, currentTime: ${event.time}`);
 });
 ```
 
@@ -1754,23 +1902,51 @@ instance.on('points.enter', function(point) {
 
 ### `segments.add`
 
-This event is emitted one or more segments are added, by calling [`instance.segments.add()`](#instancesegmentsaddsegment). The event contains an array of the Segments added.
+This event is emitted one or more segments are added, by calling [`instance.segments.add()`](#instancesegmentsaddsegment), or when the user starts dragging on the waveform view (see [view.setWaveformDragMode()](#viewsetwaveformdragmodemode)).
+
+The `event` parameter contains:
+
+* `segments`: An array of the [Segment](#segment-api) objects added
+* `insert`: A flag which is `true` if the segment was added by the user dragging on the waveform view.
 
 ```js
-instance.on('segments.add', function(segments) {
-  segments.forEach(function(segment)) {
+instance.on('segments.add', function(event) {
+  if (event.insert) {
+    const segment = event.segments[0];
+    segment.update({ id: 'my-segment-id' });
+  }
+
+  event.segments.forEach(function(segment)) {
     console.log(`Added segment: ${segment.id}`);
   });
 });
 ```
 
-### `segments.remove`
+### `segments.insert`
 
-This event is emitted one or more segments are removed, by calling [`instance.segments.removeById()`](#instancesegmentsremovebyidsegmentid) or [`instance.segments.removeByTime`](#instancesegmentsremovebytimestarttime-endtime). The event contains an array of the Segments removed.
+This event is emitted after the user inserts a segment by dragging on the waveform view (see [view.setWaveformDragMode()](#viewsetwaveformdragmodemode)).
+
+The `event` parameter contains:
+
+* `segment`: The [Segment](#segment-api) object that was added
 
 ```js
-instance.on('segments.remove', function(segments) {
-  segments.forEach(function(segment)) {
+instance.on('segments.insert', function(event) {
+  event.segment.update({ id: 'my-segment-id' });
+});
+```
+
+### `segments.remove`
+
+This event is emitted one or more segments are removed, by calling [`instance.segments.removeById()`](#instancesegmentsremovebyidsegmentid) or [`instance.segments.removeByTime`](#instancesegmentsremovebytimestarttime-endtime).
+
+The `event` parameter contains:
+
+* `segments`: An array of the [Segment](#segment-api) objects removed
+
+```js
+instance.on('segments.remove', function(event) {
+  event.segments.forEach(function(segment)) {
     console.log(`Removed segment: ${segment.id}`);
   });
 });
@@ -1956,11 +2132,16 @@ instance.on('segments.contextmenu', function(event) {
 
 This event is emitted when playback of the audio or video enters a segment.
 
+The `event` parameter contains:
+
+* `segment`: The segment that was entered
+* `time`: The current playback time, in seconds
+
 This event is not emitted by default. To enable it, call `Peaks.init()` with the `emitCueEvents` option set to `true`.
 
 ```js
-instance.on('segments.enter', function(segment) {
-  console.log(`Entered segment: ${segment.id}`);
+instance.on('segments.enter', function(event) {
+  console.log(`Entered segment: ${event.segment.id}, currentTime: ${event.time}`);
 });
 ```
 
@@ -1968,10 +2149,15 @@ instance.on('segments.enter', function(segment) {
 
 This event is emitted when playback of the audio or video exits a segment.
 
+The `event` parameter contains:
+
+* `segment`: The segment that was exited
+* `time`: The current playback time, in seconds
+
 This event is not emitted by default. To enable it, call `Peaks.init()` with the `emitCueEvents` option set to `true`.
 
 ```js
-instance.on('segments.exit', function(segment) {
-  console.log(`Exited segment: ${segment.id}`);
+instance.on('segments.exit', function(event) {
+  console.log(`Exited segment: ${event.segment.id}, currentTime: ${event.time}`);
 });
 ```

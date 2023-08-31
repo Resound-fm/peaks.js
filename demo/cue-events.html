@@ -39,8 +39,10 @@
       </p>
     </div>
 
-    <div id="waveform-container">
+    <div class="waveform-container">
       <div id="zoomview-container"></div>
+    </div>
+    <div class="waveform-container">
       <div id="overview-container"></div>
     </div>
 
@@ -55,8 +57,8 @@
         <div>
           <button data-action="zoom-in">Zoom in</button>
           <button data-action="zoom-out">Zoom out</button>
-          <button data-action="add-segment">Add a Segment at current time</button>
-          <button data-action="add-point">Add a Point at current time</button>
+          <button data-action="add-segment">Add Segment</button>
+          <button data-action="add-point">Add Point</button>
           <button data-action="log-data">Log segments/points</button>
         </div>
         <div>
@@ -366,16 +368,16 @@
             id: 'testpoint'
           });
 
-          peaksInstance.on('points.enter', function(point) {
-            console.log('points.enter', point, peaksInstance.player.getCurrentTime())
+          peaksInstance.on('points.enter', function(event) {
+            console.log('points.enter', event);
           });
 
-          peaksInstance.on('segments.enter', function(segment) {
-            console.log('segments.enter', segment,peaksInstance.player.getCurrentTime())
+          peaksInstance.on('segments.enter', function(event) {
+            console.log('segments.enter', event);
           });
 
           peaksInstance.on('segments.exit', function(segment) {
-            console.log('segments.exit', segment, peaksInstance.player.getCurrentTime())
+            console.log('segments.exit', event);
           });
         });
       })(peaks);
