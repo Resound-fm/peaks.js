@@ -1,5 +1,5 @@
-import Peaks from '../../src/main';
-import { Segment } from '../../src/segment';
+import Peaks from '../src/main';
+import { Segment } from '../src/segment';
 
 describe('Peaks.segments', function() {
   let p, logger;
@@ -16,7 +16,7 @@ describe('Peaks.segments', function() {
       },
       mediaElement: document.getElementById('media'),
       dataUri: {
-        json: 'base/test_data/sample.json'
+        arraybuffer: 'base/test_data/sample.dat'
       },
       logger: logger
     };
@@ -208,11 +208,11 @@ describe('Peaks.segments', function() {
     });
 
     it('should emit an event with an array containing a single segment object', function(done) {
-      p.on('segments.add', function(segments) {
-        expect(segments).to.have.lengthOf(1);
-        expect(segments[0]).to.be.an.instanceOf(Segment);
-        expect(segments[0].startTime).to.equal(0);
-        expect(segments[0].endTime).to.equal(10);
+      p.on('segments.add', function(event) {
+        expect(event.segments).to.have.lengthOf(1);
+        expect(event.segments[0]).to.be.an.instanceOf(Segment);
+        expect(event.segments[0].startTime).to.equal(0);
+        expect(event.segments[0].endTime).to.equal(10);
         done();
       });
 
@@ -220,14 +220,14 @@ describe('Peaks.segments', function() {
     });
 
     it('should emit an event with multiple segment objects', function(done) {
-      p.on('segments.add', function(segments) {
-        expect(segments).to.have.lengthOf(2);
-        expect(segments[0]).to.be.an.instanceOf(Segment);
-        expect(segments[0].startTime).to.equal(0);
-        expect(segments[0].endTime).to.equal(10);
-        expect(segments[1]).to.be.an.instanceOf(Segment);
-        expect(segments[1].startTime).to.equal(20);
-        expect(segments[1].endTime).to.equal(30);
+      p.on('segments.add', function(event) {
+        expect(event.segments).to.have.lengthOf(2);
+        expect(event.segments[0]).to.be.an.instanceOf(Segment);
+        expect(event.segments[0].startTime).to.equal(0);
+        expect(event.segments[0].endTime).to.equal(10);
+        expect(event.segments[1]).to.be.an.instanceOf(Segment);
+        expect(event.segments[1].startTime).to.equal(20);
+        expect(event.segments[1].endTime).to.equal(30);
         done();
       });
 
@@ -329,6 +329,7 @@ describe('Peaks.segments', function() {
       'isVisible',
       'peaks',
       '_id',
+      '_pid',
       '_startTime',
       '_endTime',
       '_labelText',
@@ -504,11 +505,11 @@ describe('Peaks.segments', function() {
     });
 
     it('should emit an event with the removed segment', function(done) {
-      p.on('segments.remove', function(segments) {
-        expect(segments).to.be.an.instanceOf(Array);
-        expect(segments).to.have.lengthOf(1);
-        expect(segments[0]).to.be.an.instanceOf(Segment);
-        expect(segments[0].id).to.equal('segment2');
+      p.on('segments.remove', function(event) {
+        expect(event.segments).to.be.an.instanceOf(Array);
+        expect(event.segments).to.have.lengthOf(1);
+        expect(event.segments[0]).to.be.an.instanceOf(Segment);
+        expect(event.segments[0].id).to.equal('segment2');
         done();
       });
 
@@ -571,15 +572,15 @@ describe('Peaks.segments', function() {
     });
 
     it('should emit an event containing the removed segments', function(done) {
-      p.on('segments.remove', function(segments) {
-        expect(segments).to.be.an.instanceOf(Array);
-        expect(segments).to.have.lengthOf(2);
-        expect(segments[0]).to.be.an.instanceOf(Segment);
-        expect(segments[0].startTime).to.equal(3);
-        expect(segments[0].endTime).to.equal(6);
-        expect(segments[1]).to.be.an.instanceOf(Segment);
-        expect(segments[1].startTime).to.equal(3);
-        expect(segments[1].endTime).to.equal(10);
+      p.on('segments.remove', function(event) {
+        expect(event.segments).to.be.an.instanceOf(Array);
+        expect(event.segments).to.have.lengthOf(2);
+        expect(event.segments[0]).to.be.an.instanceOf(Segment);
+        expect(event.segments[0].startTime).to.equal(3);
+        expect(event.segments[0].endTime).to.equal(6);
+        expect(event.segments[1]).to.be.an.instanceOf(Segment);
+        expect(event.segments[1].startTime).to.equal(3);
+        expect(event.segments[1].endTime).to.equal(10);
 
         done();
       });
@@ -630,12 +631,12 @@ describe('Peaks.segments', function() {
     });
 
     it('should emit an event with the removed segments', function(done) {
-      p.on('segments.remove', function(segments) {
-        expect(segments).to.be.an.instanceOf(Array);
-        expect(segments.length).to.equal(1);
-        expect(segments[0]).to.be.an.instanceOf(Segment);
-        expect(segments[0].startTime).to.equal(15);
-        expect(segments[0].endTime).to.equal(25);
+      p.on('segments.remove', function(event) {
+        expect(event.segments).to.be.an.instanceOf(Array);
+        expect(event.segments.length).to.equal(1);
+        expect(event.segments[0]).to.be.an.instanceOf(Segment);
+        expect(event.segments[0].startTime).to.equal(15);
+        expect(event.segments[0].endTime).to.equal(25);
 
         done();
       });

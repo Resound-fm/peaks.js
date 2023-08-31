@@ -14,7 +14,6 @@ import KeyboardHandler from './keyboard-handler';
 import MediaElementPlayer from './mediaelement-player';
 import Player from './player';
 import { createPointMarker, createSegmentMarker, createSegmentLabel } from './marker-factories';
-import Scrollbar from './scrollbar';
 import ViewController from './view-controller';
 import ZoomController from './zoom-controller';
 import WaveformBuilder from './waveform-builder';
@@ -38,29 +37,28 @@ function Peaks() {
 
   // Set default options
   this.options = {
-    zoomLevels:              [512, 1024, 2048, 4096],
-    waveformCache:           true,
+    zoomLevels:          [512, 1024, 2048, 4096],
+    waveformCache:       true,
 
-    mediaElement:            null,
-    mediaUrl:                null,
+    mediaElement:        null,
+    mediaUrl:            null,
 
-    dataUri:                 null,
-    dataUriDefaultFormat:    'json',
-    withCredentials:         false,
+    dataUri:             null,
+    withCredentials:     false,
 
-    waveformData:            null,
-    webAudio:                null,
+    waveformData:        null,
+    webAudio:            null,
 
-    nudgeIncrement:          1.0,
+    nudgeIncrement:      1.0,
 
-    pointMarkerColor:        '#39cccc',
+    pointMarkerColor:    '#39cccc',
 
-    createSegmentMarker:     createSegmentMarker,
-    createSegmentLabel:      createSegmentLabel,
-    createPointMarker:       createPointMarker,
+    createSegmentMarker: createSegmentMarker,
+    createSegmentLabel:  createSegmentLabel,
+    createPointMarker:   createPointMarker,
 
     // eslint-disable-next-line no-console
-    logger:                  console.error.bind(console)
+    logger:              console.error.bind(console)
   };
 
   return this;
@@ -69,23 +67,28 @@ function Peaks() {
 Peaks.prototype = Object.create(EventEmitter.prototype);
 
 const defaultViewOptions = {
-  playheadColor:       '#111111',
-  playheadTextColor:   '#aaaaaa',
-  axisGridlineColor:   '#cccccc',
-  showAxisLabels:      true,
-  axisLabelColor:      '#aaaaaa',
-  fontFamily:          'sans-serif',
-  fontSize:            11,
-  fontStyle:           'normal',
-  timeLabelPrecision:  2
+  playheadColor:          '#111111',
+  playheadTextColor:      '#aaaaaa',
+  axisGridlineColor:      '#cccccc',
+  showAxisLabels:         true,
+  axisTopMarkerHeight:    10,
+  axisBottomMarkerHeight: 10,
+  axisLabelColor:         '#aaaaaa',
+  fontFamily:             'sans-serif',
+  fontSize:               11,
+  fontStyle:              'normal',
+  timeLabelPrecision:     2,
+  enablePoints:           true,
+  enableSegments:         true
 };
 
 const defaultZoomviewOptions = {
   // showPlayheadTime:    true,
   playheadClickTolerance: 3,
   waveformColor:          'rgba(0, 225, 128, 1)',
-  wheelMode:              'none'
-  // zoomAdapter:         'static'
+  wheelMode:              'none',
+  autoScroll:             true,
+  autoScrollOffset:       100
 };
 
 const defaultOverviewOptions = {
@@ -141,6 +144,8 @@ function getOverviewOptions(opts) {
     'timeLabelPrecision',
     'axisGridlineColor',
     'showAxisLabels',
+    'axisTopMarkerHeight',
+    'axisBottomMarkerHeight',
     'axisLabelColor',
     'formatAxisTime',
     'fontFamily',
@@ -150,7 +155,9 @@ function getOverviewOptions(opts) {
     'highlightStrokeColor',
     'highlightOpacity',
     'highlightCornerRadius',
-    'highlightOffset'
+    'highlightOffset',
+    'enablePoints',
+    'enableSegments'
   ];
 
   optNames.forEach(function(optName) {
@@ -194,12 +201,18 @@ function getZoomviewOptions(opts) {
     'timeLabelPrecision',
     'axisGridlineColor',
     'showAxisLabels',
+    'axisTopMarkerHeight',
+    'axisBottomMarkerHeight',
     'axisLabelColor',
     'formatAxisTime',
     'fontFamily',
     'fontSize',
     'fontStyle',
-    'wheelMode'
+    'wheelMode',
+    'autoScroll',
+    'autoScrollOffset',
+    'enablePoints',
+    'enableSegments'
   ];
 
   optNames.forEach(function(optName) {
@@ -403,10 +416,8 @@ Peaks.init = function(opts, callback) {
         }
 
         if (scrollbarContainer) {
-          instance.createScrollbar(scrollbarContainer);
+          instance.views.createScrollbar(scrollbarContainer);
         }
-
-        instance._addWindowResizeHandler();
 
         if (opts.segments) {
           instance.segments.add(opts.segments);
@@ -587,38 +598,11 @@ Peaks.prototype.getWaveformData = function() {
   return this._waveformData;
 };
 
-Peaks.prototype.createScrollbar = function(container) {
-  const waveformData = this.getWaveformData();
-
-  this._scrollbar = new Scrollbar(
-    waveformData,
-    container,
-    this
-  );
-
-  return this._scrollbar;
-};
-
-Peaks.prototype._addWindowResizeHandler = function() {
-  this._onResize = this._onResize.bind(this);
-  window.addEventListener('resize', this._onResize);
-};
-
-Peaks.prototype._onResize = function() {
-  this.emit('window_resize');
-};
-
-Peaks.prototype._removeWindowResizeHandler = function() {
-  window.removeEventListener('resize', this._onResize);
-};
-
 /**
  * Cleans up a Peaks instance after use.
  */
 
 Peaks.prototype.destroy = function() {
-  this._removeWindowResizeHandler();
-
   if (this._waveformBuilder) {
     this._waveformBuilder.abort();
   }
@@ -629,11 +613,6 @@ Peaks.prototype.destroy = function() {
 
   if (this.views) {
     this.views.destroy();
-  }
-
-  if (this._scrollbar) {
-    this._scrollbar.destroy();
-    this._scrollbar = null;
   }
 
   if (this.player) {

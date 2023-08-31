@@ -14,7 +14,7 @@ import Konva from 'konva/lib/Core';
  * @typedef {Object} PointMarkerOptions
  * @global
  * @property {Point} point Point object with timestamp.
- * @property {Boolean} draggable If true, marker is draggable.
+ * @property {Boolean} editable If true, marker is draggable.
  * @property {Marker} marker
  * @property {Function} onclick
  * @property {Function} onDblClick
@@ -116,15 +116,13 @@ PointMarker.prototype.getAbsolutePosition = function() {
   return this._group.getAbsolutePosition();
 };
 
-PointMarker.prototype.timeUpdated = function(time) {
-  if (this._marker.timeUpdated) {
-    this._marker.timeUpdated(time);
+PointMarker.prototype.update = function(options) {
+  if (options.editable !== undefined) {
+    this._group.draggable(options.editable);
   }
-};
 
-PointMarker.prototype.update = function() {
   if (this._marker.update) {
-    this._marker.update();
+    this._marker.update(options);
   }
 };
 

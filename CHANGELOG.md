@@ -1,12 +1,71 @@
 # Peaks.js
 
+## 3.0.0 (2023/08/28)
+
+* Fixed point marker dragging (@chrisn)
+
+* Removed window `resize` event handling. Instead, you should use
+  [ResizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver)
+  and call [`fitToContainer()`](doc/API.md#viewfittocontainer) (@chrisn)
+
+* Added `views.getScrollbar()` method, to allow the scrollbar to be
+  resized (@chrisn)
+
+* Removed undocumented `dataUriDefaultFormat` option (@chrisn)
+
+## 3.0.0-beta.13 (2023/07/15)
+
+* (#499) Added a new `zoomview.setWaveformDragMode()` method, which
+  enables users to create new segments by clicking and dragging in the
+  zoomable waveform view. The segment id value can now be set using
+  `segment.update()` (and point ids can be updated similarly). A new event
+  is emitted, `segments.insert` after the user has inserted a new segment
+  by dragging in the waveform view.
+
+  The following event handlers now receive event objects, see
+  [doc/migration-guide.md](doc/migration-guide.md) and
+  [doc/API.md](doc/API.md) for details:
+
+  * `points.add`, `points.remove`
+  * `segments.add`, `segments.remove`
+  * `points.enter`, `segments.enter`, `segments.exit`
+  * `zoom.update` (@chrisn)
+
+* (#498) Fixed changing the `editable` flag on point markers (@chrisn)
+
+* (#500) Fixed "Zoom level too low" error, which can happen with short
+  duration audio files when the overview window tries to resample the
+  audio to fit the available width (@chrisn)
+
+* The custom marker `draggable` option has been renamed to `editable`,
+  to be consistent with the point and segment attribute with the same
+  name. Refer to [doc/migration-guide.md](doc/migration-guide.md) for
+  details of how to update your application (@chrisn)
+
+## 3.0.0-beta.12 (2023/06/27)
+
+* (#498) The custom marker `timeUpdated()` method has been removed, and
+  replaced by a more general purpose `update()` method, which is called
+  when any of the point or segment attributes have been updated
+  (including when markers are dragged). Refer to
+  [doc/migration-guide.md](doc/migration-guide.md) for details of how to
+  update your application (@chrisn)
+
+* (#497) Added zoomview `autoScroll` and `autoScrollOffset` options
+  (@chrisn)
+
+* (#88) Added `enablePoints` and `enableSegment` options, to allow you
+  to control whether points and segments are shown in the zoomview and
+  overview waveforms (@chrisn)
+
 ## 3.0.0-beta.11 (2023/06/07)
 
 * (#490) Added `preventViewEvent()` method for point and segment events.
   This allwos you to prevent `zoomview.*` or `overview.*` click events
   from a `segments.*` or `points.*` click event handler (@chrisn)
 
-* (#489) Improved event documentation, see [doc/API.md#events] (@chrisn)
+* (#489) Improved event documentation, see [doc/API.md](doc/API.md#events)
+  (@chrisn)
 
 * (#494) Enable use of Konva v9.x (@jdelStrother)
 
@@ -114,8 +173,8 @@
   and `zoomview.segmentOptions` settings.
 
   Some segment options have been removed, please refer to
-  doc/migration-guide.md for details of how to update your application
-  (@chrisn)
+  [doc/migration-guide.md](doc/migration-guide.md) for details of how to
+  update your application (@chrisn)
 
 ## 2.1.0 (2022/10/17)
 
@@ -182,8 +241,8 @@
 * (#450) Fixed waveform view initialization. This required a changed to
   how custom player objects are initialized, to be async. If your application
   uses a custom player object, this is a breaking API change. Please refer to
-  doc/migration-guide.md for details of how to update your application
-  (@chrisn)
+  [doc/migration-guide.md](doc/migration-guide.md) for details of how to update
+  your application (@chrisn)
 
 * The waveform cache is now cleared on calling `setSource()`. This would
   cause the waveform to not be updated when it should (@chrisn)
@@ -197,8 +256,8 @@
 
 * (#427) Changed all mouse and click event handlers to also expose the
   MouseEvent or PointerEvent. This is a breaking API change, please refer to
-  doc/migration-guide.md for details of how to update your application
-  (@chrisn)
+  [doc/migration-guide.md](doc/migration-guide.md) for details of how to update
+  your application (@chrisn)
 
 * (#441) Added `zoomview.contextmenu`, `overview.contextmenu`,
   `points.contextmenu`, and `segments.contextmenu` events (@rowild)

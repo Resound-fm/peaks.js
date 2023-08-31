@@ -7,13 +7,14 @@
  */
 
 import HighlightLayer from './highlight-layer';
-import MouseDragHandler from './mouse-drag-handler';
 import PlayheadLayer from './playhead-layer';
 import PointsLayer from './points-layer';
 import SegmentsLayer from './segments-layer';
 import WaveformAxis from './waveform-axis';
 import WaveformShape from './waveform-shape';
-import { clamp, formatTime, getMarkerObject, isFinite, isNumber } from './utils';
+import SeekMouseDragHandler from './seek-mouse-drag-handler';
+import { formatTime, getMarkerObject, isFinite, isNumber } from './utils';
+
 import Konva from 'konva/lib/Core';
 
 /**
@@ -41,14 +42,12 @@ function WaveformOverview(waveformData, container, peaks) {
   self._onPlaying = self._onPlaying.bind(this);
   self._onPause = self._onPause.bind(this);
   self._onZoomviewDisplaying = self._onZoomviewDisplaying.bind(this);
-  self._onWindowResize = self._onWindowResize.bind(this);
 
   // Register event handlers
   peaks.on('player.timeupdate', self._onTimeUpdate);
   peaks.on('player.playing', self._onPlaying);
   peaks.on('player.pause', self._onPause);
   peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
-  peaks.on('window_resize', self._onWindowResize);
 
   self._amplitudeScale = 1.0;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
@@ -69,20 +68,12 @@ function WaveformOverview(waveformData, container, peaks) {
   self._data = waveformData;
 
   if (self._width !== 0) {
-    try {
-      self._data = waveformData.resample({ width: self._width });
-    }
-    catch (error) {
-      // This error usually indicates that the waveform length
-      // is less than the container width
-    }
+    self._resampleAndSetWaveformData(waveformData, self._width);
   }
 
   // Disable warning: The stage has 6 layers.
   // Recommended maximum number of layers is 3-5.
   Konva.showWarnings = false;
-
-  self._resizeTimeoutId = null;
 
   self._stage = new Konva.Stage({
     container: container,
@@ -95,11 +86,15 @@ function WaveformOverview(waveformData, container, peaks) {
 
   self._createWaveform();
 
-  self._segmentsLayer = new SegmentsLayer(peaks, self, false);
-  self._segmentsLayer.addToStage(self._stage);
+  if (self._viewOptions.enableSegments) {
+    self._segmentsLayer = new SegmentsLayer(peaks, self, false);
+    self._segmentsLayer.addToStage(self._stage);
+  }
 
-  self._pointsLayer = new PointsLayer(peaks, self, false);
-  self._pointsLayer.addToStage(self._stage);
+  if (self._viewOptions.enablePoints) {
+    self._pointsLayer = new PointsLayer(peaks, self, false);
+    self._pointsLayer.addToStage(self._stage);
+  }
 
   self._highlightLayer = new HighlightLayer(
     self,
@@ -124,58 +119,25 @@ function WaveformOverview(waveformData, container, peaks) {
 
   const time = self._peaks.player.getCurrentTime();
 
-  this._playheadLayer.updatePlayheadTime(time);
+  self._playheadLayer.updatePlayheadTime(time);
 
-  self._createMouseDragHandler();
+  self._mouseDragHandler = new SeekMouseDragHandler(peaks, self);
 
-  self._onClick = self._onClick.bind(this);
-  self._onDblClick = self._onDblClick.bind(this);
-  self._onContextMenu = self._onContextMenu.bind(this);
+  self._onClick = self._onClick.bind(self);
+  self._onDblClick = self._onDblClick.bind(self);
+  self._onContextMenu = self._onContextMenu.bind(self);
 
   self._stage.on('click', self._onClick);
   self._stage.on('dblclick', self._onDblClick);
   self._stage.on('contextmenu', self._onContextMenu);
 }
 
-WaveformOverview.prototype._createMouseDragHandler = function() {
-  const self = this;
-
-  self._mouseDragHandler = new MouseDragHandler(self._stage, {
-    onMouseDown: function(mousePosX) {
-      this._seek(mousePosX);
-    },
-
-    onMouseMove: function(mousePosX) {
-      this._seek(mousePosX);
-    },
-
-    _seek: function(mousePosX) {
-      if (!self._enableSeek) {
-        return;
-      }
-
-      mousePosX = clamp(mousePosX, 0, self._width);
-
-      let time = self.pixelsToTime(mousePosX);
-      const duration = self._getDuration();
-
-      // Prevent the playhead position from jumping by limiting click
-      // handling to the waveform duration.
-      if (time > duration) {
-        time = duration;
-      }
-
-      // Update the playhead position. This gives a smoother visual update
-      // than if we only use the player.timeupdate event.
-      self._playheadLayer.updatePlayheadTime(time);
-
-      self._peaks.player.seek(time);
-    }
-  });
-};
-
 WaveformOverview.prototype.enableSeek = function(enable) {
   this._enableSeek = enable;
+};
+
+WaveformOverview.prototype.isSeekEnabled = function() {
+  return this._enableSeek;
 };
 
 WaveformOverview.prototype._onClick = function(event) {
@@ -222,7 +184,9 @@ WaveformOverview.prototype._clickHandler = function(event, eventName) {
             }
           };
 
-          this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          if (this._segmentsLayer) {
+            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          }
         }
       }
     }
@@ -263,44 +227,39 @@ WaveformOverview.prototype._onZoomviewDisplaying = function(startTime, endTime) 
   this.showHighlight(startTime, endTime);
 };
 
-WaveformOverview.prototype.showHighlight = function(startTime, endTime) {
-  this._highlightLayer.showHighlight(startTime, endTime);
+WaveformOverview.prototype.updatePlayheadTime = function(time) {
+  this._playheadLayer.updatePlayheadTime(time);
 };
 
-WaveformOverview.prototype._onWindowResize = function() {
-  const self = this;
-
-  if (self._resizeTimeoutId) {
-    clearTimeout(self._resizeTimeoutId);
-    self._resizeTimeoutId = null;
-  }
-
-  // Avoid resampling waveform data to zero width
-  if (self._container.clientWidth !== 0) {
-    self._width = self._container.clientWidth;
-    self._stage.setWidth(self._width);
-
-    self._resizeTimeoutId = setTimeout(function() {
-      self._width = self._container.clientWidth;
-      self._data = self._originalWaveformData.resample({ width: self._width });
-      self._stage.setWidth(self._width);
-
-      self._updateWaveform();
-    }, 500);
-  }
+WaveformOverview.prototype.showHighlight = function(startTime, endTime) {
+  this._highlightLayer.showHighlight(startTime, endTime);
 };
 
 WaveformOverview.prototype.setWaveformData = function(waveformData) {
   this._originalWaveformData = waveformData;
 
   if (this._width !== 0) {
-    this._data = waveformData.resample({ width: this._width });
+    this._resampleAndSetWaveformData(waveformData, this._width);
   }
   else {
     this._data = waveformData;
   }
 
   this._updateWaveform();
+};
+
+WaveformOverview.prototype._resampleAndSetWaveformData = function(waveformData, width) {
+  try {
+    this._data = waveformData.resample({ width: width });
+    return true;
+  }
+  catch (error) {
+    // This error usually indicates that the waveform length
+    // is less than the container width. Ignore, and use the
+    // given waveform data
+    this._data = waveformData;
+    return false;
+  }
 };
 
 WaveformOverview.prototype.playheadPosChanged = function(time) {
@@ -411,7 +370,10 @@ WaveformOverview.prototype.setAmplitudeScale = function(scale) {
   this._amplitudeScale = scale;
 
   this._waveformLayer.draw();
-  this._segmentsLayer.draw();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.draw();
+  }
 };
 
 WaveformOverview.prototype.getAmplitudeScale = function() {
@@ -504,8 +466,13 @@ WaveformOverview.prototype._updateWaveform = function() {
   const frameStartTime = 0;
   const frameEndTime   = this.pixelsToTime(this._width);
 
-  this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-  this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  if (this._pointsLayer) {
+    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+  }
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  }
 };
 
 WaveformOverview.prototype.setWaveformColor = function(color) {
@@ -543,14 +510,19 @@ WaveformOverview.prototype.formatTime = function(time) {
   return this._formatPlayheadTime(time);
 };
 
-WaveformOverview.prototype.showAxisLabels = function(show) {
-  this._axis.showAxisLabels(show);
+WaveformOverview.prototype.showAxisLabels = function(show, options) {
+  this._axis.showAxisLabels(show, options);
   this._axisLayer.draw();
 };
 
 WaveformOverview.prototype.enableMarkerEditing = function(enable) {
-  this._segmentsLayer.enableEditing(enable);
-  this._pointsLayer.enableEditing(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableEditing(enable);
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.enableEditing(enable);
+  }
 };
 
 WaveformOverview.prototype.fitToContainer = function() {
@@ -564,29 +536,32 @@ WaveformOverview.prototype.fitToContainer = function() {
     this._width = this._container.clientWidth;
     this._stage.setWidth(this._width);
 
-    try {
-      this._data = this._originalWaveformData.resample({ width: this._width });
+    if (this._resampleAndSetWaveformData(this._originalWaveformData, this._width)) {
       updateWaveform = true;
-    }
-    catch (error) {
-      // Ignore, and leave this._data as it was
     }
   }
 
-  this._height = this._container.clientHeight;
-  this._stage.setHeight(this._height);
+  if (this._container.clientHeight !== this._height) {
+    this._height = this._container.clientHeight;
+    this._stage.setHeight(this._height);
 
-  this._waveformShape.fitToView();
-  this._playheadLayer.fitToView();
-  this._segmentsLayer.fitToView();
-  this._pointsLayer.fitToView();
-  this._highlightLayer.fitToView();
+    this._waveformShape.fitToView();
+    this._playheadLayer.fitToView();
+
+    if (this._segmentsLayer) {
+      this._segmentsLayer.fitToView();
+    }
+
+    if (this._pointsLayer) {
+      this._pointsLayer.fitToView();
+    }
+
+    this._highlightLayer.fitToView();
+  }
 
   if (updateWaveform) {
     this._updateWaveform();
   }
-
-  this._stage.draw();
 };
 
 WaveformOverview.prototype.getViewOptions = function() {
@@ -594,20 +569,22 @@ WaveformOverview.prototype.getViewOptions = function() {
 };
 
 WaveformOverview.prototype.destroy = function() {
-  if (this._resizeTimeoutId) {
-    clearTimeout(this._resizeTimeoutId);
-    this._resizeTimeoutId = null;
-  }
-
   this._peaks.off('player.playing', this._onPlaying);
   this._peaks.off('player.pause', this._onPause);
   this._peaks.off('player.timeupdate', this._onTimeUpdate);
   this._peaks.off('zoomview.displaying', this._onZoomviewDisplaying);
-  this._peaks.off('window_resize', this._onWindowResize);
+
+  this._mouseDragHandler.destroy();
 
   this._playheadLayer.destroy();
-  this._segmentsLayer.destroy();
-  this._pointsLayer.destroy();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.destroy();
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.destroy();
+  }
 
   if (this._stage) {
     this._stage.destroy();

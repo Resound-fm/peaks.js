@@ -39,8 +39,10 @@
       </p>
     </div>
 
-    <div id="waveform-container">
+    <div class="waveform-container">
       <div id="zoomview-container"></div>
+    </div>
+    <div class="waveform-container">
       <div id="overview-container"></div>
     </div>
 
@@ -85,6 +87,11 @@
         <div>
           <input type="checkbox" id="enable-seek" checked>
           <label for="enable-seek">Enable click to seek</label>
+          <label for="waveform-drag-mode">Waveform drag mode:</label>
+          <select id="waveform-drag-mode">
+            <option value="scroll">Scroll</option>
+            <option value="insert-segment">Insert segment</option>
+          </select>
         </div>
         <div>
           <input type="checkbox" id="enable-segment-dragging">
@@ -380,6 +387,12 @@
             overview.enableSeek(event.target.checked);
           });
 
+          document.getElementById('waveform-drag-mode').addEventListener('change', function(event) {
+            var view = peaksInstance.views.getView('zoomview');
+
+            view.setWaveformDragMode(event.target.value);
+          });
+
           document.getElementById('enable-segment-dragging').addEventListener('change', function(event) {
             var zoomview = peaksInstance.views.getView('zoomview');
 
@@ -435,21 +448,20 @@
           });
 
           document.querySelector('button[data-action="resize"]').addEventListener('click', function(event) {
-            var zoomviewContainer = document.getElementById('zoomview-container');
-            var overviewContainer = document.getElementById('overview-container');
+            const zoomviewContainer = document.getElementById('zoomview-container');
+            const overviewContainer = document.getElementById('overview-container');
 
-            var zoomviewStyle = zoomviewContainer.offsetHeight === 200 ? 'height:300px' : 'height:200px';
-            var overviewStyle = overviewContainer.offsetHeight === 85  ? 'height:200px' : 'height:85px';
+            zoomviewContainer.style.height = zoomviewContainer.offsetHeight === 200 ? "300px" : "200px";
+            overviewContainer.style.height = overviewContainer.offsetHeight === 200 ? "85px"  : "200px";
 
-            zoomviewContainer.setAttribute('style', zoomviewStyle);
-            overviewContainer.setAttribute('style', overviewStyle);
+            const zoomview = peaksInstance.views.getView('zoomview');
 
-            var zoomview = peaksInstance.views.getView('zoomview');
             if (zoomview) {
               zoomview.fitToContainer();
             }
 
-            var overview = peaksInstance.views.getView('overview');
+            const overview = peaksInstance.views.getView('overview');
+
             if (overview) {
               overview.fitToContainer();
             }
@@ -483,14 +495,17 @@
             }
           });
 
-          // Points mouse events
-
-          peaksInstance.on('points.mouseenter', function(point) {
-            console.log('points.mouseenter:', point);
+          // Point events
+          peaksInstance.on('points.add', function(event) {
+            console.log('points.add:', event);
           });
 
-          peaksInstance.on('points.mouseleave', function(point) {
-            console.log('points.mouseleave:', point);
+          peaksInstance.on('points.mouseenter', function(event) {
+            console.log('points.mouseenter:', event);
+          });
+
+          peaksInstance.on('points.mouseleave', function(event) {
+            console.log('points.mouseleave:', event);
           });
 
           peaksInstance.on('points.click', function(event) {
@@ -519,7 +534,19 @@
             console.log('points.dragend:', event);
           });
 
-          // Segments mouse events
+          // Segment events
+
+          peaksInstance.on('segments.add', function(event) {
+            console.log('segments.add:', event);
+          });
+
+          peaksInstance.on('segments.insert', function(event) {
+            console.log('segments.insert:', event);
+          });
+
+          peaksInstance.on('segments.update', function(event) {
+            console.log('segments.update:', event);
+          });
 
           peaksInstance.on('segments.dragstart', function(event) {
             console.log('segments.dragstart:', event);
@@ -563,6 +590,8 @@
             console.log('segments.contextmenu:', event);
           });
 
+          // Zoomview waveform events
+
           peaksInstance.on('zoomview.click', function(event) {
             console.log('zoomview.click:', event);
           });
@@ -577,6 +606,8 @@
             console.log('zoomview.contextmenu:', event);
           });
 
+          // Overview waveform events
+
           peaksInstance.on('overview.click', function(event) {
             console.log('overview.click:', event);
           });
@@ -590,6 +621,8 @@
 
             console.log('overview.contextmenu:', event);
           });
+
+          // Player events
 
           peaksInstance.on('player.seeked', function(time) {
             console.log('player.seeked:', time);
@@ -607,8 +640,10 @@
             console.log('player.ended');
           });
 
-          peaksInstance.on('zoom.update', function(currentZoom, previousZoom) {
-            console.log('zoom.update', currentZoom, previousZoom);
+          // Zoom events
+
+          peaksInstance.on('zoom.update', function(event) {
+            console.log('zoom.update', event);
           });
         });
       })(peaks);
