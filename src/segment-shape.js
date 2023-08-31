@@ -112,7 +112,7 @@ function SegmentShape(segment, peaks, layer, view) {
   const segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
   const segmentEndOffset   = this._view.timeToPixelOffset(this._segment.endTime);
 
-  const overlayRectHeight = clamp(0, this._view.getHeight() * this._overlayOffset);
+  const overlayRectHeight = clamp(0, this._view.getHeight());
 
   // The clip rectangle prevents text in the overlay from appearing
   // outside the overlay.
@@ -121,7 +121,7 @@ function SegmentShape(segment, peaks, layer, view) {
     name:          'segment-overlay',
     segment:       this._segment,
     x:             segmentStartOffset,
-    y:             -10,
+    y:             0,
     width:         segmentEndOffset - segmentStartOffset,
     height:        this._view.getHeight(),
     clipX:         0,
@@ -298,6 +298,9 @@ SegmentShape.prototype.update = function(options) {
   this._borderColor = this._segment.bordercolor;
 
   if (this._overlayText) {
+    const labelColor = this._segment.labelColor;
+
+    this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
 
@@ -380,8 +383,8 @@ SegmentShape.prototype.isDragging = function() {
 
 SegmentShape.prototype._onMouseEnter = function(event) {
   if (this._label) {
-    this._label.moveToTop();
-    this._label.show();
+    // this._label.moveToTop();
+    // this._label.show();
   }
 
   this._peaks.emit('segments.mouseenter', {

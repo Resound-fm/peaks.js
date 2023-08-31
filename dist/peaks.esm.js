@@ -321,6 +321,33 @@ var eventemitter3 = {exports: {}};
 })(eventemitter3);
 var EventEmitter = eventemitter3.exports;
 
+function _iterableToArrayLimit(arr, i) {
+  var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
+  if (null != _i) {
+    var _s,
+      _e,
+      _x,
+      _r,
+      _arr = [],
+      _n = !0,
+      _d = !1;
+    try {
+      if (_x = (_i = _i.call(arr)).next, 0 === i) {
+        if (Object(_i) !== _i) return;
+        _n = !1;
+      } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);
+    } catch (err) {
+      _d = !0, _e = err;
+    } finally {
+      try {
+        if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+    return _arr;
+  }
+}
 function _typeof(obj) {
   "@babel/helpers - typeof";
 
@@ -329,6 +356,28 @@ function _typeof(obj) {
   } : function (obj) {
     return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   }, _typeof(obj);
+}
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+  return arr2;
+}
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
 /**
@@ -2363,14 +2412,6 @@ DefaultPointMarker.prototype.timeUpdated = function (time) {
 };
 
 /**
- * @file
- *
- * Defines the {@link DefaultSegmentMarker} class.
- *
- * @module default-segment-marker
- */
-
-/**
  * Creates a segment marker handle.
  *
  * @class
@@ -2383,13 +2424,16 @@ function DefaultSegmentMarker(options) {
   this._options = options;
 }
 DefaultSegmentMarker.prototype.init = function (group) {
-  var handleWidth = 10;
-  var handleHeight = 30;
-  var handleX = -(handleWidth / 2) + 13; // Place off to the side of the segment
+  var _this = this;
+  var handleWidth = 15;
+  var handleHeight = 48;
+  var handleX = -(handleWidth / 2) - 8; // Place off to the side of the segment
 
-  handleX = this._options.startMarker ? handleX * -1 - 10 : handleX;
+  handleX = this._options.startMarker ? handleX * -1 - 14.9 : handleX;
   var xPosition = this._options.startMarker ? -24 : 24;
   var time = this._options.startMarker ? this._options.segment.startTime : this._options.segment.endTime;
+  var handleLineColor = this._options.segment.borderColor;
+  var handleColor = this._options.segment.handleColor;
 
   // Label - create with default y, the real value is set in fitToView().
   this._label = new Text({
@@ -2410,25 +2454,74 @@ DefaultSegmentMarker.prototype.init = function (group) {
     y: 0,
     width: handleWidth,
     height: handleHeight,
-    fill: this._options.color,
-    stroke: this._options.color,
+    fill: handleColor,
+    stroke: handleColor,
+    strokeWidth: 0
+  });
+  this._handleLineOne = new Rect({
+    name: 'handleLineOne',
+    x: handleX + 4.5,
+    y: 0,
+    width: 0.5,
+    height: 16,
+    fill: handleLineColor,
+    stroke: handleLineColor,
+    strokeWidth: 1
+  });
+  this._handleLineTwo = new Rect({
+    name: 'handleLineTwo',
+    x: handleX + 9.5,
+    y: 0,
+    width: 0.5,
+    height: 16,
+    fill: handleLineColor,
+    stroke: handleLineColor,
+    strokeWidth: 1
+  });
+  this._handleLineSingle = new Rect({
+    name: 'handleLineSingle',
+    x: handleX + 7,
+    y: 0,
+    width: 0.5,
+    height: 16,
+    fill: handleLineColor,
+    stroke: handleLineColor,
     strokeWidth: 1,
-    cornerRadius: 2
+    visible: false
   });
 
   // Vertical Line - create with default y and points, the real values
   // are set in fitToView().
   this._line = new Line({
     x: 0,
-    y: 0,
-    stroke: this._options.color,
-    strokeWidth: 1
+    y: 0
   });
   group.add(this._label);
   // group.add(this._line);
+  group.add(this._handleLineOne);
+  group.add(this._handleLineTwo);
+  group.add(this._handleLineSingle);
   group.add(this._handle);
   this.fitToView();
   this.bindEventHandlers(group);
+  setTimeout(function () {
+    var focusedSegmentShape;
+    var segmentShapes = _this._options.layer._segmentShapes;
+    for (var _i = 0, _Object$entries = Object.entries(segmentShapes); _i < _Object$entries.length; _i++) {
+      var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 1),
+        value = _Object$entries$_i[0];
+      var segmentShape = segmentShapes[value];
+      if (segmentShape._endMarker !== null) {
+        focusedSegmentShape = segmentShape;
+        break;
+      }
+    }
+    var segmentShapeWidth = focusedSegmentShape._overlay.width();
+    if (segmentShapeWidth <= 32.5) {
+      var markerInfo = _this.getMarkerInfo(focusedSegmentShape);
+      _this.updateMarkersSmall(segmentShapeWidth, markerInfo);
+    }
+  }, 0);
 };
 DefaultSegmentMarker.prototype.bindEventHandlers = function (group) {
   var self = this;
@@ -2437,45 +2530,126 @@ DefaultSegmentMarker.prototype.bindEventHandlers = function (group) {
 
   if (self._options.draggable) {
     group.on('dragstart', function () {
-      self._handle.attrs.fill = '#5c9af5'; // blueberry-500
-      self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+      // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+      // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
       // if (self._options.startMarker) {
       //   self._label.setX(xPosition - self._label.getWidth());
       // }
 
       // self._label.show();
     });
-
     group.on('dragend', function () {
       // self._label.hide();
     });
   }
   self._handle.on('mouseover touchstart', function () {
-    document.body.style.cursor = 'pointer';
-    self._handle.attrs.fill = '#5c9af5'; // blueberry-500
-    self._handle.attrs.stroke = '#5c9af5'; // blueberry-500
+    document.body.style.cursor = 'col-resize';
+    // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
+    // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
     // if (self._options.startMarker) {
     //   self._label.setX(xPosition - self._label.getWidth());
     // }
 
     // self._label.show();
+    this.parent.parent.draw();
   });
-
   self._handle.on('mouseout touchend', function () {
     document.body.style.cursor = 'default';
-    self._handle.attrs.fill = '#3A7BD9'; // blueberry-400
-    self._handle.attrs.stroke = '#3A7BD9'; // blueberry-400
+    // self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
+    // self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
     // self._label.hide();
+    this.parent.parent.draw();
   });
 };
-
 DefaultSegmentMarker.prototype.fitToView = function () {
   var height = this._options.layer.getHeight();
   this._label.y(height / 2 - 5);
-  this._handle.y(height / 2 - 15.5);
-  this._line.points([0.5, 0, 0.5, height]);
+  this._handle.y(height / 2 + 45);
+  this._handleLineOne.y(height / 2 + 61);
+  this._handleLineTwo.y(height / 2 + 61);
+  this._handleLineSingle.y(height / 2 + 61);
+  // this._line.points([0.5, 0, 0.5, height]);
+};
+
+DefaultSegmentMarker.prototype.updateMarkersSmall = function (segmentShapeWidth, markerInfo) {
+  var endMarkerHandleLineSingle = markerInfo.endMarkerHandleLineSingle,
+    startMarkerHandleLineSingle = markerInfo.startMarkerHandleLineSingle;
+  var newHandleWidth = segmentShapeWidth / 2 - 0.5;
+  markerInfo.endMarker._handle.x(-newHandleWidth + 1);
+  markerInfo.startMarker._handle.attrs.width = newHandleWidth;
+  markerInfo.endMarker._handle.attrs.width = newHandleWidth;
+  markerInfo.endMarkerHandleLines.forEach(function (line) {
+    return line.hide();
+  });
+  endMarkerHandleLineSingle.show();
+  endMarkerHandleLineSingle.x(newHandleWidth / 2 - newHandleWidth);
+  markerInfo.startMarkerHandleLines.forEach(function (line) {
+    return line.hide();
+  });
+  startMarkerHandleLineSingle.show();
+  startMarkerHandleLineSingle.x(newHandleWidth / 2);
+};
+DefaultSegmentMarker.prototype.getMarkerInfo = function (segmentShape) {
+  var _endMarker = segmentShape._endMarker,
+    _startMarker = segmentShape._startMarker;
+  var endMarker = _endMarker._marker;
+  var endMarkerGroupChildren = _endMarker._group.children;
+  var startMarker = _startMarker._marker;
+  var startMarkerGroupChildren = _startMarker._group.children;
+  var endMarkerHandleLines = endMarkerGroupChildren.filter(function (child) {
+    return child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo';
+  });
+  var endMarkerHandleLineSingle = endMarkerGroupChildren.find(function (child) {
+    return child.attrs.name === 'handleLineSingle';
+  });
+  var startMarkerHandleLines = startMarkerGroupChildren.filter(function (child) {
+    return child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo';
+  });
+  var startMarkerHandleLineSingle = startMarkerGroupChildren.find(function (child) {
+    return child.attrs.name === 'handleLineSingle';
+  });
+  return {
+    endMarker: endMarker,
+    startMarker: startMarker,
+    endMarkerHandleLines: endMarkerHandleLines,
+    endMarkerHandleLineSingle: endMarkerHandleLineSingle,
+    startMarkerHandleLines: startMarkerHandleLines,
+    startMarkerHandleLineSingle: startMarkerHandleLineSingle
+  };
 };
 DefaultSegmentMarker.prototype.timeUpdated = function (time) {
+  var focusedSegmentShape;
+  var segmentShapes = this._options.layer._segmentShapes;
+  for (var _i2 = 0, _Object$entries2 = Object.entries(segmentShapes); _i2 < _Object$entries2.length; _i2++) {
+    var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i2], 1),
+      value = _Object$entries2$_i[0];
+    var segmentShape = segmentShapes[value];
+    if (segmentShape._endMarker !== null) {
+      focusedSegmentShape = segmentShape;
+      break;
+    }
+  }
+  var markerInfo = this.getMarkerInfo(focusedSegmentShape);
+  var segmentShapeWidth = focusedSegmentShape._overlay.width();
+  if (segmentShapeWidth <= 32.5) {
+    this.updateMarkersSmall(segmentShapeWidth, markerInfo);
+  } else {
+    var handleX = -(15 / 2) - 8;
+    var startHandleX = handleX * -1 - 14.9;
+    var endHandleX = handleX;
+    markerInfo.endMarker._handle.x(endHandleX);
+    markerInfo.startMarker._handle.x(startHandleX);
+    markerInfo.startMarker._handle.attrs.width = 15;
+    markerInfo.endMarker._handle.attrs.width = 15;
+    markerInfo.endMarkerHandleLines.forEach(function (line) {
+      return line.show();
+    });
+    markerInfo.endMarkerHandleLineSingle.hide();
+    markerInfo.startMarkerHandleLines.forEach(function (line) {
+      return line.show();
+    });
+    markerInfo.startMarkerHandleLineSingle.hide();
+  }
   this._label.setText(this._options.layer.formatTime(time));
 };
 
@@ -4280,12 +4454,12 @@ function SegmentShape(segment, peaks, layer, view) {
   // Create with default y and height, the real values are set in fitToView().
   var segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
   var segmentEndOffset = this._view.timeToPixelOffset(this._segment.endTime);
-  var overlayRectHeight = clamp(0, this._view.getHeight() * this._overlayOffset);
+  var overlayRectHeight = clamp(0, this._view.getHeight());
   this._overlay = new Konva.Group({
     name: 'segment-overlay',
     segment: this._segment,
     x: segmentStartOffset,
-    y: -10,
+    y: 0,
     width: segmentEndOffset - segmentStartOffset,
     height: this._view.getHeight(),
     clipX: 0,
@@ -4381,6 +4555,8 @@ SegmentShape.prototype.update = function (options) {
   this._color = this._segment.color;
   this._borderColor = this._segment.bordercolor;
   if (this._overlayText) {
+    var labelColor = this._segment.labelColor;
+    this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
   var segmentOptions = this._view.getViewOptions().segmentOptions;
@@ -4507,10 +4683,7 @@ SegmentShape.prototype._createMarkers = function () {
   }
 };
 SegmentShape.prototype._onMouseEnter = function (event) {
-  if (this._label) {
-    this._label.moveToTop();
-    this._label.show();
-  }
+  if (this._label) ;
   this._peaks.emit('segments.mouseenter', {
     segment: this._segment,
     evt: event.evt
@@ -5401,7 +5574,7 @@ function WaveformOverview(waveformData, container, peaks) {
   peaks.on('player.pause', self._onPause);
   peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
   peaks.on('window_resize', self._onWindowResize);
-  self._amplitudeScale = 1;
+  self._amplitudeScale = 1.0;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
   self._enableSeek = true;
   if (self._viewOptions.formatPlayheadTime) {
