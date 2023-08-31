@@ -444,7 +444,9 @@ WaveformZoomView.prototype._syncPlayhead = function(time) {
     // TODO: move this code to animation function?
     // TODO: don't scroll if user has positioned view manually (e.g., using
     // the keyboard)
-    const endThreshold = this._frameOffset + this._width - (this._width / 2) - this._autoScrollOffset;
+    let endThreshold = this._frameOffset + this._width;
+    
+    endThreshold = endThreshold - (this._width / 2) - this._autoScrollOffset;
 
     if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
       this._frameOffset = pixelIndex - Math.round(this._width / 2) - this._autoScrollOffset;
