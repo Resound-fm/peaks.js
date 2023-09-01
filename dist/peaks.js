@@ -353,14 +353,14 @@
 	    return a;
 	  }
 	}
-	function _typeof(o) {
+	function _typeof$1(o) {
 	  "@babel/helpers - typeof";
 
-	  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+	  return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
 	    return typeof o;
 	  } : function (o) {
 	    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-	  }, _typeof(o);
+	  }, _typeof$1(o);
 	}
 	function _classCallCheck(instance, Constructor) {
 	  if (!(instance instanceof Constructor)) {
@@ -1457,7 +1457,7 @@
 	      var desc;
 	      obj.visitedByCircularReferenceRemoval = true;
 	      for (var key in obj) {
-	        if (!(obj.hasOwnProperty(key) && obj[key] && _typeof(obj[key]) == 'object')) {
+	        if (!(obj.hasOwnProperty(key) && obj[key] && _typeof$1(obj[key]) == 'object')) {
 	          continue;
 	        }
 	        desc = Object.getOwnPropertyDescriptor(obj, key);
@@ -3061,7 +3061,7 @@
 	            for (n = 0; n < len; n++) {
 	              filter = filters[n];
 	              if (typeof filter !== 'function') {
-	                Util_1$6.Util.error('Filter should be type of function, but got ' + _typeof(filter) + ' instead. Please check correct filters');
+	                Util_1$6.Util.error('Filter should be type of function, but got ' + _typeof$1(filter) + ' instead. Please check correct filters');
 	                continue;
 	              }
 	              filter.call(this, imageData);
@@ -5015,7 +5015,7 @@
 	    }, {
 	      key: "setContainer",
 	      value: function setContainer(container) {
-	        if (_typeof(container) === STRING) {
+	        if (_typeof$1(container) === STRING) {
 	          if (container.charAt(0) === '.') {
 	            var className = container.slice(1);
 	            container = document.getElementsByClassName(className)[0];
@@ -7685,7 +7685,7 @@
 	 */
 
 	function isObject(value) {
-	  return value !== null && _typeof(value) === 'object' && !Array.isArray(value);
+	  return value !== null && _typeof$1(value) === 'object' && !Array.isArray(value);
 	}
 
 	/**
@@ -7697,6 +7697,17 @@
 
 	function isString(value) {
 	  return typeof value === 'string';
+	}
+
+	/**
+	 * Checks whether the given value is a valid ArrayBuffer.
+	 *
+	 * @param {ArrayBuffer} value The value to test
+	 * @returns {Boolean}
+	 */
+
+	function isArrayBuffer(value) {
+	  return Object.prototype.toString.call(value).includes('ArrayBuffer');
 	}
 
 	/**
@@ -7779,7 +7790,7 @@
 	  if (isHeadless || navigator.webdriver) {
 	    return false;
 	  }
-	  return (typeof document === "undefined" ? "undefined" : _typeof(document)) === 'object' && 'visibilityState' in document && document.visibilityState === 'visible';
+	  return (typeof document === "undefined" ? "undefined" : _typeof$1(document)) === 'object' && 'visibilityState' in document && document.visibilityState === 'visible';
 	}
 	var requestAnimationFrame$1 = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 	var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
@@ -12798,7 +12809,7 @@
 	 * @param {String} options.fontStyle
 	 */
 
-	function WaveformAxis$1(view, options) {
+	function WaveformAxis(view, options) {
 	  var self = this;
 	  self._axisGridlineColor = options.axisGridlineColor;
 	  self._axisLabelColor = options.axisLabelColor;
@@ -12813,14 +12824,14 @@
 	      return formatTime(time, 0);
 	    };
 	  }
-	  self._axisLabelFont = WaveformAxis$1._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
+	  self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
 	  self._axisShape = new Konva.Shape({
 	    sceneFunc: function sceneFunc(context) {
 	      self._drawAxis(context, view);
 	    }
 	  });
 	}
-	WaveformAxis$1._buildFontString = function (fontFamily, fontSize, fontStyle) {
+	WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
 	  if (!fontSize) {
 	    fontSize = 11;
 	  }
@@ -12832,10 +12843,10 @@
 	  }
 	  return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
 	};
-	WaveformAxis$1.prototype.addToLayer = function (layer) {
+	WaveformAxis.prototype.addToLayer = function (layer) {
 	  layer.add(this._axisShape);
 	};
-	WaveformAxis$1.prototype.showAxisLabels = function (show, options) {
+	WaveformAxis.prototype.showAxisLabels = function (show, options) {
 	  this._showAxisLabels = show;
 	  if (options) {
 	    if (objectHasProperty(options, 'topMarkerHeight')) {
@@ -12858,7 +12869,7 @@
 	 * @returns {Number}
 	 */
 
-	WaveformAxis$1.prototype._getAxisLabelScale = function (view) {
+	WaveformAxis.prototype._getAxisLabelScale = function (view) {
 	  var baseSecs = 1; // seconds
 	  var steps = [1, 2, 5, 10, 20, 30];
 	  var minSpacing = 60;
@@ -12886,7 +12897,7 @@
 	 * @param {WaveformOverview|WaveformZoomView} view
 	 */
 
-	WaveformAxis$1.prototype._drawAxis = function (context, view) {
+	WaveformAxis.prototype._drawAxis = function (context, view) {
 	  var currentFrameStartTime = view.getStartTime();
 
 	  // Draw axis markers
@@ -13551,7 +13562,7 @@
 	  this._axisLayer = new Konva.Layer({
 	    listening: false
 	  });
-	  this._axis = new WaveformAxis$1(this, this._viewOptions);
+	  this._axis = new WaveformAxis(this, this._viewOptions);
 	  this._axis.addToLayer(this._axisLayer);
 	  this._stage.add(this._axisLayer);
 	};
@@ -14486,7 +14497,7 @@
 	  this._axisLayer = new Konva.Layer({
 	    listening: false
 	  });
-	  this._axis = new WaveformAxis$1(this, this._viewOptions);
+	  this._axis = new WaveformAxis(this, this._viewOptions);
 	  this._axis.addToLayer(this._axisLayer);
 	  this._stage.add(this._axisLayer);
 	};
@@ -15055,172 +15066,1036 @@
 	};
 
 	/**
-	 * @file
-	 *
-	 * Defines the {@link WaveformAxis} class.
-	 *
-	 * @module waveform-axis
+	 * Provides access to the waveform data for a single audio channel.
 	 */
-
-	/**
-	 * Creates the waveform axis shapes and adds them to the given view layer.
-	 *
-	 * @class
-	 * @alias WaveformAxis
-	 *
-	 * @param {WaveformOverview|WaveformZoomView} view
-	 * @param {Object} options
-	 * @param {String} options.axisGridlineColor
-	 * @param {String} options.axisLabelColor
-	 * @param {Boolean} options.showAxisLabels
-	 * @param {Function} options.formatAxisTime
-	 * @param {String} options.fontFamily
-	 * @param {Number} options.fontSize
-	 * @param {String} options.fontStyle
-	 */
-
-	function WaveformAxis(view, options) {
-	  var self = this;
-	  self._axisGridlineColor = options.axisGridlineColor;
-	  self._axisLabelColor = options.axisLabelColor;
-	  self._showAxisLabels = options.showAxisLabels;
-	  self._axisTopMarkerHeight = options.axisTopMarkerHeight;
-	  self._axisBottomMarkerHeight = options.axisBottomMarkerHeight;
-	  if (options.formatAxisTime) {
-	    self._formatAxisTime = options.formatAxisTime;
-	  } else {
-	    self._formatAxisTime = function (time) {
-	      // precision = 0, drops the fractional seconds
-	      return formatTime(time, 0);
-	    };
-	  }
-	  self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
-	  self._axisShape = new Konva.Shape({
-	    sceneFunc: function sceneFunc(context) {
-	      self._drawAxis(context, view);
-	    }
-	  });
+	function WaveformDataChannel(waveformData, channelIndex) {
+	  this._waveformData = waveformData;
+	  this._channelIndex = channelIndex;
 	}
-	WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
-	  if (!fontSize) {
-	    fontSize = 11;
-	  }
-	  if (!fontFamily) {
-	    fontFamily = 'sans-serif';
-	  }
-	  if (!fontStyle) {
-	    fontStyle = 'normal';
-	  }
-	  return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
+	/**
+	 * Returns the waveform minimum at the given index position.
+	 */
+
+	WaveformDataChannel.prototype.min_sample = function (index) {
+	  var offset = (index * this._waveformData.channels + this._channelIndex) * 2;
+	  return this._waveformData._at(offset);
 	};
-	WaveformAxis.prototype.addToLayer = function (layer) {
-	  layer.add(this._axisShape);
+	/**
+	 * Returns the waveform maximum at the given index position.
+	 */
+
+	WaveformDataChannel.prototype.max_sample = function (index) {
+	  var offset = (index * this._waveformData.channels + this._channelIndex) * 2 + 1;
+	  return this._waveformData._at(offset);
 	};
-	WaveformAxis.prototype.showAxisLabels = function (show, options) {
-	  this._showAxisLabels = show;
-	  if (options) {
-	    if (objectHasProperty(options, 'topMarkerHeight')) {
-	      this._axisTopMarkerHeight = options.topMarkerHeight;
-	    }
-	    if (objectHasProperty(options, 'bottomMarkerHeight')) {
-	      this._axisBottomMarkerHeight = options.bottomMarkerHeight;
-	    }
-	  }
+	/**
+	 * Sets the waveform minimum at the given index position.
+	 */
+
+	WaveformDataChannel.prototype.set_min_sample = function (index, sample) {
+	  var offset = (index * this._waveformData.channels + this._channelIndex) * 2;
+	  return this._waveformData._set_at(offset, sample);
+	};
+	/**
+	 * Sets the waveform maximum at the given index position.
+	 */
+
+	WaveformDataChannel.prototype.set_max_sample = function (index, sample) {
+	  var offset = (index * this._waveformData.channels + this._channelIndex) * 2 + 1;
+	  return this._waveformData._set_at(offset, sample);
+	};
+	/**
+	 * Returns all the waveform minimum values as an array.
+	 */
+
+	WaveformDataChannel.prototype.min_array = function () {
+	  return this._waveformData._offsetValues(0, this._waveformData.length, this._channelIndex * 2);
+	};
+	/**
+	 * Returns all the waveform maximum values as an array.
+	 */
+
+	WaveformDataChannel.prototype.max_array = function () {
+	  return this._waveformData._offsetValues(0, this._waveformData.length, this._channelIndex * 2 + 1);
 	};
 
 	/**
-	 * Returns number of seconds for each x-axis marker, appropriate for the
-	 * current zoom level, ensuring that markers are not too close together
-	 * and that markers are placed at intuitive time intervals (i.e., every 1,
-	 * 2, 5, 10, 20, 30 seconds, then every 1, 2, 5, 10, 20, 30 minutes, then
-	 * every 1, 2, 5, 10, 20, 30 hours).
+	 * AudioBuffer-based WaveformData generator
 	 *
-	 * @param {WaveformOverview|WaveformZoomView} view
-	 * @returns {Number}
+	 * Adapted from BlockFile::CalcSummary in Audacity, with permission.
+	 * See https://code.google.com/p/audacity/source/browse/audacity-src/trunk/src/BlockFile.cpp
 	 */
+	var INT8_MAX = 127;
+	var INT8_MIN = -128;
+	function calculateWaveformDataLength(audio_sample_count, scale) {
+	  var data_length = Math.floor(audio_sample_count / scale);
+	  var samples_remaining = audio_sample_count - data_length * scale;
+	  if (samples_remaining > 0) {
+	    data_length++;
+	  }
+	  return data_length;
+	}
+	function generateWaveformData(options) {
+	  var scale = options.scale;
+	  var amplitude_scale = options.amplitude_scale;
+	  var split_channels = options.split_channels;
+	  var length = options.length;
+	  var sample_rate = options.sample_rate;
+	  var channels = options.channels.map(function (channel) {
+	    return new Float32Array(channel);
+	  });
+	  var output_channels = split_channels ? channels.length : 1;
+	  var version = output_channels === 1 ? 1 : 2;
+	  var header_size = version === 1 ? 20 : 24;
+	  var data_length = calculateWaveformDataLength(length, scale);
+	  var total_size = header_size + data_length * 2 * output_channels;
+	  var buffer = new ArrayBuffer(total_size);
+	  var data_view = new DataView(buffer);
+	  var scale_counter = 0;
+	  var offset = header_size;
+	  var channel, i;
+	  var min_value = new Array(output_channels);
+	  var max_value = new Array(output_channels);
+	  for (channel = 0; channel < output_channels; channel++) {
+	    min_value[channel] = Infinity;
+	    max_value[channel] = -Infinity;
+	  }
+	  data_view.setInt32(0, version, true); // Version
 
-	WaveformAxis.prototype._getAxisLabelScale = function (view) {
-	  var baseSecs = 1; // seconds
-	  var steps = [1, 2, 5, 10, 20, 30];
-	  var minSpacing = 60;
-	  var index = 0;
-	  var secs;
-	  for (;;) {
-	    secs = baseSecs * steps[index];
-	    var pixels = view.timeToPixels(secs);
-	    if (pixels < minSpacing) {
-	      if (++index === steps.length) {
-	        baseSecs *= 60; // seconds -> minutes -> hours
-	        index = 0;
+	  data_view.setUint32(4, 1, true); // Is 8 bit?
+
+	  data_view.setInt32(8, sample_rate, true); // Sample rate
+
+	  data_view.setInt32(12, scale, true); // Scale
+
+	  data_view.setInt32(16, data_length, true); // Length
+
+	  if (version === 2) {
+	    data_view.setInt32(20, output_channels, true);
+	  }
+	  for (i = 0; i < length; i++) {
+	    var sample = 0;
+	    if (output_channels === 1) {
+	      for (channel = 0; channel < channels.length; ++channel) {
+	        sample += channels[channel][i];
+	      }
+	      sample = Math.floor(INT8_MAX * sample * amplitude_scale / channels.length);
+	      if (sample < min_value[0]) {
+	        min_value[0] = sample;
+	        if (min_value[0] < INT8_MIN) {
+	          min_value[0] = INT8_MIN;
+	        }
+	      }
+	      if (sample > max_value[0]) {
+	        max_value[0] = sample;
+	        if (max_value[0] > INT8_MAX) {
+	          max_value[0] = INT8_MAX;
+	        }
 	      }
 	    } else {
-	      break;
+	      for (channel = 0; channel < output_channels; ++channel) {
+	        sample = Math.floor(INT8_MAX * channels[channel][i] * amplitude_scale);
+	        if (sample < min_value[channel]) {
+	          min_value[channel] = sample;
+	          if (min_value[channel] < INT8_MIN) {
+	            min_value[channel] = INT8_MIN;
+	          }
+	        }
+	        if (sample > max_value[channel]) {
+	          max_value[channel] = sample;
+	          if (max_value[channel] > INT8_MAX) {
+	            max_value[channel] = INT8_MAX;
+	          }
+	        }
+	      }
+	    }
+	    if (++scale_counter === scale) {
+	      for (channel = 0; channel < output_channels; channel++) {
+	        data_view.setInt8(offset++, min_value[channel]);
+	        data_view.setInt8(offset++, max_value[channel]);
+	        min_value[channel] = Infinity;
+	        max_value[channel] = -Infinity;
+	      }
+	      scale_counter = 0;
 	    }
 	  }
-	  return secs;
+	  if (scale_counter > 0) {
+	    for (channel = 0; channel < output_channels; channel++) {
+	      data_view.setInt8(offset++, min_value[channel]);
+	      data_view.setInt8(offset++, max_value[channel]);
+	    }
+	  }
+	  return buffer;
+	}
+	function _typeof(obj) {
+	  "@babel/helpers - typeof";
+
+	  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+	    _typeof = function _typeof(obj) {
+	      return typeof obj;
+	    };
+	  } else {
+	    _typeof = function _typeof(obj) {
+	      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+	    };
+	  }
+	  return _typeof(obj);
+	}
+	function isJsonWaveformData(data) {
+	  return data && _typeof(data) === "object" && "sample_rate" in data && "samples_per_pixel" in data && "bits" in data && "length" in data && "data" in data;
+	}
+	function isBinaryWaveformData(data) {
+	  var isCompatible = data && _typeof(data) === "object" && "byteLength" in data;
+	  if (isCompatible) {
+	    var view = new DataView(data);
+	    var version = view.getInt32(0, true);
+	    if (version !== 1 && version !== 2) {
+	      throw new TypeError("WaveformData.create(): This waveform data version not supported");
+	    }
+	  }
+	  return isCompatible;
+	}
+	function convertJsonToBinary(data) {
+	  var waveformData = data.data;
+	  var channels = data.channels || 1;
+	  var header_size = 24; // version 2
+
+	  var bytes_per_sample = data.bits === 8 ? 1 : 2;
+	  var expected_length = data.length * 2 * channels;
+	  if (waveformData.length !== expected_length) {
+	    throw new Error("WaveformData.create(): Length mismatch in JSON waveform data");
+	  }
+	  var total_size = header_size + waveformData.length * bytes_per_sample;
+	  var array_buffer = new ArrayBuffer(total_size);
+	  var data_object = new DataView(array_buffer);
+	  data_object.setInt32(0, 2, true); // Version
+
+	  data_object.setUint32(4, data.bits === 8, true);
+	  data_object.setInt32(8, data.sample_rate, true);
+	  data_object.setInt32(12, data.samples_per_pixel, true);
+	  data_object.setInt32(16, data.length, true);
+	  data_object.setInt32(20, channels, true);
+	  var index = header_size;
+	  var i;
+	  if (data.bits === 8) {
+	    for (i = 0; i < waveformData.length; i++) {
+	      data_object.setInt8(index++, waveformData[i], true);
+	    }
+	  } else {
+	    for (i = 0; i < waveformData.length; i++) {
+	      data_object.setInt16(index, waveformData[i], true);
+	      index += 2;
+	    }
+	  }
+	  return array_buffer;
+	}
+	function decodeBase64(base64, enableUnicode) {
+	  var binaryString = atob(base64);
+	  if (enableUnicode) {
+	    var binaryView = new Uint8Array(binaryString.length);
+	    for (var i = 0, n = binaryString.length; i < n; ++i) {
+	      binaryView[i] = binaryString.charCodeAt(i);
+	    }
+	    return String.fromCharCode.apply(null, new Uint16Array(binaryView.buffer));
+	  }
+	  return binaryString;
+	}
+	function createURL(base64, sourcemapArg, enableUnicodeArg) {
+	  var sourcemap = sourcemapArg === undefined ? null : sourcemapArg;
+	  var enableUnicode = enableUnicodeArg === undefined ? false : enableUnicodeArg;
+	  var source = decodeBase64(base64, enableUnicode);
+	  var start = source.indexOf('\n', 10) + 1;
+	  var body = source.substring(start) + (sourcemap ? '\/\/# sourceMappingURL=' + sourcemap : '');
+	  var blob = new Blob([body], {
+	    type: 'application/javascript'
+	  });
+	  return URL.createObjectURL(blob);
+	}
+	function createBase64WorkerFactory(base64, sourcemapArg, enableUnicodeArg) {
+	  var url;
+	  return function WorkerFactory(options) {
+	    url = url || createURL(base64, sourcemapArg, enableUnicodeArg);
+	    return new Worker(url, options);
+	  };
+	}
+	var WorkerFactory = createBase64WorkerFactory('Lyogcm9sbHVwLXBsdWdpbi13ZWItd29ya2VyLWxvYWRlciAqLwooZnVuY3Rpb24gKCkgewogICd1c2Ugc3RyaWN0JzsKCiAgLyoqCiAgICogQXVkaW9CdWZmZXItYmFzZWQgV2F2ZWZvcm1EYXRhIGdlbmVyYXRvcgogICAqCiAgICogQWRhcHRlZCBmcm9tIEJsb2NrRmlsZTo6Q2FsY1N1bW1hcnkgaW4gQXVkYWNpdHksIHdpdGggcGVybWlzc2lvbi4KICAgKiBTZWUgaHR0cHM6Ly9jb2RlLmdvb2dsZS5jb20vcC9hdWRhY2l0eS9zb3VyY2UvYnJvd3NlL2F1ZGFjaXR5LXNyYy90cnVuay9zcmMvQmxvY2tGaWxlLmNwcAogICAqLwogIHZhciBJTlQ4X01BWCA9IDEyNzsKICB2YXIgSU5UOF9NSU4gPSAtMTI4OwoKICBmdW5jdGlvbiBjYWxjdWxhdGVXYXZlZm9ybURhdGFMZW5ndGgoYXVkaW9fc2FtcGxlX2NvdW50LCBzY2FsZSkgewogICAgdmFyIGRhdGFfbGVuZ3RoID0gTWF0aC5mbG9vcihhdWRpb19zYW1wbGVfY291bnQgLyBzY2FsZSk7CiAgICB2YXIgc2FtcGxlc19yZW1haW5pbmcgPSBhdWRpb19zYW1wbGVfY291bnQgLSBkYXRhX2xlbmd0aCAqIHNjYWxlOwoKICAgIGlmIChzYW1wbGVzX3JlbWFpbmluZyA+IDApIHsKICAgICAgZGF0YV9sZW5ndGgrKzsKICAgIH0KCiAgICByZXR1cm4gZGF0YV9sZW5ndGg7CiAgfQoKICBmdW5jdGlvbiBnZW5lcmF0ZVdhdmVmb3JtRGF0YShvcHRpb25zKSB7CiAgICB2YXIgc2NhbGUgPSBvcHRpb25zLnNjYWxlOwogICAgdmFyIGFtcGxpdHVkZV9zY2FsZSA9IG9wdGlvbnMuYW1wbGl0dWRlX3NjYWxlOwogICAgdmFyIHNwbGl0X2NoYW5uZWxzID0gb3B0aW9ucy5zcGxpdF9jaGFubmVsczsKICAgIHZhciBsZW5ndGggPSBvcHRpb25zLmxlbmd0aDsKICAgIHZhciBzYW1wbGVfcmF0ZSA9IG9wdGlvbnMuc2FtcGxlX3JhdGU7CiAgICB2YXIgY2hhbm5lbHMgPSBvcHRpb25zLmNoYW5uZWxzLm1hcChmdW5jdGlvbiAoY2hhbm5lbCkgewogICAgICByZXR1cm4gbmV3IEZsb2F0MzJBcnJheShjaGFubmVsKTsKICAgIH0pOwogICAgdmFyIG91dHB1dF9jaGFubmVscyA9IHNwbGl0X2NoYW5uZWxzID8gY2hhbm5lbHMubGVuZ3RoIDogMTsKICAgIHZhciB2ZXJzaW9uID0gb3V0cHV0X2NoYW5uZWxzID09PSAxID8gMSA6IDI7CiAgICB2YXIgaGVhZGVyX3NpemUgPSB2ZXJzaW9uID09PSAxID8gMjAgOiAyNDsKICAgIHZhciBkYXRhX2xlbmd0aCA9IGNhbGN1bGF0ZVdhdmVmb3JtRGF0YUxlbmd0aChsZW5ndGgsIHNjYWxlKTsKICAgIHZhciB0b3RhbF9zaXplID0gaGVhZGVyX3NpemUgKyBkYXRhX2xlbmd0aCAqIDIgKiBvdXRwdXRfY2hhbm5lbHM7CiAgICB2YXIgYnVmZmVyID0gbmV3IEFycmF5QnVmZmVyKHRvdGFsX3NpemUpOwogICAgdmFyIGRhdGFfdmlldyA9IG5ldyBEYXRhVmlldyhidWZmZXIpOwogICAgdmFyIHNjYWxlX2NvdW50ZXIgPSAwOwogICAgdmFyIG9mZnNldCA9IGhlYWRlcl9zaXplOwogICAgdmFyIGNoYW5uZWwsIGk7CiAgICB2YXIgbWluX3ZhbHVlID0gbmV3IEFycmF5KG91dHB1dF9jaGFubmVscyk7CiAgICB2YXIgbWF4X3ZhbHVlID0gbmV3IEFycmF5KG91dHB1dF9jaGFubmVscyk7CgogICAgZm9yIChjaGFubmVsID0gMDsgY2hhbm5lbCA8IG91dHB1dF9jaGFubmVsczsgY2hhbm5lbCsrKSB7CiAgICAgIG1pbl92YWx1ZVtjaGFubmVsXSA9IEluZmluaXR5OwogICAgICBtYXhfdmFsdWVbY2hhbm5lbF0gPSAtSW5maW5pdHk7CiAgICB9CgogICAgZGF0YV92aWV3LnNldEludDMyKDAsIHZlcnNpb24sIHRydWUpOyAvLyBWZXJzaW9uCgogICAgZGF0YV92aWV3LnNldFVpbnQzMig0LCAxLCB0cnVlKTsgLy8gSXMgOCBiaXQ/CgogICAgZGF0YV92aWV3LnNldEludDMyKDgsIHNhbXBsZV9yYXRlLCB0cnVlKTsgLy8gU2FtcGxlIHJhdGUKCiAgICBkYXRhX3ZpZXcuc2V0SW50MzIoMTIsIHNjYWxlLCB0cnVlKTsgLy8gU2NhbGUKCiAgICBkYXRhX3ZpZXcuc2V0SW50MzIoMTYsIGRhdGFfbGVuZ3RoLCB0cnVlKTsgLy8gTGVuZ3RoCgogICAgaWYgKHZlcnNpb24gPT09IDIpIHsKICAgICAgZGF0YV92aWV3LnNldEludDMyKDIwLCBvdXRwdXRfY2hhbm5lbHMsIHRydWUpOwogICAgfQoKICAgIGZvciAoaSA9IDA7IGkgPCBsZW5ndGg7IGkrKykgewogICAgICB2YXIgc2FtcGxlID0gMDsKCiAgICAgIGlmIChvdXRwdXRfY2hhbm5lbHMgPT09IDEpIHsKICAgICAgICBmb3IgKGNoYW5uZWwgPSAwOyBjaGFubmVsIDwgY2hhbm5lbHMubGVuZ3RoOyArK2NoYW5uZWwpIHsKICAgICAgICAgIHNhbXBsZSArPSBjaGFubmVsc1tjaGFubmVsXVtpXTsKICAgICAgICB9CgogICAgICAgIHNhbXBsZSA9IE1hdGguZmxvb3IoSU5UOF9NQVggKiBzYW1wbGUgKiBhbXBsaXR1ZGVfc2NhbGUgLyBjaGFubmVscy5sZW5ndGgpOwoKICAgICAgICBpZiAoc2FtcGxlIDwgbWluX3ZhbHVlWzBdKSB7CiAgICAgICAgICBtaW5fdmFsdWVbMF0gPSBzYW1wbGU7CgogICAgICAgICAgaWYgKG1pbl92YWx1ZVswXSA8IElOVDhfTUlOKSB7CiAgICAgICAgICAgIG1pbl92YWx1ZVswXSA9IElOVDhfTUlOOwogICAgICAgICAgfQogICAgICAgIH0KCiAgICAgICAgaWYgKHNhbXBsZSA+IG1heF92YWx1ZVswXSkgewogICAgICAgICAgbWF4X3ZhbHVlWzBdID0gc2FtcGxlOwoKICAgICAgICAgIGlmIChtYXhfdmFsdWVbMF0gPiBJTlQ4X01BWCkgewogICAgICAgICAgICBtYXhfdmFsdWVbMF0gPSBJTlQ4X01BWDsKICAgICAgICAgIH0KICAgICAgICB9CiAgICAgIH0gZWxzZSB7CiAgICAgICAgZm9yIChjaGFubmVsID0gMDsgY2hhbm5lbCA8IG91dHB1dF9jaGFubmVsczsgKytjaGFubmVsKSB7CiAgICAgICAgICBzYW1wbGUgPSBNYXRoLmZsb29yKElOVDhfTUFYICogY2hhbm5lbHNbY2hhbm5lbF1baV0gKiBhbXBsaXR1ZGVfc2NhbGUpOwoKICAgICAgICAgIGlmIChzYW1wbGUgPCBtaW5fdmFsdWVbY2hhbm5lbF0pIHsKICAgICAgICAgICAgbWluX3ZhbHVlW2NoYW5uZWxdID0gc2FtcGxlOwoKICAgICAgICAgICAgaWYgKG1pbl92YWx1ZVtjaGFubmVsXSA8IElOVDhfTUlOKSB7CiAgICAgICAgICAgICAgbWluX3ZhbHVlW2NoYW5uZWxdID0gSU5UOF9NSU47CiAgICAgICAgICAgIH0KICAgICAgICAgIH0KCiAgICAgICAgICBpZiAoc2FtcGxlID4gbWF4X3ZhbHVlW2NoYW5uZWxdKSB7CiAgICAgICAgICAgIG1heF92YWx1ZVtjaGFubmVsXSA9IHNhbXBsZTsKCiAgICAgICAgICAgIGlmIChtYXhfdmFsdWVbY2hhbm5lbF0gPiBJTlQ4X01BWCkgewogICAgICAgICAgICAgIG1heF92YWx1ZVtjaGFubmVsXSA9IElOVDhfTUFYOwogICAgICAgICAgICB9CiAgICAgICAgICB9CiAgICAgICAgfQogICAgICB9CgogICAgICBpZiAoKytzY2FsZV9jb3VudGVyID09PSBzY2FsZSkgewogICAgICAgIGZvciAoY2hhbm5lbCA9IDA7IGNoYW5uZWwgPCBvdXRwdXRfY2hhbm5lbHM7IGNoYW5uZWwrKykgewogICAgICAgICAgZGF0YV92aWV3LnNldEludDgob2Zmc2V0KyssIG1pbl92YWx1ZVtjaGFubmVsXSk7CiAgICAgICAgICBkYXRhX3ZpZXcuc2V0SW50OChvZmZzZXQrKywgbWF4X3ZhbHVlW2NoYW5uZWxdKTsKICAgICAgICAgIG1pbl92YWx1ZVtjaGFubmVsXSA9IEluZmluaXR5OwogICAgICAgICAgbWF4X3ZhbHVlW2NoYW5uZWxdID0gLUluZmluaXR5OwogICAgICAgIH0KCiAgICAgICAgc2NhbGVfY291bnRlciA9IDA7CiAgICAgIH0KICAgIH0KCiAgICBpZiAoc2NhbGVfY291bnRlciA+IDApIHsKICAgICAgZm9yIChjaGFubmVsID0gMDsgY2hhbm5lbCA8IG91dHB1dF9jaGFubmVsczsgY2hhbm5lbCsrKSB7CiAgICAgICAgZGF0YV92aWV3LnNldEludDgob2Zmc2V0KyssIG1pbl92YWx1ZVtjaGFubmVsXSk7CiAgICAgICAgZGF0YV92aWV3LnNldEludDgob2Zmc2V0KyssIG1heF92YWx1ZVtjaGFubmVsXSk7CiAgICAgIH0KICAgIH0KCiAgICByZXR1cm4gYnVmZmVyOwogIH0KCiAgb25tZXNzYWdlID0gZnVuY3Rpb24gb25tZXNzYWdlKGV2dCkgewogICAgdmFyIGJ1ZmZlciA9IGdlbmVyYXRlV2F2ZWZvcm1EYXRhKGV2dC5kYXRhKTsgLy8gVHJhbnNmZXIgYnVmZmVyIHRvIHRoZSBjYWxsaW5nIHRocmVhZAoKICAgIHRoaXMucG9zdE1lc3NhZ2UoYnVmZmVyLCBbYnVmZmVyXSk7CiAgICB0aGlzLmNsb3NlKCk7CiAgfTsKCn0pKCk7Cgo=', null, false);
+	/* eslint-enable */
+
+	/**
+	 * Provides access to waveform data.
+	 */
+
+	function WaveformData(data) {
+	  if (isJsonWaveformData(data)) {
+	    data = convertJsonToBinary(data);
+	  }
+	  if (isBinaryWaveformData(data)) {
+	    this._data = new DataView(data);
+	    this._offset = this._version() === 2 ? 24 : 20;
+	    this._channels = [];
+	    for (var channel = 0; channel < this.channels; channel++) {
+	      this._channels[channel] = new WaveformDataChannel(this, channel);
+	    }
+	  } else {
+	    throw new TypeError("WaveformData.create(): Unknown data format");
+	  }
+	}
+	var defaultOptions = {
+	  scale: 512,
+	  amplitude_scale: 1.0,
+	  split_channels: false,
+	  disable_worker: false
+	};
+	function getOptions(options) {
+	  var opts = {
+	    scale: options.scale || defaultOptions.scale,
+	    amplitude_scale: options.amplitude_scale || defaultOptions.amplitude_scale,
+	    split_channels: options.split_channels || defaultOptions.split_channels,
+	    disable_worker: options.disable_worker || defaultOptions.disable_worker
+	  };
+	  return opts;
+	}
+	function getChannelData(audio_buffer) {
+	  var channels = [];
+	  for (var i = 0; i < audio_buffer.numberOfChannels; ++i) {
+	    channels.push(audio_buffer.getChannelData(i).buffer);
+	  }
+	  return channels;
+	}
+	function createFromAudioBuffer(audio_buffer, options, callback) {
+	  var channels = getChannelData(audio_buffer);
+	  if (options.disable_worker) {
+	    var buffer = generateWaveformData({
+	      scale: options.scale,
+	      amplitude_scale: options.amplitude_scale,
+	      split_channels: options.split_channels,
+	      length: audio_buffer.length,
+	      sample_rate: audio_buffer.sampleRate,
+	      channels: channels
+	    });
+	    callback(null, new WaveformData(buffer), audio_buffer);
+	  } else {
+	    var worker = new WorkerFactory();
+	    worker.onmessage = function (evt) {
+	      callback(null, new WaveformData(evt.data), audio_buffer);
+	    };
+	    worker.postMessage({
+	      scale: options.scale,
+	      amplitude_scale: options.amplitude_scale,
+	      split_channels: options.split_channels,
+	      length: audio_buffer.length,
+	      sample_rate: audio_buffer.sampleRate,
+	      channels: channels
+	    }, channels);
+	  }
+	}
+	function createFromArrayBuffer(audioContext, audioData, options, callback) {
+	  // The following function is a workaround for a Webkit bug where decodeAudioData
+	  // invokes the errorCallback with null instead of a DOMException.
+	  // See https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-decodeaudiodata
+	  // and http://stackoverflow.com/q/10365335/103396
+	  function errorCallback(error) {
+	    if (!error) {
+	      error = new DOMException("EncodingError");
+	    }
+	    callback(error);
+	  }
+	  audioContext.decodeAudioData(audioData, function (audio_buffer) {
+	    createFromAudioBuffer(audio_buffer, options, callback);
+	  }, errorCallback);
+	}
+	/**
+	 * Creates and returns a WaveformData instance from the given waveform data.
+	 */
+
+	WaveformData.create = function create(data) {
+	  return new WaveformData(data);
+	};
+	/**
+	 * Creates a WaveformData instance from audio.
+	 */
+
+	WaveformData.createFromAudio = function (options, callback) {
+	  var opts = getOptions(options);
+	  if (options.audio_context && options.array_buffer) {
+	    return createFromArrayBuffer(options.audio_context, options.array_buffer, opts, callback);
+	  } else if (options.audio_buffer) {
+	    return createFromAudioBuffer(options.audio_buffer, opts, callback);
+	  } else {
+	    throw new TypeError(
+	    // eslint-disable-next-line
+	    "WaveformData.createFromAudio(): Pass either an AudioContext and ArrayBuffer, or an AudioBuffer object");
+	  }
+	};
+	WaveformData.prototype = {
+	  /**
+	   * Creates and returns a new WaveformData object with resampled data.
+	   * Use this method to create waveform data at different zoom levels.
+	   *
+	   * Adapted from Sequence::GetWaveDisplay in Audacity, with permission.
+	   * https://code.google.com/p/audacity/source/browse/audacity-src/trunk/src/Sequence.cpp
+	   */
+	  resample: function resample(options) {
+	    options.scale = typeof options.scale === "number" ? options.scale : null;
+	    options.width = typeof options.width === "number" ? options.width : null;
+	    if (options.width != null && options.width <= 0) {
+	      throw new RangeError("WaveformData.resample(): width should be a positive integer value");
+	    }
+	    if (options.scale != null && options.scale <= 0) {
+	      throw new RangeError("WaveformData.resample(): scale should be a positive integer value");
+	    }
+	    if (!options.scale && !options.width) {
+	      throw new Error("WaveformData.resample(): Missing scale or width option");
+	    } // Scale we want to reach
+
+	    var output_samples_per_pixel = options.scale || Math.floor(this.duration * this.sample_rate / options.width);
+	    var scale = this.scale; // scale we are coming from
+	    // The amount of data we want to resample i.e. final zoom want to resample
+	    // all data but for intermediate zoom we want to resample subset
+
+	    var input_buffer_size = this.length;
+	    var input_buffer_length_samples = input_buffer_size * this.scale;
+	    var output_buffer_length_samples = Math.ceil(input_buffer_length_samples / output_samples_per_pixel);
+	    var output_header_size = 24; // version 2
+
+	    var bytes_per_sample = this.bits === 8 ? 1 : 2;
+	    var total_size = output_header_size + output_buffer_length_samples * 2 * this.channels * bytes_per_sample;
+	    var output_data = new ArrayBuffer(total_size);
+	    var output_dataview = new DataView(output_data);
+	    output_dataview.setInt32(0, 2, true); // Version
+
+	    output_dataview.setUint32(4, this.bits === 8, true); // Is 8 bit?
+
+	    output_dataview.setInt32(8, this.sample_rate, true);
+	    output_dataview.setInt32(12, output_samples_per_pixel, true);
+	    output_dataview.setInt32(16, output_buffer_length_samples, true);
+	    output_dataview.setInt32(20, this.channels, true);
+	    var waveform_data = new WaveformData(output_data);
+	    var input_index = 0;
+	    var output_index = 0;
+	    var channels = this.channels;
+	    var min = new Array(channels);
+	    var max = new Array(channels);
+	    var channel;
+	    for (channel = 0; channel < channels; ++channel) {
+	      if (input_buffer_size > 0) {
+	        min[channel] = this.channel(channel).min_sample(input_index);
+	        max[channel] = this.channel(channel).max_sample(input_index);
+	      } else {
+	        min[channel] = 0;
+	        max[channel] = 0;
+	      }
+	    }
+	    var min_value = this.bits === 8 ? -128 : -32768;
+	    var max_value = this.bits === 8 ? 127 : 32767;
+	    if (output_samples_per_pixel < scale) {
+	      throw new Error("WaveformData.resample(): Zoom level " + output_samples_per_pixel + " too low, minimum: " + scale);
+	    }
+	    var where, prev_where, stop, value, last_input_index;
+	    function sample_at_pixel(x) {
+	      return Math.floor(x * output_samples_per_pixel);
+	    }
+	    while (input_index < input_buffer_size) {
+	      while (Math.floor(sample_at_pixel(output_index) / scale) === input_index) {
+	        if (output_index > 0) {
+	          for (channel = 0; channel < channels; ++channel) {
+	            waveform_data.channel(channel).set_min_sample(output_index - 1, min[channel]);
+	            waveform_data.channel(channel).set_max_sample(output_index - 1, max[channel]);
+	          }
+	        }
+	        last_input_index = input_index;
+	        output_index++;
+	        where = sample_at_pixel(output_index);
+	        prev_where = sample_at_pixel(output_index - 1);
+	        if (where !== prev_where) {
+	          for (channel = 0; channel < channels; ++channel) {
+	            min[channel] = max_value;
+	            max[channel] = min_value;
+	          }
+	        }
+	      }
+	      where = sample_at_pixel(output_index);
+	      stop = Math.floor(where / scale);
+	      if (stop > input_buffer_size) {
+	        stop = input_buffer_size;
+	      }
+	      while (input_index < stop) {
+	        for (channel = 0; channel < channels; ++channel) {
+	          value = this.channel(channel).min_sample(input_index);
+	          if (value < min[channel]) {
+	            min[channel] = value;
+	          }
+	          value = this.channel(channel).max_sample(input_index);
+	          if (value > max[channel]) {
+	            max[channel] = value;
+	          }
+	        }
+	        input_index++;
+	      }
+	    }
+	    if (input_index !== last_input_index) {
+	      for (channel = 0; channel < channels; ++channel) {
+	        waveform_data.channel(channel).set_min_sample(output_index - 1, min[channel]);
+	        waveform_data.channel(channel).set_max_sample(output_index - 1, max[channel]);
+	      }
+	    }
+	    return waveform_data;
+	  },
+	  /**
+	   * Concatenates with one or more other waveforms, returning a new WaveformData object.
+	   */
+	  concat: function concat() {
+	    var self = this;
+	    var otherWaveforms = Array.prototype.slice.call(arguments); // Check that all the supplied waveforms are compatible
+
+	    otherWaveforms.forEach(function (otherWaveform) {
+	      if (self.channels !== otherWaveform.channels || self.sample_rate !== otherWaveform.sample_rate || self.bits !== otherWaveform.bits || self.scale !== otherWaveform.scale) {
+	        throw new Error("WaveformData.concat(): Waveforms are incompatible");
+	      }
+	    });
+	    var combinedBuffer = this._concatBuffers.apply(this, otherWaveforms);
+	    return WaveformData.create(combinedBuffer);
+	  },
+	  /**
+	   * Returns a new ArrayBuffer with the concatenated waveform.
+	   * All waveforms must have identical metadata (version, channels, etc)
+	   */
+	  _concatBuffers: function _concatBuffers() {
+	    var otherWaveforms = Array.prototype.slice.call(arguments);
+	    var headerSize = this._offset;
+	    var totalSize = headerSize;
+	    var totalDataLength = 0;
+	    var bufferCollection = [this].concat(otherWaveforms).map(function (w) {
+	      return w._data.buffer;
+	    });
+	    var i, buffer;
+	    for (i = 0; i < bufferCollection.length; i++) {
+	      buffer = bufferCollection[i];
+	      var dataSize = new DataView(buffer).getInt32(16, true);
+	      totalSize += buffer.byteLength - headerSize;
+	      totalDataLength += dataSize;
+	    }
+	    var totalBuffer = new ArrayBuffer(totalSize);
+	    var sourceHeader = new DataView(bufferCollection[0]);
+	    var totalBufferView = new DataView(totalBuffer); // Copy the header from the first chunk
+
+	    for (i = 0; i < headerSize; i++) {
+	      totalBufferView.setUint8(i, sourceHeader.getUint8(i));
+	    } // Rewrite the data-length header item to reflect all of the samples concatenated together
+
+	    totalBufferView.setInt32(16, totalDataLength, true);
+	    var offset = 0;
+	    var dataOfTotalBuffer = new Uint8Array(totalBuffer, headerSize);
+	    for (i = 0; i < bufferCollection.length; i++) {
+	      buffer = bufferCollection[i];
+	      dataOfTotalBuffer.set(new Uint8Array(buffer, headerSize), offset);
+	      offset += buffer.byteLength - headerSize;
+	    }
+	    return totalBuffer;
+	  },
+	  /**
+	   * Return the unpacked values for a particular offset.
+	   */
+	  _offsetValues: function getOffsetValues(start, length, correction) {
+	    var values = [];
+	    var channels = this.channels;
+	    correction += start * channels * 2; // offset the positioning query
+
+	    for (var i = 0; i < length; i++) {
+	      values.push(this._at(i * channels * 2 + correction));
+	    }
+	    return values;
+	  },
+	  /**
+	   * Returns the data format version number.
+	   */
+	  _version: function _version() {
+	    return this._data.getInt32(0, true);
+	  },
+	  /**
+	   * Returns the length of the waveform, in pixels.
+	   */
+	  get length() {
+	    return this._data.getUint32(16, true);
+	  },
+	  /**
+	   * Returns the number of bits per sample, either 8 or 16.
+	   */
+	  get bits() {
+	    var bits = Boolean(this._data.getUint32(4, true));
+	    return bits ? 8 : 16;
+	  },
+	  /**
+	   * Returns the (approximate) duration of the audio file, in seconds.
+	   */
+	  get duration() {
+	    return this.length * this.scale / this.sample_rate;
+	  },
+	  /**
+	   * Returns the number of pixels per second.
+	   */
+	  get pixels_per_second() {
+	    return this.sample_rate / this.scale;
+	  },
+	  /**
+	   * Returns the amount of time represented by a single pixel, in seconds.
+	   */
+	  get seconds_per_pixel() {
+	    return this.scale / this.sample_rate;
+	  },
+	  /**
+	   * Returns the number of waveform channels.
+	   */
+	  get channels() {
+	    if (this._version() === 2) {
+	      return this._data.getInt32(20, true);
+	    } else {
+	      return 1;
+	    }
+	  },
+	  /**
+	   * Returns a waveform channel.
+	   */
+	  channel: function channel(index) {
+	    if (index >= 0 && index < this._channels.length) {
+	      return this._channels[index];
+	    } else {
+	      throw new RangeError("Invalid channel: " + index);
+	    }
+	  },
+	  /**
+	   * Returns the number of audio samples per second.
+	   */
+	  get sample_rate() {
+	    return this._data.getInt32(8, true);
+	  },
+	  /**
+	   * Returns the number of audio samples per pixel.
+	   */
+	  get scale() {
+	    return this._data.getInt32(12, true);
+	  },
+	  /**
+	   * Returns a waveform data value at a specific offset.
+	   */
+	  _at: function at_sample(index) {
+	    if (this.bits === 8) {
+	      return this._data.getInt8(this._offset + index);
+	    } else {
+	      return this._data.getInt16(this._offset + index * 2, true);
+	    }
+	  },
+	  /**
+	   * Sets a waveform data value at a specific offset.
+	   */
+	  _set_at: function set_at(index, sample) {
+	    if (this.bits === 8) {
+	      return this._data.setInt8(this._offset + index, sample);
+	    } else {
+	      return this._data.setInt16(this._offset + index * 2, sample, true);
+	    }
+	  },
+	  /**
+	   * Returns the waveform data index position for a given time.
+	   */
+	  at_time: function at_time(time) {
+	    return Math.floor(time * this.sample_rate / this.scale);
+	  },
+	  /**
+	   * Returns the time in seconds for a given index.
+	   */
+	  time: function time(index) {
+	    return index * this.scale / this.sample_rate;
+	  },
+	  /**
+	   * Returns an object containing the waveform data.
+	   */
+	  toJSON: function toJSON() {
+	    var waveform = {
+	      version: 2,
+	      channels: this.channels,
+	      sample_rate: this.sample_rate,
+	      samples_per_pixel: this.scale,
+	      bits: this.bits,
+	      length: this.length,
+	      data: []
+	    };
+	    for (var i = 0; i < this.length; i++) {
+	      for (var channel = 0; channel < this.channels; channel++) {
+	        waveform.data.push(this.channel(channel).min_sample(i));
+	        waveform.data.push(this.channel(channel).max_sample(i));
+	      }
+	    }
+	    return waveform;
+	  },
+	  /**
+	   * Returns the waveform data in binary format as an ArrayBuffer.
+	   */
+	  toArrayBuffer: function toArrayBuffer() {
+	    return this._data.buffer;
+	  }
 	};
 
 	/**
-	 * Draws the time axis and labels onto a view.
+	 * @file
 	 *
-	 * @param {Konva.Context} context The context to draw on.
-	 * @param {WaveformOverview|WaveformZoomView} view
+	 * Defines the {@link WaveformBuilder} class.
+	 *
+	 * @module waveform-builder
+	 */
+	var isXhr2 = ('withCredentials' in new XMLHttpRequest());
+
+	/**
+	 * Creates and returns a WaveformData object, either by requesting the
+	 * waveform data from the server, or by creating the waveform data using the
+	 * Web Audio API.
+	 *
+	 * @class
+	 * @alias WaveformBuilder
+	 *
+	 * @param {Peaks} peaks
 	 */
 
-	WaveformAxis.prototype._drawAxis = function (context, view) {
-	  var currentFrameStartTime = view.getStartTime();
+	function WaveformBuilder(peaks) {
+	  this._peaks = peaks;
+	}
 
-	  // Time interval between axis markers (seconds)
-	  var axisLabelIntervalSecs = this._getAxisLabelScale(view);
+	/**
+	 * Options for requesting remote waveform data.
+	 *
+	 * @typedef {Object} RemoteWaveformDataOptions
+	 * @global
+	 * @property {String=} arraybuffer
+	 * @property {String=} json
+	 */
 
-	  // Time of first axis marker (seconds)
-	  var firstAxisLabelSecs = roundUpToNearest(currentFrameStartTime, axisLabelIntervalSecs);
+	/**
+	 * Options for supplying local waveform data.
+	 *
+	 * @typedef {Object} LocalWaveformDataOptions
+	 * @global
+	 * @property {ArrayBuffer=} arraybuffer
+	 * @property {Object=} json
+	 */
 
-	  // Distance between waveform start time and first axis marker (seconds)
-	  var axisLabelOffsetSecs = firstAxisLabelSecs - currentFrameStartTime;
+	/**
+	 * Options for the Web Audio waveform builder.
+	 *
+	 * @typedef {Object} WaveformBuilderWebAudioOptions
+	 * @global
+	 * @property {AudioContext} audioContext
+	 * @property {AudioBuffer=} audioBuffer
+	 * @property {Number=} scale
+	 * @property {Boolean=} multiChannel
+	 */
 
-	  // Distance between waveform start time and first axis marker (pixels)
-	  var axisLabelOffsetPixels = view.timeToPixels(axisLabelOffsetSecs);
-	  context.setAttr('strokeStyle', this._axisGridlineColor);
-	  context.setAttr('lineWidth', 1);
+	/**
+	 * Options for [WaveformBuilder.init]{@link WaveformBuilder#init}.
+	 *
+	 * @typedef {Object} WaveformBuilderInitOptions
+	 * @global
+	 * @property {RemoteWaveformDataOptions=} dataUri
+	 * @property {LocalWaveformDataOptions=} waveformData
+	 * @property {WaveformBuilderWebAudioOptions=} webAudio
+	 * @property {Boolean=} withCredentials
+	 * @property {Array<Number>=} zoomLevels
+	 */
 
-	  // Set text style
-	  context.setAttr('font', this._axisLabelFont);
-	  context.setAttr('fillStyle', this._axisLabelColor);
-	  context.setAttr('textAlign', 'left');
-	  context.setAttr('textBaseline', 'bottom');
-	  var width = view.getWidth();
-	  var height = view.getHeight();
-	  var secs = firstAxisLabelSecs;
-	  for (;;) {
-	    // Position of axis marker (pixels)
-	    var x = axisLabelOffsetPixels + view.timeToPixels(secs - firstAxisLabelSecs);
-	    if (x >= width) {
-	      break;
-	    }
-	    if (this._axisTopMarkerHeight > 0) {
-	      context.beginPath();
-	      context.moveTo(x + 0.5, 0);
-	      context.lineTo(x + 0.5, 0 + this._axisTopMarkerHeight);
-	      context.stroke();
-	    }
-	    if (this._axisBottomMarkerHeight) {
-	      context.beginPath();
-	      context.moveTo(x + 0.5, height);
-	      context.lineTo(x + 0.5, height - this._axisBottomMarkerHeight);
-	      context.stroke();
-	    }
-	    if (this._showAxisLabels) {
-	      var label = this._formatAxisTime(secs);
-	      var labelWidth = context.measureText(label).width;
-	      var labelX = x - labelWidth / 2;
-	      var labelY = height - 1 - this._axisBottomMarkerHeight;
-	      if (labelX >= 0) {
-	        context.fillText(label, labelX, labelY);
-	      }
-	    }
-	    secs += axisLabelIntervalSecs;
+	/**
+	 * Callback for receiving the waveform data.
+	 *
+	 * @callback WaveformBuilderInitCallback
+	 * @global
+	 * @param {Error} error
+	 * @param {WaveformData} waveformData
+	 */
+
+	/**
+	 * Loads or creates the waveform data.
+	 *
+	 * @private
+	 * @param {WaveformBuilderInitOptions} options
+	 * @param {WaveformBuilderInitCallback} callback
+	 */
+
+	WaveformBuilder.prototype.init = function (options, callback) {
+	  if (options.dataUri && (options.webAudio || options.audioContext) || options.waveformData && (options.webAudio || options.audioContext) || options.dataUri && options.waveformData) {
+	    // eslint-disable-next-line max-len
+	    callback(new TypeError('Peaks.init(): You may only pass one source (webAudio, dataUri, or waveformData) to render waveform data.'));
+	    return;
 	  }
+	  if (options.audioContext) {
+	    // eslint-disable-next-line max-len
+	    this._peaks._logger('Peaks.init(): The audioContext option is deprecated, please pass a webAudio object instead');
+	    options.webAudio = {
+	      audioContext: options.audioContext
+	    };
+	  }
+	  if (options.dataUri) {
+	    return this._getRemoteWaveformData(options, callback);
+	  } else if (options.waveformData) {
+	    return this._buildWaveformFromLocalData(options, callback);
+	  } else if (options.webAudio) {
+	    if (options.webAudio.audioBuffer) {
+	      return this._buildWaveformDataFromAudioBuffer(options, callback);
+	    } else {
+	      return this._buildWaveformDataUsingWebAudio(options, callback);
+	    }
+	  } else {
+	    // eslint-disable-next-line max-len
+	    callback(new Error('Peaks.init(): You must pass an audioContext, or dataUri, or waveformData to render waveform data'));
+	  }
+	};
+
+	/* eslint-disable max-len */
+
+	/**
+	 * Fetches waveform data, based on the given options.
+	 *
+	 * @private
+	 * @param {Object} options
+	 * @param {String|Object} options.dataUri
+	 * @param {String} options.dataUri.arraybuffer Waveform data URL
+	 *   (binary format)
+	 * @param {String} options.dataUri.json Waveform data URL (JSON format)
+	 * @param {String} options.defaultUriFormat Either 'arraybuffer' (for binary
+	 *   data) or 'json'
+	 * @param {WaveformBuilderInitCallback} callback
+	 *
+	 * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
+	 *   for details of the binary and JSON waveform data formats.
+	 */
+
+	/* eslint-enable max-len */
+
+	WaveformBuilder.prototype._getRemoteWaveformData = function (options, callback) {
+	  var self = this;
+	  var dataUri = null;
+	  var requestType = null;
+	  var url;
+	  if (isObject(options.dataUri)) {
+	    dataUri = options.dataUri;
+	  } else {
+	    callback(new TypeError('Peaks.init(): The dataUri option must be an object'));
+	    return;
+	  }
+	  ['ArrayBuffer', 'JSON'].some(function (connector) {
+	    if (window[connector]) {
+	      requestType = connector.toLowerCase();
+	      url = dataUri[requestType];
+	      return Boolean(url);
+	    }
+	  });
+	  if (!url) {
+	    // eslint-disable-next-line max-len
+	    callback(new Error('Peaks.init(): Unable to determine a compatible dataUri format for this browser'));
+	    return;
+	  }
+	  self._xhr = self._createXHR(url, requestType, options.withCredentials, function (event) {
+	    if (this.readyState !== 4) {
+	      return;
+	    }
+	    if (this.status !== 200) {
+	      callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
+	      return;
+	    }
+	    self._xhr = null;
+	    var waveformData = WaveformData.create(event.target.response);
+	    if (waveformData.channels !== 1 && waveformData.channels !== 2) {
+	      callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
+	      return;
+	    } else if (waveformData.bits !== 8) {
+	      callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
+	      return;
+	    }
+	    callback(null, waveformData);
+	  }, function () {
+	    callback(new Error('XHR failed'));
+	  }, function () {
+	    callback(new Error('XHR aborted'));
+	  });
+	  self._xhr.send();
+	};
+
+	/* eslint-disable max-len */
+
+	/**
+	 * Creates a waveform from given data, based on the given options.
+	 *
+	 * @private
+	 * @param {Object} options
+	 * @param {Object} options.waveformData
+	 * @param {ArrayBuffer} options.waveformData.arraybuffer Waveform data (binary format)
+	 * @param {Object} options.waveformData.json Waveform data (JSON format)
+	 * @param {WaveformBuilderInitCallback} callback
+	 *
+	 * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
+	 *   for details of the binary and JSON waveform data formats.
+	 */
+
+	/* eslint-enable max-len */
+
+	WaveformBuilder.prototype._buildWaveformFromLocalData = function (options, callback) {
+	  var waveformData = null;
+	  var data = null;
+	  if (isObject(options.waveformData)) {
+	    waveformData = options.waveformData;
+	  } else {
+	    callback(new Error('Peaks.init(): The waveformData option must be an object'));
+	    return;
+	  }
+	  if (isObject(waveformData.json)) {
+	    data = waveformData.json;
+	  } else if (isArrayBuffer(waveformData.arraybuffer)) {
+	    data = waveformData.arraybuffer;
+	  }
+	  if (!data) {
+	    // eslint-disable-next-line max-len
+	    callback(new Error('Peaks.init(): Unable to determine a compatible waveformData format'));
+	    return;
+	  }
+	  try {
+	    var createdWaveformData = WaveformData.create(data);
+	    if (createdWaveformData.channels !== 1 && createdWaveformData.channels !== 2) {
+	      callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
+	      return;
+	    } else if (createdWaveformData.bits !== 8) {
+	      callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
+	      return;
+	    }
+	    callback(null, createdWaveformData);
+	  } catch (err) {
+	    callback(err);
+	  }
+	};
+
+	/**
+	 * Creates waveform data using the Web Audio API.
+	 *
+	 * @private
+	 * @param {Object} options
+	 * @param {AudioContext} options.audioContext
+	 * @param {HTMLMediaElement} options.mediaElement
+	 * @param {WaveformBuilderInitCallback} callback
+	 */
+
+	WaveformBuilder.prototype._buildWaveformDataUsingWebAudio = function (options, callback) {
+	  var self = this;
+	  var audioContext = window.AudioContext || window.webkitAudioContext;
+	  if (!(options.webAudio.audioContext instanceof audioContext)) {
+	    // eslint-disable-next-line max-len
+	    callback(new TypeError('Peaks.init(): The webAudio.audioContext option must be a valid AudioContext'));
+	    return;
+	  }
+	  var webAudioOptions = options.webAudio;
+	  if (webAudioOptions.scale !== options.zoomLevels[0]) {
+	    webAudioOptions.scale = options.zoomLevels[0];
+	  }
+
+	  // If the media element has already selected which source to play, its
+	  // currentSrc attribute will contain the source media URL. Otherwise,
+	  // we wait for a canplay event to tell us when the media is ready.
+
+	  var mediaSourceUrl = self._peaks.options.mediaElement.currentSrc;
+	  if (mediaSourceUrl) {
+	    self._requestAudioAndBuildWaveformData(mediaSourceUrl, webAudioOptions, options.withCredentials, callback);
+	  } else {
+	    self._peaks.once('player.canplay', function () {
+	      self._requestAudioAndBuildWaveformData(self._peaks.options.mediaElement.currentSrc, webAudioOptions, options.withCredentials, callback);
+	    });
+	  }
+	};
+	WaveformBuilder.prototype._buildWaveformDataFromAudioBuffer = function (options, callback) {
+	  var webAudioOptions = options.webAudio;
+	  if (webAudioOptions.scale !== options.zoomLevels[0]) {
+	    webAudioOptions.scale = options.zoomLevels[0];
+	  }
+	  var webAudioBuilderOptions = {
+	    audio_buffer: webAudioOptions.audioBuffer,
+	    split_channels: webAudioOptions.multiChannel,
+	    scale: webAudioOptions.scale,
+	    disable_worker: true
+	  };
+	  WaveformData.createFromAudio(webAudioBuilderOptions, callback);
+	};
+
+	/**
+	 * Fetches the audio content, based on the given options, and creates waveform
+	 * data using the Web Audio API.
+	 *
+	 * @private
+	 * @param {url} The media source URL
+	 * @param {WaveformBuilderWebAudioOptions} webAudio
+	 * @param {Boolean} withCredentials
+	 * @param {WaveformBuilderInitCallback} callback
+	 */
+
+	WaveformBuilder.prototype._requestAudioAndBuildWaveformData = function (url, webAudio, withCredentials, callback) {
+	  var self = this;
+	  if (!url) {
+	    self._peaks._logger('Peaks.init(): The mediaElement src is invalid');
+	    return;
+	  }
+	  self._xhr = self._createXHR(url, 'arraybuffer', withCredentials, function (event) {
+	    if (this.readyState !== 4) {
+	      return;
+	    }
+	    if (this.status !== 200) {
+	      callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
+	      return;
+	    }
+	    self._xhr = null;
+	    var webAudioBuilderOptions = {
+	      audio_context: webAudio.audioContext,
+	      array_buffer: event.target.response,
+	      split_channels: webAudio.multiChannel,
+	      scale: webAudio.scale
+	    };
+	    WaveformData.createFromAudio(webAudioBuilderOptions, callback);
+	  }, function () {
+	    callback(new Error('XHR failed'));
+	  }, function () {
+	    callback(new Error('XHR aborted'));
+	  });
+	  self._xhr.send();
+	};
+	WaveformBuilder.prototype.abort = function () {
+	  if (this._xhr) {
+	    this._xhr.abort();
+	  }
+	};
+
+	/**
+	 * @private
+	 * @param {String} url
+	 * @param {String} requestType
+	 * @param {Boolean} withCredentials
+	 * @param {Function} onLoad
+	 * @param {Function} onError
+	 *
+	 * @returns {XMLHttpRequest}
+	 */
+
+	WaveformBuilder.prototype._createXHR = function (url, requestType, withCredentials, onLoad, onError, onAbort) {
+	  var xhr = new XMLHttpRequest();
+
+	  // open an XHR request to the data source file
+	  xhr.open('GET', url, true);
+	  if (isXhr2) {
+	    try {
+	      xhr.responseType = requestType;
+	    } catch (e) {
+	      // Some browsers like Safari 6 do handle XHR2 but not the json
+	      // response type, doing only a try/catch fails in IE9
+	    }
+	  }
+	  xhr.onload = onLoad;
+	  xhr.onerror = onError;
+	  if (isXhr2 && withCredentials) {
+	    xhr.withCredentials = true;
+	  }
+	  xhr.addEventListener('abort', onAbort);
+	  return xhr;
 	};
 
 	/**
@@ -15466,7 +16341,7 @@
 	  instance.views = new ViewController(instance);
 
 	  // Setup the UI components
-	  instance._waveformBuilder = new WaveformAxis(instance);
+	  instance._waveformBuilder = new WaveformBuilder(instance);
 	  instance.player.init(instance).then(function () {
 	    instance._waveformBuilder.init(instance.options, function (err, waveformData) {
 	      if (err) {
@@ -15620,7 +16495,7 @@
 	    if (!options.zoomLevels) {
 	      options.zoomLevels = self.options.zoomLevels;
 	    }
-	    self._waveformBuilder = new WaveformAxis(self);
+	    self._waveformBuilder = new WaveformBuilder(self);
 	    self._waveformBuilder.init(options, function (err, waveformData) {
 	      if (err) {
 	        callback(err);

@@ -1,12 +1,13 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('konva/lib/Core'), require('konva/lib/shapes/Line'), require('konva/lib/shapes/Rect'), require('konva/lib/shapes/Text'), require('konva/lib/Animation')) :
-  typeof define === 'function' && define.amd ? define(['konva/lib/Core', 'konva/lib/shapes/Line', 'konva/lib/shapes/Rect', 'konva/lib/shapes/Text', 'konva/lib/Animation'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.peaks = factory(global.Konva, global.Konva, global.Konva, global.Konva, global.Konva));
-})(this, (function (Konva, Line, Rect, Text, Animation) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('konva/lib/Core'), require('konva/lib/shapes/Line'), require('konva/lib/shapes/Rect'), require('konva/lib/shapes/Text'), require('konva/lib/Animation'), require('waveform-data')) :
+  typeof define === 'function' && define.amd ? define(['konva/lib/Core', 'konva/lib/shapes/Line', 'konva/lib/shapes/Rect', 'konva/lib/shapes/Text', 'konva/lib/Animation', 'waveform-data'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.peaks = factory(global.Konva, global.Konva, global.Konva, global.Konva, global.Konva, global.WaveformData));
+})(this, (function (Konva, Line, Rect, Text, Animation, WaveformData) { 'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
   var Konva__default = /*#__PURE__*/_interopDefaultLegacy(Konva);
+  var WaveformData__default = /*#__PURE__*/_interopDefaultLegacy(WaveformData);
 
   var eventemitter3 = {exports: {}};
 
@@ -551,6 +552,17 @@
 
   function isString(value) {
     return typeof value === 'string';
+  }
+
+  /**
+   * Checks whether the given value is a valid ArrayBuffer.
+   *
+   * @param {ArrayBuffer} value The value to test
+   * @returns {Boolean}
+   */
+
+  function isArrayBuffer(value) {
+    return Object.prototype.toString.call(value).includes('ArrayBuffer');
   }
 
   /**
@@ -4993,7 +5005,7 @@
    * @param {String} options.fontStyle
    */
 
-  function WaveformAxis$1(view, options) {
+  function WaveformAxis(view, options) {
     var self = this;
     self._axisGridlineColor = options.axisGridlineColor;
     self._axisLabelColor = options.axisLabelColor;
@@ -5008,14 +5020,14 @@
         return formatTime(time, 0);
       };
     }
-    self._axisLabelFont = WaveformAxis$1._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
+    self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
     self._axisShape = new Konva__default["default"].Shape({
       sceneFunc: function sceneFunc(context) {
         self._drawAxis(context, view);
       }
     });
   }
-  WaveformAxis$1._buildFontString = function (fontFamily, fontSize, fontStyle) {
+  WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
     if (!fontSize) {
       fontSize = 11;
     }
@@ -5027,10 +5039,10 @@
     }
     return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
   };
-  WaveformAxis$1.prototype.addToLayer = function (layer) {
+  WaveformAxis.prototype.addToLayer = function (layer) {
     layer.add(this._axisShape);
   };
-  WaveformAxis$1.prototype.showAxisLabels = function (show, options) {
+  WaveformAxis.prototype.showAxisLabels = function (show, options) {
     this._showAxisLabels = show;
     if (options) {
       if (objectHasProperty(options, 'topMarkerHeight')) {
@@ -5053,7 +5065,7 @@
    * @returns {Number}
    */
 
-  WaveformAxis$1.prototype._getAxisLabelScale = function (view) {
+  WaveformAxis.prototype._getAxisLabelScale = function (view) {
     var baseSecs = 1; // seconds
     var steps = [1, 2, 5, 10, 20, 30];
     var minSpacing = 60;
@@ -5081,7 +5093,7 @@
    * @param {WaveformOverview|WaveformZoomView} view
    */
 
-  WaveformAxis$1.prototype._drawAxis = function (context, view) {
+  WaveformAxis.prototype._drawAxis = function (context, view) {
     var currentFrameStartTime = view.getStartTime();
 
     // Draw axis markers
@@ -5746,7 +5758,7 @@
     this._axisLayer = new Konva__default["default"].Layer({
       listening: false
     });
-    this._axis = new WaveformAxis$1(this, this._viewOptions);
+    this._axis = new WaveformAxis(this, this._viewOptions);
     this._axis.addToLayer(this._axisLayer);
     this._stage.add(this._axisLayer);
   };
@@ -6681,7 +6693,7 @@
     this._axisLayer = new Konva__default["default"].Layer({
       listening: false
     });
-    this._axis = new WaveformAxis$1(this, this._viewOptions);
+    this._axis = new WaveformAxis(this, this._viewOptions);
     this._axis.addToLayer(this._axisLayer);
     this._stage.add(this._axisLayer);
   };
@@ -7252,170 +7264,363 @@
   /**
    * @file
    *
-   * Defines the {@link WaveformAxis} class.
+   * Defines the {@link WaveformBuilder} class.
    *
-   * @module waveform-axis
+   * @module waveform-builder
    */
+  var isXhr2 = ('withCredentials' in new XMLHttpRequest());
 
   /**
-   * Creates the waveform axis shapes and adds them to the given view layer.
+   * Creates and returns a WaveformData object, either by requesting the
+   * waveform data from the server, or by creating the waveform data using the
+   * Web Audio API.
    *
    * @class
-   * @alias WaveformAxis
+   * @alias WaveformBuilder
    *
-   * @param {WaveformOverview|WaveformZoomView} view
-   * @param {Object} options
-   * @param {String} options.axisGridlineColor
-   * @param {String} options.axisLabelColor
-   * @param {Boolean} options.showAxisLabels
-   * @param {Function} options.formatAxisTime
-   * @param {String} options.fontFamily
-   * @param {Number} options.fontSize
-   * @param {String} options.fontStyle
+   * @param {Peaks} peaks
    */
 
-  function WaveformAxis(view, options) {
-    var self = this;
-    self._axisGridlineColor = options.axisGridlineColor;
-    self._axisLabelColor = options.axisLabelColor;
-    self._showAxisLabels = options.showAxisLabels;
-    self._axisTopMarkerHeight = options.axisTopMarkerHeight;
-    self._axisBottomMarkerHeight = options.axisBottomMarkerHeight;
-    if (options.formatAxisTime) {
-      self._formatAxisTime = options.formatAxisTime;
-    } else {
-      self._formatAxisTime = function (time) {
-        // precision = 0, drops the fractional seconds
-        return formatTime(time, 0);
+  function WaveformBuilder(peaks) {
+    this._peaks = peaks;
+  }
+
+  /**
+   * Options for requesting remote waveform data.
+   *
+   * @typedef {Object} RemoteWaveformDataOptions
+   * @global
+   * @property {String=} arraybuffer
+   * @property {String=} json
+   */
+
+  /**
+   * Options for supplying local waveform data.
+   *
+   * @typedef {Object} LocalWaveformDataOptions
+   * @global
+   * @property {ArrayBuffer=} arraybuffer
+   * @property {Object=} json
+   */
+
+  /**
+   * Options for the Web Audio waveform builder.
+   *
+   * @typedef {Object} WaveformBuilderWebAudioOptions
+   * @global
+   * @property {AudioContext} audioContext
+   * @property {AudioBuffer=} audioBuffer
+   * @property {Number=} scale
+   * @property {Boolean=} multiChannel
+   */
+
+  /**
+   * Options for [WaveformBuilder.init]{@link WaveformBuilder#init}.
+   *
+   * @typedef {Object} WaveformBuilderInitOptions
+   * @global
+   * @property {RemoteWaveformDataOptions=} dataUri
+   * @property {LocalWaveformDataOptions=} waveformData
+   * @property {WaveformBuilderWebAudioOptions=} webAudio
+   * @property {Boolean=} withCredentials
+   * @property {Array<Number>=} zoomLevels
+   */
+
+  /**
+   * Callback for receiving the waveform data.
+   *
+   * @callback WaveformBuilderInitCallback
+   * @global
+   * @param {Error} error
+   * @param {WaveformData} waveformData
+   */
+
+  /**
+   * Loads or creates the waveform data.
+   *
+   * @private
+   * @param {WaveformBuilderInitOptions} options
+   * @param {WaveformBuilderInitCallback} callback
+   */
+
+  WaveformBuilder.prototype.init = function (options, callback) {
+    if (options.dataUri && (options.webAudio || options.audioContext) || options.waveformData && (options.webAudio || options.audioContext) || options.dataUri && options.waveformData) {
+      // eslint-disable-next-line max-len
+      callback(new TypeError('Peaks.init(): You may only pass one source (webAudio, dataUri, or waveformData) to render waveform data.'));
+      return;
+    }
+    if (options.audioContext) {
+      // eslint-disable-next-line max-len
+      this._peaks._logger('Peaks.init(): The audioContext option is deprecated, please pass a webAudio object instead');
+      options.webAudio = {
+        audioContext: options.audioContext
       };
     }
-    self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
-    self._axisShape = new Konva__default["default"].Shape({
-      sceneFunc: function sceneFunc(context) {
-        self._drawAxis(context, view);
+    if (options.dataUri) {
+      return this._getRemoteWaveformData(options, callback);
+    } else if (options.waveformData) {
+      return this._buildWaveformFromLocalData(options, callback);
+    } else if (options.webAudio) {
+      if (options.webAudio.audioBuffer) {
+        return this._buildWaveformDataFromAudioBuffer(options, callback);
+      } else {
+        return this._buildWaveformDataUsingWebAudio(options, callback);
+      }
+    } else {
+      // eslint-disable-next-line max-len
+      callback(new Error('Peaks.init(): You must pass an audioContext, or dataUri, or waveformData to render waveform data'));
+    }
+  };
+
+  /* eslint-disable max-len */
+
+  /**
+   * Fetches waveform data, based on the given options.
+   *
+   * @private
+   * @param {Object} options
+   * @param {String|Object} options.dataUri
+   * @param {String} options.dataUri.arraybuffer Waveform data URL
+   *   (binary format)
+   * @param {String} options.dataUri.json Waveform data URL (JSON format)
+   * @param {String} options.defaultUriFormat Either 'arraybuffer' (for binary
+   *   data) or 'json'
+   * @param {WaveformBuilderInitCallback} callback
+   *
+   * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
+   *   for details of the binary and JSON waveform data formats.
+   */
+
+  /* eslint-enable max-len */
+
+  WaveformBuilder.prototype._getRemoteWaveformData = function (options, callback) {
+    var self = this;
+    var dataUri = null;
+    var requestType = null;
+    var url;
+    if (isObject(options.dataUri)) {
+      dataUri = options.dataUri;
+    } else {
+      callback(new TypeError('Peaks.init(): The dataUri option must be an object'));
+      return;
+    }
+    ['ArrayBuffer', 'JSON'].some(function (connector) {
+      if (window[connector]) {
+        requestType = connector.toLowerCase();
+        url = dataUri[requestType];
+        return Boolean(url);
       }
     });
-  }
-  WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
-    if (!fontSize) {
-      fontSize = 11;
+    if (!url) {
+      // eslint-disable-next-line max-len
+      callback(new Error('Peaks.init(): Unable to determine a compatible dataUri format for this browser'));
+      return;
     }
-    if (!fontFamily) {
-      fontFamily = 'sans-serif';
-    }
-    if (!fontStyle) {
-      fontStyle = 'normal';
-    }
-    return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
-  };
-  WaveformAxis.prototype.addToLayer = function (layer) {
-    layer.add(this._axisShape);
-  };
-  WaveformAxis.prototype.showAxisLabels = function (show, options) {
-    this._showAxisLabels = show;
-    if (options) {
-      if (objectHasProperty(options, 'topMarkerHeight')) {
-        this._axisTopMarkerHeight = options.topMarkerHeight;
+    self._xhr = self._createXHR(url, requestType, options.withCredentials, function (event) {
+      if (this.readyState !== 4) {
+        return;
       }
-      if (objectHasProperty(options, 'bottomMarkerHeight')) {
-        this._axisBottomMarkerHeight = options.bottomMarkerHeight;
+      if (this.status !== 200) {
+        callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
+        return;
       }
+      self._xhr = null;
+      var waveformData = WaveformData__default["default"].create(event.target.response);
+      if (waveformData.channels !== 1 && waveformData.channels !== 2) {
+        callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
+        return;
+      } else if (waveformData.bits !== 8) {
+        callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
+        return;
+      }
+      callback(null, waveformData);
+    }, function () {
+      callback(new Error('XHR failed'));
+    }, function () {
+      callback(new Error('XHR aborted'));
+    });
+    self._xhr.send();
+  };
+
+  /* eslint-disable max-len */
+
+  /**
+   * Creates a waveform from given data, based on the given options.
+   *
+   * @private
+   * @param {Object} options
+   * @param {Object} options.waveformData
+   * @param {ArrayBuffer} options.waveformData.arraybuffer Waveform data (binary format)
+   * @param {Object} options.waveformData.json Waveform data (JSON format)
+   * @param {WaveformBuilderInitCallback} callback
+   *
+   * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
+   *   for details of the binary and JSON waveform data formats.
+   */
+
+  /* eslint-enable max-len */
+
+  WaveformBuilder.prototype._buildWaveformFromLocalData = function (options, callback) {
+    var waveformData = null;
+    var data = null;
+    if (isObject(options.waveformData)) {
+      waveformData = options.waveformData;
+    } else {
+      callback(new Error('Peaks.init(): The waveformData option must be an object'));
+      return;
+    }
+    if (isObject(waveformData.json)) {
+      data = waveformData.json;
+    } else if (isArrayBuffer(waveformData.arraybuffer)) {
+      data = waveformData.arraybuffer;
+    }
+    if (!data) {
+      // eslint-disable-next-line max-len
+      callback(new Error('Peaks.init(): Unable to determine a compatible waveformData format'));
+      return;
+    }
+    try {
+      var createdWaveformData = WaveformData__default["default"].create(data);
+      if (createdWaveformData.channels !== 1 && createdWaveformData.channels !== 2) {
+        callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
+        return;
+      } else if (createdWaveformData.bits !== 8) {
+        callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
+        return;
+      }
+      callback(null, createdWaveformData);
+    } catch (err) {
+      callback(err);
     }
   };
 
   /**
-   * Returns number of seconds for each x-axis marker, appropriate for the
-   * current zoom level, ensuring that markers are not too close together
-   * and that markers are placed at intuitive time intervals (i.e., every 1,
-   * 2, 5, 10, 20, 30 seconds, then every 1, 2, 5, 10, 20, 30 minutes, then
-   * every 1, 2, 5, 10, 20, 30 hours).
+   * Creates waveform data using the Web Audio API.
    *
-   * @param {WaveformOverview|WaveformZoomView} view
-   * @returns {Number}
+   * @private
+   * @param {Object} options
+   * @param {AudioContext} options.audioContext
+   * @param {HTMLMediaElement} options.mediaElement
+   * @param {WaveformBuilderInitCallback} callback
    */
 
-  WaveformAxis.prototype._getAxisLabelScale = function (view) {
-    var baseSecs = 1; // seconds
-    var steps = [1, 2, 5, 10, 20, 30];
-    var minSpacing = 60;
-    var index = 0;
-    var secs;
-    for (;;) {
-      secs = baseSecs * steps[index];
-      var pixels = view.timeToPixels(secs);
-      if (pixels < minSpacing) {
-        if (++index === steps.length) {
-          baseSecs *= 60; // seconds -> minutes -> hours
-          index = 0;
-        }
-      } else {
-        break;
-      }
+  WaveformBuilder.prototype._buildWaveformDataUsingWebAudio = function (options, callback) {
+    var self = this;
+    var audioContext = window.AudioContext || window.webkitAudioContext;
+    if (!(options.webAudio.audioContext instanceof audioContext)) {
+      // eslint-disable-next-line max-len
+      callback(new TypeError('Peaks.init(): The webAudio.audioContext option must be a valid AudioContext'));
+      return;
     }
-    return secs;
+    var webAudioOptions = options.webAudio;
+    if (webAudioOptions.scale !== options.zoomLevels[0]) {
+      webAudioOptions.scale = options.zoomLevels[0];
+    }
+
+    // If the media element has already selected which source to play, its
+    // currentSrc attribute will contain the source media URL. Otherwise,
+    // we wait for a canplay event to tell us when the media is ready.
+
+    var mediaSourceUrl = self._peaks.options.mediaElement.currentSrc;
+    if (mediaSourceUrl) {
+      self._requestAudioAndBuildWaveformData(mediaSourceUrl, webAudioOptions, options.withCredentials, callback);
+    } else {
+      self._peaks.once('player.canplay', function () {
+        self._requestAudioAndBuildWaveformData(self._peaks.options.mediaElement.currentSrc, webAudioOptions, options.withCredentials, callback);
+      });
+    }
+  };
+  WaveformBuilder.prototype._buildWaveformDataFromAudioBuffer = function (options, callback) {
+    var webAudioOptions = options.webAudio;
+    if (webAudioOptions.scale !== options.zoomLevels[0]) {
+      webAudioOptions.scale = options.zoomLevels[0];
+    }
+    var webAudioBuilderOptions = {
+      audio_buffer: webAudioOptions.audioBuffer,
+      split_channels: webAudioOptions.multiChannel,
+      scale: webAudioOptions.scale,
+      disable_worker: true
+    };
+    WaveformData__default["default"].createFromAudio(webAudioBuilderOptions, callback);
   };
 
   /**
-   * Draws the time axis and labels onto a view.
+   * Fetches the audio content, based on the given options, and creates waveform
+   * data using the Web Audio API.
    *
-   * @param {Konva.Context} context The context to draw on.
-   * @param {WaveformOverview|WaveformZoomView} view
+   * @private
+   * @param {url} The media source URL
+   * @param {WaveformBuilderWebAudioOptions} webAudio
+   * @param {Boolean} withCredentials
+   * @param {WaveformBuilderInitCallback} callback
    */
 
-  WaveformAxis.prototype._drawAxis = function (context, view) {
-    var currentFrameStartTime = view.getStartTime();
-
-    // Time interval between axis markers (seconds)
-    var axisLabelIntervalSecs = this._getAxisLabelScale(view);
-
-    // Time of first axis marker (seconds)
-    var firstAxisLabelSecs = roundUpToNearest(currentFrameStartTime, axisLabelIntervalSecs);
-
-    // Distance between waveform start time and first axis marker (seconds)
-    var axisLabelOffsetSecs = firstAxisLabelSecs - currentFrameStartTime;
-
-    // Distance between waveform start time and first axis marker (pixels)
-    var axisLabelOffsetPixels = view.timeToPixels(axisLabelOffsetSecs);
-    context.setAttr('strokeStyle', this._axisGridlineColor);
-    context.setAttr('lineWidth', 1);
-
-    // Set text style
-    context.setAttr('font', this._axisLabelFont);
-    context.setAttr('fillStyle', this._axisLabelColor);
-    context.setAttr('textAlign', 'left');
-    context.setAttr('textBaseline', 'bottom');
-    var width = view.getWidth();
-    var height = view.getHeight();
-    var secs = firstAxisLabelSecs;
-    for (;;) {
-      // Position of axis marker (pixels)
-      var x = axisLabelOffsetPixels + view.timeToPixels(secs - firstAxisLabelSecs);
-      if (x >= width) {
-        break;
-      }
-      if (this._axisTopMarkerHeight > 0) {
-        context.beginPath();
-        context.moveTo(x + 0.5, 0);
-        context.lineTo(x + 0.5, 0 + this._axisTopMarkerHeight);
-        context.stroke();
-      }
-      if (this._axisBottomMarkerHeight) {
-        context.beginPath();
-        context.moveTo(x + 0.5, height);
-        context.lineTo(x + 0.5, height - this._axisBottomMarkerHeight);
-        context.stroke();
-      }
-      if (this._showAxisLabels) {
-        var label = this._formatAxisTime(secs);
-        var labelWidth = context.measureText(label).width;
-        var labelX = x - labelWidth / 2;
-        var labelY = height - 1 - this._axisBottomMarkerHeight;
-        if (labelX >= 0) {
-          context.fillText(label, labelX, labelY);
-        }
-      }
-      secs += axisLabelIntervalSecs;
+  WaveformBuilder.prototype._requestAudioAndBuildWaveformData = function (url, webAudio, withCredentials, callback) {
+    var self = this;
+    if (!url) {
+      self._peaks._logger('Peaks.init(): The mediaElement src is invalid');
+      return;
     }
+    self._xhr = self._createXHR(url, 'arraybuffer', withCredentials, function (event) {
+      if (this.readyState !== 4) {
+        return;
+      }
+      if (this.status !== 200) {
+        callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
+        return;
+      }
+      self._xhr = null;
+      var webAudioBuilderOptions = {
+        audio_context: webAudio.audioContext,
+        array_buffer: event.target.response,
+        split_channels: webAudio.multiChannel,
+        scale: webAudio.scale
+      };
+      WaveformData__default["default"].createFromAudio(webAudioBuilderOptions, callback);
+    }, function () {
+      callback(new Error('XHR failed'));
+    }, function () {
+      callback(new Error('XHR aborted'));
+    });
+    self._xhr.send();
+  };
+  WaveformBuilder.prototype.abort = function () {
+    if (this._xhr) {
+      this._xhr.abort();
+    }
+  };
+
+  /**
+   * @private
+   * @param {String} url
+   * @param {String} requestType
+   * @param {Boolean} withCredentials
+   * @param {Function} onLoad
+   * @param {Function} onError
+   *
+   * @returns {XMLHttpRequest}
+   */
+
+  WaveformBuilder.prototype._createXHR = function (url, requestType, withCredentials, onLoad, onError, onAbort) {
+    var xhr = new XMLHttpRequest();
+
+    // open an XHR request to the data source file
+    xhr.open('GET', url, true);
+    if (isXhr2) {
+      try {
+        xhr.responseType = requestType;
+      } catch (e) {
+        // Some browsers like Safari 6 do handle XHR2 but not the json
+        // response type, doing only a try/catch fails in IE9
+      }
+    }
+    xhr.onload = onLoad;
+    xhr.onerror = onError;
+    if (isXhr2 && withCredentials) {
+      xhr.withCredentials = true;
+    }
+    xhr.addEventListener('abort', onAbort);
+    return xhr;
   };
 
   /**
@@ -7661,7 +7866,7 @@
     instance.views = new ViewController(instance);
 
     // Setup the UI components
-    instance._waveformBuilder = new WaveformAxis(instance);
+    instance._waveformBuilder = new WaveformBuilder(instance);
     instance.player.init(instance).then(function () {
       instance._waveformBuilder.init(instance.options, function (err, waveformData) {
         if (err) {
@@ -7815,7 +8020,7 @@
       if (!options.zoomLevels) {
         options.zoomLevels = self.options.zoomLevels;
       }
-      self._waveformBuilder = new WaveformAxis(self);
+      self._waveformBuilder = new WaveformBuilder(self);
       self._waveformBuilder.init(options, function (err, waveformData) {
         if (err) {
           callback(err);
