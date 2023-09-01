@@ -321,41 +321,41 @@ var eventemitter3 = {exports: {}};
 })(eventemitter3);
 var EventEmitter = eventemitter3.exports;
 
-function _iterableToArrayLimit(arr, i) {
-  var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
-  if (null != _i) {
-    var _s,
-      _e,
-      _x,
-      _r,
-      _arr = [],
-      _n = !0,
-      _d = !1;
+function _iterableToArrayLimit(r, l) {
+  var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+  if (null != t) {
+    var e,
+      n,
+      i,
+      u,
+      a = [],
+      f = !0,
+      o = !1;
     try {
-      if (_x = (_i = _i.call(arr)).next, 0 === i) {
-        if (Object(_i) !== _i) return;
-        _n = !1;
-      } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);
-    } catch (err) {
-      _d = !0, _e = err;
+      if (i = (t = t.call(r)).next, 0 === l) {
+        if (Object(t) !== t) return;
+        f = !1;
+      } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
+    } catch (r) {
+      o = !0, n = r;
     } finally {
       try {
-        if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
+        if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
       } finally {
-        if (_d) throw _e;
+        if (o) throw n;
       }
     }
-    return _arr;
+    return a;
   }
 }
-function _typeof(obj) {
+function _typeof(o) {
   "@babel/helpers - typeof";
 
-  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  }, _typeof(obj);
+  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+    return typeof o;
+  } : function (o) {
+    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+  }, _typeof(o);
 }
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
@@ -4148,11 +4148,6 @@ SegmentMarker.prototype.getAbsolutePosition = function () {
 SegmentMarker.prototype.isStartMarker = function () {
   return this._startMarker;
 };
-SegmentMarker.prototype.timeUpdated = function (time) {
-  if (this._marker.timeUpdated) {
-    this._marker.timeUpdated(time);
-  }
-};
 SegmentMarker.prototype.update = function (options) {
   if (this._marker.update) {
     this._marker.update(options);
@@ -4164,6 +4159,12 @@ SegmentMarker.prototype.destroy = function () {
   }
   this._group.destroyChildren();
   this._group.destroy();
+};
+SegmentMarker.prototype.startDrag = function () {
+  this._group.startDrag();
+};
+SegmentMarker.prototype.stopDrag = function () {
+  this._group.stopDrag();
 };
 
 /**
@@ -4454,7 +4455,11 @@ function SegmentShape(segment, peaks, layer, view) {
   // Create with default y and height, the real values are set in fitToView().
   var segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
   var segmentEndOffset = this._view.timeToPixelOffset(this._segment.endTime);
-  var overlayRectHeight = clamp(0, this._view.getHeight());
+  var overlayRectHeight = clamp(0, this._view.getHeight() - 2 * this._overlayOffset);
+
+  // The clip rectangle prevents text in the overlay from appearing
+  // outside the overlay.
+
   this._overlay = new Konva.Group({
     name: 'segment-overlay',
     segment: this._segment,
@@ -4540,23 +4545,19 @@ SegmentShape.prototype.update = function (options) {
   var marker;
   if (marker = this.getStartMarker()) {
     marker.setX(segmentStartOffset - marker.getWidth());
-    marker.update();
-    if (options && objectHasProperty(options, 'startTime')) {
-      marker.timeUpdated(options.startTime);
+    if (options) {
+      marker.update(options);
     }
   }
   if (marker = this.getEndMarker()) {
     marker.setX(segmentEndOffset);
-    marker.update();
-    if (options && objectHasProperty(options, 'endTime')) {
-      marker.timeUpdated(options.endTime);
+    if (options) {
+      marker.update(options);
     }
   }
   this._color = this._segment.color;
   this._borderColor = this._segment.bordercolor;
   if (this._overlayText) {
-    var labelColor = this._segment.labelColor;
-    this._overlayText.fill(labelColor);
     this._overlayText.text(this._segment.labelText);
   }
   var segmentOptions = this._view.getViewOptions().segmentOptions;
@@ -4683,7 +4684,10 @@ SegmentShape.prototype._createMarkers = function () {
   }
 };
 SegmentShape.prototype._onMouseEnter = function (event) {
-  if (this._label) ;
+  if (this._label) {
+    this._label.moveToTop();
+    this._label.show();
+  }
   this._peaks.emit('segments.mouseenter', {
     segment: this._segment,
     evt: event.evt
@@ -4713,6 +4717,10 @@ SegmentShape.prototype._onMouseUp = function (event) {
 SegmentShape.prototype.segmentClicked = function (eventName, event) {
   this._moveToTop();
   this._peaks.emit('segments.' + eventName, event);
+};
+SegmentShape.prototype._moveToTop = function () {
+  this._overlay.moveToTop();
+  this._layer.moveSegmentMarkersToTop();
 };
 SegmentShape.prototype.enableSegmentDragging = function (enable) {
   if (!this._segment.editable) {
@@ -4872,13 +4880,22 @@ SegmentShape.prototype._onSegmentDragEnd = function (event) {
     evt: event.evt
   });
 };
-SegmentShape.prototype._moveToTop = function () {
-  this._overlay.moveToTop();
+SegmentShape.prototype.moveMarkersToTop = function () {
+  if (this._startMarker) {
+    this._startMarker.moveToTop();
+  }
   if (this._endMarker) {
     this._endMarker.moveToTop();
   }
-  if (this._startMarker) {
-    this._startMarker.moveToTop();
+};
+SegmentShape.prototype.startDrag = function () {
+  if (this._endMarker) {
+    this._endMarker.startDrag();
+  }
+};
+SegmentShape.prototype.stopDrag = function () {
+  if (this._endMarker) {
+    this._endMarker.stopDrag();
   }
 };
 
@@ -4909,68 +4926,85 @@ SegmentShape.prototype._onSegmentMarkerDragStart = function (segmentMarker, even
 SegmentShape.prototype._onSegmentMarkerDragMove = function (segmentMarker, event) {
   if (segmentMarker.isStartMarker()) {
     this._segmentStartMarkerDragMove(segmentMarker, event);
-    segmentMarker.timeUpdated(segmentMarker.getSegment().startTime);
+    segmentMarker.update({
+      startTime: this._segment.startTime
+    });
   } else {
     this._segmentEndMarkerDragMove(segmentMarker, event);
-    segmentMarker.timeUpdated(segmentMarker.getSegment().endTime);
+    segmentMarker.update({
+      endTime: this._segment.endTime
+    });
   }
-  segmentMarker.update();
 };
+function getDuration(segment) {
+  return segment.endTime - segment.startTime;
+}
 SegmentShape.prototype._segmentStartMarkerDragMove = function (segmentMarker, event) {
+  var width = this._view.getWidth();
   var startMarkerX = this._startMarker.getX();
   var endMarkerX = this._endMarker.getX();
   var minSegmentDuration = this._view.pixelsToTime(50);
   var minSegmentWidth = this._view.getMinSegmentDragWidth();
   var upperLimit = this._endMarker.getX() - minSegmentWidth;
-  var lowerLimit;
-  var previousSegmentVisible = true;
-  var previousSegmentUpdated = false;
-  if (this._previousSegment) {
-    var dragMode = this._view.getSegmentDragMode();
-    if (dragMode === 'no-overlap' || dragMode === 'compress' && !this._previousSegment.editable) {
-      lowerLimit = this._view.timeToPixelOffset(this._previousSegment.endTime);
-      if (lowerLimit < 0) {
-        lowerLimit = 0;
-        previousSegmentVisible = false;
-      }
-    } else if (dragMode === 'compress') {
-      var segmentDuration = this._previousSegment.endTime - this._previousSegment.startTime;
-      if (segmentDuration < minSegmentDuration) {
-        minSegmentDuration = segmentDuration;
-      }
-      lowerLimit = this._view.timeToPixelOffset(this._previousSegment.startTime + minSegmentDuration);
-      if (lowerLimit < 0) {
-        lowerLimit = 0;
-        previousSegmentVisible = false;
-      }
-    }
-  } else {
-    lowerLimit = 0;
+  if (upperLimit > width) {
+    upperLimit = width;
   }
-  if (startMarkerX >= lowerLimit && startMarkerX < upperLimit) {
-    this._overlay.clipWidth(endMarkerX - startMarkerX);
-    segmentMarker.setX(startMarkerX);
-    this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
-    segmentMarker.timeUpdated(this._segment.startTime);
-    if (this._previousSegment) {
-      var prevSegmentEndX = this._view.timeToPixelOffset(this._previousSegment.endTime);
-      if (startMarkerX < prevSegmentEndX) {
+  var previousSegmentVisible = false;
+  var previousSegmentUpdated = false;
+  var previousSegmentEndX;
+  if (this._previousSegment) {
+    previousSegmentEndX = this._view.timeToPixelOffset(this._previousSegment.endTime);
+    previousSegmentVisible = previousSegmentEndX >= 0;
+  }
+  if (startMarkerX > upperLimit) {
+    segmentMarker.setX(upperLimit);
+    this._overlay.clipWidth(upperLimit - endMarkerX);
+    if (minSegmentWidth === 0 && upperLimit < width) {
+      this._segment._setStartTime(this._segment.endTime);
+    } else {
+      this._segment._setStartTime(this._view.pixelOffsetToTime(upperLimit));
+    }
+  } else if (this._previousSegment && previousSegmentVisible) {
+    var dragMode = this._view.getSegmentDragMode();
+    var fixedPreviousSegment = dragMode === 'no-overlap' || dragMode === 'compress' && !this._previousSegment.editable;
+    var compressPreviousSegment = dragMode === 'compress' && this._previousSegment.editable;
+    if (startMarkerX <= previousSegmentEndX) {
+      if (fixedPreviousSegment) {
+        segmentMarker.setX(previousSegmentEndX);
+        this._overlay.clipWidth(previousSegmentEndX - endMarkerX);
+        this._segment._setStartTime(this._previousSegment.endTime);
+      } else if (compressPreviousSegment) {
+        var previousSegmentDuration = getDuration(this._previousSegment);
+        if (previousSegmentDuration < minSegmentDuration) {
+          minSegmentDuration = previousSegmentDuration;
+        }
+        var lowerLimit = this._view.timeToPixelOffset(this._previousSegment.startTime + minSegmentDuration);
+        if (startMarkerX < lowerLimit) {
+          startMarkerX = lowerLimit;
+        }
+        segmentMarker.setX(startMarkerX);
+        this._overlay.clipWidth(endMarkerX - startMarkerX);
+        this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
         this._previousSegment.update({
           endTime: this._view.pixelOffsetToTime(startMarkerX)
         });
         previousSegmentUpdated = true;
       }
+    } else {
+      if (startMarkerX < 0) {
+        startMarkerX = 0;
+      }
+      segmentMarker.setX(startMarkerX);
+      this._overlay.clipWidth(endMarkerX - startMarkerX);
+      this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
     }
   } else {
-    var x = startMarkerX >= upperLimit ? upperLimit : lowerLimit;
-    this._overlay.clipWidth(endMarkerX - x);
-    segmentMarker.setX(x);
-    if (this._previousSegment && previousSegmentVisible && startMarkerX < lowerLimit) {
-      this._segment._setStartTime(this._previousSegment.endTime);
-    } else {
-      this._segment._setStartTime(this._view.pixelOffsetToTime(x));
+    if (startMarkerX < 0) {
+      startMarkerX = 0;
     }
-    segmentMarker.timeUpdated(this._segment.startTime);
+    segmentMarker.setX(startMarkerX);
+    this._overlay.clipWidth(endMarkerX - startMarkerX);
+    this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
   }
   this._peaks.emit('segments.dragged', {
     segment: this._segment,
@@ -4988,61 +5022,71 @@ SegmentShape.prototype._segmentStartMarkerDragMove = function (segmentMarker, ev
   }
 };
 SegmentShape.prototype._segmentEndMarkerDragMove = function (segmentMarker, event) {
+  var width = this._view.getWidth();
   var startMarkerX = this._startMarker.getX();
   var endMarkerX = this._endMarker.getX();
   var minSegmentDuration = this._view.pixelsToTime(50);
   var minSegmentWidth = this._view.getMinSegmentDragWidth();
   var lowerLimit = this._startMarker.getX() + minSegmentWidth;
-  var upperLimit;
-  var nextSegmentVisible = true;
-  var nextSegmentUpdated = false;
-  var width = this._view.getWidth();
-  if (this._nextSegment) {
-    var dragMode = this._view.getSegmentDragMode();
-    if (dragMode === 'no-overlap' || dragMode === 'compress' && !this._nextSegment.editable) {
-      upperLimit = this._view.timeToPixelOffset(this._nextSegment.startTime);
-      if (upperLimit > width) {
-        upperLimit = width;
-        nextSegmentVisible = false;
-      }
-    } else if (dragMode === 'compress') {
-      var segmentDuration = this._nextSegment.endTime - this._nextSegment.startTime;
-      if (segmentDuration < minSegmentDuration) {
-        minSegmentDuration = segmentDuration;
-      }
-      upperLimit = this._view.timeToPixelOffset(this._nextSegment.endTime - minSegmentDuration);
-      if (upperLimit > width) {
-        upperLimit = width;
-        nextSegmentVisible = false;
-      }
-    }
-  } else {
-    upperLimit = width;
+  if (lowerLimit < 0) {
+    lowerLimit = 0;
   }
-  if (endMarkerX >= lowerLimit && endMarkerX < upperLimit) {
-    this._overlay.clipWidth(endMarkerX - startMarkerX);
-    segmentMarker.setX(endMarkerX);
-    this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
-    segmentMarker.timeUpdated(this._segment.endTime);
-    if (this._nextSegment) {
-      var nextSegmentStartX = this._view.timeToPixelOffset(this._nextSegment.startTime);
-      if (endMarkerX > nextSegmentStartX) {
+  var nextSegmentVisible = false;
+  var nextSegmentUpdated = false;
+  var nextSegmentStartX;
+  if (this._nextSegment) {
+    nextSegmentStartX = this._view.timeToPixelOffset(this._nextSegment.startTime);
+    nextSegmentVisible = nextSegmentStartX < width;
+  }
+  if (endMarkerX < lowerLimit) {
+    segmentMarker.setX(lowerLimit);
+    this._overlay.clipWidth(lowerLimit - startMarkerX);
+    if (minSegmentWidth === 0 && lowerLimit > 0) {
+      this._segment._setEndTime(this._segment.startTime);
+    } else {
+      this._segment._setEndTime(this._view.pixelOffsetToTime(lowerLimit));
+    }
+  } else if (this._nextSegment && nextSegmentVisible) {
+    var dragMode = this._view.getSegmentDragMode();
+    var fixedNextSegment = dragMode === 'no-overlap' || dragMode === 'compress' && !this._nextSegment.editable;
+    var compressNextSegment = dragMode === 'compress' && this._nextSegment.editable;
+    if (endMarkerX >= nextSegmentStartX) {
+      if (fixedNextSegment) {
+        segmentMarker.setX(nextSegmentStartX);
+        this._overlay.clipWidth(nextSegmentStartX - startMarkerX);
+        this._segment._setEndTime(this._nextSegment.startTime);
+      } else if (compressNextSegment) {
+        var nextSegmentDuration = getDuration(this._nextSegment);
+        if (nextSegmentDuration < minSegmentDuration) {
+          minSegmentDuration = nextSegmentDuration;
+        }
+        var upperLimit = this._view.timeToPixelOffset(this._nextSegment.endTime - minSegmentDuration);
+        if (endMarkerX > upperLimit) {
+          endMarkerX = upperLimit;
+        }
+        segmentMarker.setX(endMarkerX);
+        this._overlay.clipWidth(endMarkerX - startMarkerX);
+        this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
         this._nextSegment.update({
           startTime: this._view.pixelOffsetToTime(endMarkerX)
         });
         nextSegmentUpdated = true;
       }
+    } else {
+      if (endMarkerX > width) {
+        endMarkerX = width;
+      }
+      segmentMarker.setX(endMarkerX);
+      this._overlay.clipWidth(endMarkerX - startMarkerX);
+      this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
     }
   } else {
-    var x = endMarkerX >= upperLimit ? upperLimit : lowerLimit;
-    this._overlay.clipWidth(x - startMarkerX);
-    segmentMarker.setX(x);
-    if (this._nextSegment && nextSegmentVisible && endMarkerX >= upperLimit) {
-      this._segment._setEndTime(this._nextSegment.startTime);
-    } else {
-      this._segment._setEndTime(this._view.pixelOffsetToTime(x));
+    if (endMarkerX > width) {
+      endMarkerX = width;
     }
-    segmentMarker.timeUpdated(this._segment.endTime);
+    segmentMarker.setX(endMarkerX);
+    this._overlay.clipWidth(endMarkerX - startMarkerX);
+    this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
   }
   this._peaks.emit('segments.dragged', {
     segment: this._segment,
@@ -5189,6 +5233,9 @@ SegmentsLayer.prototype.enableSegmentDragging = function (enable) {
       this._segmentShapes[segmentId].enableSegmentDragging(enable);
     }
   }
+};
+SegmentsLayer.prototype.getSegmentShape = function (segmentId) {
+  return this._segmentShapes[segmentId];
 };
 SegmentsLayer.prototype.formatTime = function (time) {
   return this._view.formatTime(time);
@@ -6087,13 +6134,16 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._peaks.on('keyboard.right', self._onKeyboardRight);
   self._peaks.on('keyboard.shift_left', self._onKeyboardShiftLeft);
   self._peaks.on('keyboard.shift_right', self._onKeyboardShiftRight);
-  self._enableAutoScroll = true;
+  self._autoScroll = self._viewOptions.autoScroll;
+  self._autoScrollOffset = self._viewOptions.autoScrollOffset;
   self._amplitudeScale = 1.0;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
   self._enableSeek = true;
   self._enableSegmentDragging = false;
   self._segmentDragMode = 'overlap';
   self._minSegmentDragWidth = 0;
+  self._waveformDragMode = 'scroll';
+  self._insertSegmentShape = null;
   if (self._viewOptions.formatPlayheadTime) {
     self._formatPlayheadTime = self._viewOptions.formatPlayheadTime;
   } else {
@@ -6124,10 +6174,14 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._waveformColor = self._viewOptions.waveformColor;
   self._playedWaveformColor = self._viewOptions.playedWaveformColor;
   self._createWaveform();
-  self._segmentsLayer = new SegmentsLayer(peaks, self, true);
-  self._segmentsLayer.addToStage(self._stage);
-  self._pointsLayer = new PointsLayer(peaks, self, true);
-  self._pointsLayer.addToStage(self._stage);
+  if (self._viewOptions.enableSegments) {
+    self._segmentsLayer = new SegmentsLayer(peaks, self, true);
+    self._segmentsLayer.addToStage(self._stage);
+  }
+  if (self._viewOptions.enablePoints) {
+    self._pointsLayer = new PointsLayer(peaks, self, true);
+    self._pointsLayer.addToStage(self._stage);
+  }
   self._createAxisLabels();
   self._playheadLayer = new PlayheadLayer({
     player: self._peaks.player,
@@ -6148,11 +6202,9 @@ function WaveformZoomView(waveformData, container, peaks) {
   self.setWheelMode(self._viewOptions.wheelMode);
   self._onClick = self._onClick.bind(this);
   self._onDblClick = self._onDblClick.bind(this);
-  self._onMouseDown = self._onMouseDown.bind(this);
   self._onContextMenu = self._onContextMenu.bind(this);
   self._stage.on('click', self._onClick);
   self._stage.on('dblclick', self._onDblClick);
-  self._stage.on('mousedown', self._onMouseDown);
   self._stage.on('contextmenu', self._onContextMenu);
 }
 WaveformZoomView.prototype._initWaveformCache = function () {
@@ -6166,68 +6218,91 @@ WaveformZoomView.prototype._createMouseDragHandler = function () {
   var self = this;
   self._mouseDragHandler = new MouseDragHandler(self._stage, {
     onMouseDown: function onMouseDown(mousePosX, segment) {
-      this._seeking = false;
-      this._segment = segment;
-      var playheadOffset = self._playheadLayer.getPlayheadOffset();
-      if (self._enableSeek && Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
-        this._seeking = true;
-
-        // The user has clicked near the playhead, and the playhead is within
-        // a segment. In this case we want to allow the playhead to move, but
-        // prevent the segment from being dragged. So we temporarily make the
-        // segment non-draggable, and restore its draggable state in onMouseUp().
-        if (this._segment) {
-          this._segmentIsDraggable = this._segment.draggable();
-          this._segment.draggable(false);
+      if (self._waveformDragMode === 'insert-segment') {
+        var time = self.pixelsToTime(mousePosX + self._frameOffset);
+        var _segment = self._peaks.segments.add({
+          startTime: time,
+          endTime: time,
+          editable: true
+        });
+        self._insertSegmentShape = self._segmentsLayer.getSegmentShape(_segment.id);
+        if (self._insertSegmentShape) {
+          self._insertSegmentShape.moveMarkersToTop();
+          self._insertSegmentShape.startDrag();
         }
-      }
-      if (this._seeking) {
-        this._seek(mousePosX);
       } else {
-        this.initialFrameOffset = self._frameOffset;
-        this.mouseDownX = mousePosX;
+        this._seeking = false;
+        this._segment = segment;
+        var playheadOffset = self._playheadLayer.getPlayheadOffset();
+        if (self._enableSeek && Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
+          this._seeking = true;
+
+          // The user has clicked near the playhead, and the playhead is within
+          // a segment. In this case we want to allow the playhead to move, but
+          // prevent the segment from being dragged. So we temporarily make the
+          // segment non-draggable, and restore its draggable state in onMouseUp().
+          if (this._segment) {
+            this._segmentIsDraggable = this._segment.draggable();
+            this._segment.draggable(false);
+          }
+        }
+        if (this._seeking) {
+          this._seek(mousePosX);
+        } else {
+          this.initialFrameOffset = self._frameOffset;
+          this.mouseDownX = mousePosX;
+        }
       }
     },
     onMouseMove: function onMouseMove(mousePosX) {
-      // Prevent scrolling the waveform if the user is dragging a segment.
-      if (this._segment && !this._seeking) {
-        return;
-      }
-      if (this._seeking) {
-        this._seek(mousePosX);
-      } else {
-        // Moving the mouse to the left increases the time position of the
-        // left-hand edge of the visible waveform.
-        var diff = this.mouseDownX - mousePosX;
-        var newFrameOffset = this.initialFrameOffset + diff;
-        if (newFrameOffset !== this.initialFrameOffset) {
-          self.updateWaveform(newFrameOffset);
+      if (self._waveformDragMode === 'scroll') {
+        // Prevent scrolling the waveform if the user is dragging a segment.
+        if (this._segment && !this._seeking) {
+          return;
+        }
+        if (this._seeking) {
+          this._seek(mousePosX);
+        } else {
+          // Moving the mouse to the left increases the time position of the
+          // left-hand edge of the visible waveform.
+          var diff = this.mouseDownX - mousePosX;
+          var newFrameOffset = this.initialFrameOffset + diff;
+          if (newFrameOffset !== this.initialFrameOffset) {
+            self.updateWaveform(newFrameOffset);
+          }
         }
       }
     },
     onMouseUp: function onMouseUp( /* mousePosX */
     ) {
-      if (!this._seeking) {
-        // Set playhead position only on click release, when not dragging.
-        if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
-          var time = self.pixelOffsetToTime(this.mouseDownX);
-          var duration = self._getDuration();
-
-          // Prevent the playhead position from jumping by limiting click
-          // handling to the waveform duration.
-          if (time > duration) {
-            time = duration;
-          }
-          self._playheadLayer.updatePlayheadTime(time);
-          self._peaks.player.seek(time);
+      if (self._waveformDragMode === 'insert-segment') {
+        if (self._insertSegmentShape) {
+          self._insertSegmentShape.stopDrag();
+          self._insertSegmentShape = null;
         }
-      }
+      } else {
+        if (!this._seeking) {
+          // Set playhead position only on click release, when not dragging.
+          if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
+            var time = self.pixelOffsetToTime(this.mouseDownX);
+            var duration = self._getDuration();
 
-      // If the user was dragging the playhead while the playhead is within
-      // a segment, restore the segment's original draggable state.
-      if (this._segment && this._seeking) {
-        if (this._segmentIsDraggable) {
-          this._segment.draggable(true);
+            // Prevent the playhead position from jumping by limiting click
+            // handling to the waveform duration.
+            if (time > duration) {
+              time = duration;
+            }
+            self._playheadLayer.updatePlayheadTime(time);
+            self._peaks.player.seek(time);
+          }
+        }
+
+        // If the user was dragging the playhead while the playhead is within
+        // a segment, restore the segment's original draggable state.
+        if (this._segment && this._seeking) {
+          if (this._segmentIsDraggable) {
+            this._segment.draggable(true);
+          }
         }
       }
     },
@@ -6258,9 +6333,6 @@ WaveformZoomView.prototype._onClick = function (event) {
 WaveformZoomView.prototype._onDblClick = function (event) {
   this._clickHandler(event, 'dblclick');
 };
-WaveformZoomView.prototype._onMouseDown = function (event) {
-  this._clickHandler(event, 'mousedown');
-};
 WaveformZoomView.prototype._onContextMenu = function (event) {
   this._clickHandler(event, 'contextmenu');
 };
@@ -6290,7 +6362,9 @@ WaveformZoomView.prototype._clickHandler = function (event, eventName) {
               emitViewEvent = false;
             }
           };
-          this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          if (this._segmentsLayer) {
+            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          }
         }
       }
     }
@@ -6356,11 +6430,16 @@ WaveformZoomView.prototype._onWheelCaptureVerticalScroll = function (event) {
   var newFrameOffset = clamp(this._frameOffset + Math.floor(delta), 0, this._pixelLength - this._width);
   this.updateWaveform(newFrameOffset);
 };
+WaveformZoomView.prototype.setWaveformDragMode = function (mode) {
+  this._waveformDragMode = mode;
+};
 WaveformZoomView.prototype.enableSegmentDragging = function (enable) {
   this._enableSegmentDragging = enable;
 
   // Update all existing segments
-  this._segmentsLayer.enableSegmentDragging(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableSegmentDragging(enable);
+  }
 };
 WaveformZoomView.prototype.isSegmentDraggingEnabled = function () {
   return this._enableSegmentDragging;
@@ -6454,7 +6533,7 @@ WaveformZoomView.prototype.playheadPosChanged = function (time) {
 };
 WaveformZoomView.prototype._syncPlayhead = function (time) {
   this._playheadLayer.updatePlayheadTime(time);
-  if (this._enableAutoScroll) {
+  if (this._autoScroll) {
     // Check for the playhead reaching the right-hand side of the window.
 
     var pixelIndex = this.timeToPixels(time);
@@ -6462,9 +6541,10 @@ WaveformZoomView.prototype._syncPlayhead = function (time) {
     // TODO: move this code to animation function?
     // TODO: don't scroll if user has positioned view manually (e.g., using
     // the keyboard)
-    var endThreshold = this._frameOffset + this._width - this._width / 2;
+    var endThreshold = this._frameOffset + this._width - this._autoScrollOffset;
     if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
-      this._frameOffset = pixelIndex - Math.round(this._width / 2);
+      // Put the playhead at 100 pixels from the left edge
+      this._frameOffset = pixelIndex - this._autoScrollOffset;
       if (this._frameOffset < 0) {
         this._frameOffset = 0;
       }
@@ -6549,11 +6629,6 @@ WaveformZoomView.prototype.setZoom = function (options) {
 
   // Update the playhead position after zooming.
   this._playheadLayer.updatePlayheadTime(currentTime);
-
-  // const adapter = this.createZoomAdapter(currentScale, previousScale);
-
-  // adapter.start(relativePosition);
-
   this._peaks.emit('zoom.update', scale, prevScale);
   return true;
 };
@@ -6640,21 +6715,6 @@ WaveformZoomView.prototype.timeToPixelOffset = function (time) {
   return Math.floor(time * this._data.sample_rate / this._data.scale) - this._frameOffset;
 };
 
-/* const zoomAdapterMap = {
-  'animated': AnimatedZoomAdapter,
-  'static': StaticZoomAdapter
-};
-
-WaveformZoomView.prototype.createZoomAdapter = function(currentScale, previousScale) {
-  const ZoomAdapter = zoomAdapterMap[this._viewOptions.zoomAdapter];
-
-  if (!ZoomAdapter) {
-    throw new Error('Invalid zoomAdapter: ' + this._viewOptions.zoomAdapter);
-  }
-
-  return ZoomAdapter.create(this, currentScale, previousScale);
-}; */
-
 /**
  * @returns {Number} The start position of the waveform shown in the view,
  *   in pixels.
@@ -6708,7 +6768,9 @@ WaveformZoomView.prototype.setAmplitudeScale = function (scale) {
   }
   this._amplitudeScale = scale;
   this._drawWaveformLayer();
-  this._segmentsLayer.draw();
+  if (this._segmentsLayer) {
+    this._segmentsLayer.draw();
+  }
 };
 WaveformZoomView.prototype.getAmplitudeScale = function () {
   return this._amplitudeScale;
@@ -6816,8 +6878,12 @@ WaveformZoomView.prototype.updateWaveform = function (frameOffset) {
   this._axisLayer.draw();
   var frameStartTime = this.getStartTime();
   var frameEndTime = this.getEndTime();
-  this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-  this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  if (this._pointsLayer) {
+    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+  }
+  if (this._segmentsLayer) {
+    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  }
   this._peaks.emit('zoomview.displaying', frameStartTime, frameEndTime);
 };
 WaveformZoomView.prototype._drawWaveformLayer = function () {
@@ -6854,15 +6920,22 @@ WaveformZoomView.prototype.showAxisLabels = function (show) {
   this._axis.showAxisLabels(show);
   this._axisLayer.draw();
 };
-WaveformZoomView.prototype.enableAutoScroll = function (enable) {
-  this._enableAutoScroll = enable;
+WaveformZoomView.prototype.enableAutoScroll = function (enable, options) {
+  this._autoScroll = enable;
+  if (objectHasProperty(options, 'offset')) {
+    this._autoScrollOffset = options.offset;
+  }
 };
 WaveformZoomView.prototype.enableMarkerEditing = function (enable) {
-  this._segmentsLayer.enableEditing(enable);
-  this._pointsLayer.enableEditing(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableEditing(enable);
+  }
+  if (this._pointsLayer) {
+    this._pointsLayer.enableEditing(enable);
+  }
 };
 WaveformZoomView.prototype.getMinSegmentDragWidth = function () {
-  return this._minSegmentDragWidth;
+  return this._insertSegmentShape ? 0 : this._minSegmentDragWidth;
 };
 WaveformZoomView.prototype.setMinSegmentDragWidth = function (width) {
   this._minSegmentDragWidth = width;
@@ -6901,8 +6974,12 @@ WaveformZoomView.prototype.fitToContainer = function () {
   this._stage.height(this._height);
   this._waveformShape.fitToView();
   this._playheadLayer.fitToView();
-  this._segmentsLayer.fitToView();
-  this._pointsLayer.fitToView();
+  if (this._segmentsLayer) {
+    this._segmentsLayer.fitToView();
+  }
+  if (this._pointsLayer) {
+    this._pointsLayer.fitToView();
+  }
   if (updateWaveform) {
     this.updateWaveform(this._frameOffset);
   }
@@ -6911,34 +6988,6 @@ WaveformZoomView.prototype.fitToContainer = function () {
 WaveformZoomView.prototype.getViewOptions = function () {
   return this._viewOptions;
 };
-
-/* WaveformZoomView.prototype.beginZoom = function() {
-  // Fade out the time axis and the segments
-  // this._axis.axisShape.setAttr('opacity', 0);
-
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(false);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(false);
-  }
-};
-
-WaveformZoomView.prototype.endZoom = function() {
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(true);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(true);
-  }
-
-  const time = this._peaks.player.getCurrentTime();
-
-  this.seekFrame(this.timeToPixels(time));
-}; */
-
 WaveformZoomView.prototype.destroy = function () {
   if (this._resizeTimeoutId) {
     clearTimeout(this._resizeTimeoutId);
@@ -6955,8 +7004,12 @@ WaveformZoomView.prototype.destroy = function () {
   this._peaks.off('keyboard.shift_left', this._onKeyboardShiftLeft);
   this._peaks.off('keyboard.shift_right', this._onKeyboardShiftRight);
   this._playheadLayer.destroy();
-  this._segmentsLayer.destroy();
-  this._pointsLayer.destroy();
+  if (this._segmentsLayer) {
+    this._segmentsLayer.destroy();
+  }
+  if (this._pointsLayer) {
+    this._pointsLayer.destroy();
+  }
   if (this._stage) {
     this._stage.destroy();
     this._stage = null;

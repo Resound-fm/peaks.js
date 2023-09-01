@@ -115,12 +115,6 @@ SegmentMarker.prototype.isStartMarker = function() {
   return this._startMarker;
 };
 
-SegmentMarker.prototype.timeUpdated = function(time) {
-  if (this._marker.timeUpdated) {
-    this._marker.timeUpdated(time);
-  }
-};
-
 SegmentMarker.prototype.update = function(options) {
   if (this._marker.update) {
     this._marker.update(options);
@@ -134,6 +128,14 @@ SegmentMarker.prototype.destroy = function() {
 
   this._group.destroyChildren();
   this._group.destroy();
+};
+
+SegmentMarker.prototype.startDrag = function() {
+  this._group.startDrag();
+};
+
+SegmentMarker.prototype.stopDrag = function() {
+  this._group.stopDrag();
 };
 
 export default SegmentMarker;

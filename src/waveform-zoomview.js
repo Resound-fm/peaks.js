@@ -12,8 +12,6 @@ import PointsLayer from './points-layer';
 import SegmentsLayer from './segments-layer';
 import WaveformAxis from './waveform-axis';
 import WaveformShape from './waveform-shape';
-// import AnimatedZoomAdapter from './animated-zoom-adapter';
-// import StaticZoomAdapter from './static-zoom-adapter';
 import { clamp, formatTime, getMarkerObject, isFinite, isNumber, isValidTime,
   objectHasProperty } from './utils';
 
@@ -61,13 +59,17 @@ function WaveformZoomView(waveformData, container, peaks) {
   self._peaks.on('keyboard.shift_left', self._onKeyboardShiftLeft);
   self._peaks.on('keyboard.shift_right', self._onKeyboardShiftRight);
 
-  self._enableAutoScroll = true;
+  self._autoScroll = self._viewOptions.autoScroll;
+  self._autoScrollOffset = self._viewOptions.autoScrollOffset;
+
   self._amplitudeScale = 1.0;
   self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
   self._enableSeek = true;
   self._enableSegmentDragging = false;
   self._segmentDragMode = 'overlap';
   self._minSegmentDragWidth = 0;
+  self._waveformDragMode = 'scroll';
+  self._insertSegmentShape = null;
 
   if (self._viewOptions.formatPlayheadTime) {
     self._formatPlayheadTime = self._viewOptions.formatPlayheadTime;
@@ -108,11 +110,15 @@ function WaveformZoomView(waveformData, container, peaks) {
 
   self._createWaveform();
 
-  self._segmentsLayer = new SegmentsLayer(peaks, self, true);
-  self._segmentsLayer.addToStage(self._stage);
+  if (self._viewOptions.enableSegments) {
+    self._segmentsLayer = new SegmentsLayer(peaks, self, true);
+    self._segmentsLayer.addToStage(self._stage);
+  }
 
-  self._pointsLayer = new PointsLayer(peaks, self, true);
-  self._pointsLayer.addToStage(self._stage);
+  if (self._viewOptions.enablePoints) {
+    self._pointsLayer = new PointsLayer(peaks, self, true);
+    self._pointsLayer.addToStage(self._stage);
+  }
 
   self._createAxisLabels();
 
@@ -141,12 +147,10 @@ function WaveformZoomView(waveformData, container, peaks) {
 
   self._onClick = self._onClick.bind(this);
   self._onDblClick = self._onDblClick.bind(this);
-  self._onMouseDown = self._onMouseDown.bind(this);
   self._onContextMenu = self._onContextMenu.bind(this);
 
   self._stage.on('click', self._onClick);
   self._stage.on('dblclick', self._onDblClick);
-  self._stage.on('mousedown', self._onMouseDown);
   self._stage.on('contextmenu', self._onContextMenu);
 }
 
@@ -163,79 +167,107 @@ WaveformZoomView.prototype._createMouseDragHandler = function() {
 
   self._mouseDragHandler = new MouseDragHandler(self._stage, {
     onMouseDown: function(mousePosX, segment) {
-      this._seeking = false;
-      this._segment = segment;
+      if (self._waveformDragMode === 'insert-segment') {
+        const time = self.pixelsToTime(mousePosX + self._frameOffset);
 
-      const playheadOffset = self._playheadLayer.getPlayheadOffset();
+        const segment = self._peaks.segments.add({
+          startTime: time,
+          endTime: time,
+          editable: true
+        });
 
-      if (self._enableSeek &&
-          Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
-        this._seeking = true;
+        self._insertSegmentShape = self._segmentsLayer.getSegmentShape(segment.id);
 
-        // The user has clicked near the playhead, and the playhead is within
-        // a segment. In this case we want to allow the playhead to move, but
-        // prevent the segment from being dragged. So we temporarily make the
-        // segment non-draggable, and restore its draggable state in onMouseUp().
-        if (this._segment) {
-          this._segmentIsDraggable = this._segment.draggable();
-          this._segment.draggable(false);
+        if (self._insertSegmentShape) {
+          self._insertSegmentShape.moveMarkersToTop();
+          self._insertSegmentShape.startDrag();
         }
       }
-
-      if (this._seeking) {
-        this._seek(mousePosX);
-      }
       else {
-        this.initialFrameOffset = self._frameOffset;
-        this.mouseDownX = mousePosX;
+        this._seeking = false;
+        this._segment = segment;
+
+        const playheadOffset = self._playheadLayer.getPlayheadOffset();
+
+        if (self._enableSeek &&
+            Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
+          this._seeking = true;
+
+          // The user has clicked near the playhead, and the playhead is within
+          // a segment. In this case we want to allow the playhead to move, but
+          // prevent the segment from being dragged. So we temporarily make the
+          // segment non-draggable, and restore its draggable state in onMouseUp().
+          if (this._segment) {
+            this._segmentIsDraggable = this._segment.draggable();
+            this._segment.draggable(false);
+          }
+        }
+
+        if (this._seeking) {
+          this._seek(mousePosX);
+        }
+        else {
+          this.initialFrameOffset = self._frameOffset;
+          this.mouseDownX = mousePosX;
+        }
       }
     },
 
     onMouseMove: function(mousePosX) {
-      // Prevent scrolling the waveform if the user is dragging a segment.
-      if (this._segment && !this._seeking) {
-        return;
-      }
+      if (self._waveformDragMode === 'scroll') {
+        // Prevent scrolling the waveform if the user is dragging a segment.
+        if (this._segment && !this._seeking) {
+          return;
+        }
 
-      if (this._seeking) {
-        this._seek(mousePosX);
-      }
-      else {
-        // Moving the mouse to the left increases the time position of the
-        // left-hand edge of the visible waveform.
-        const diff = this.mouseDownX - mousePosX;
-        const newFrameOffset = this.initialFrameOffset + diff;
+        if (this._seeking) {
+          this._seek(mousePosX);
+        }
+        else {
+          // Moving the mouse to the left increases the time position of the
+          // left-hand edge of the visible waveform.
+          const diff = this.mouseDownX - mousePosX;
+          const newFrameOffset = this.initialFrameOffset + diff;
 
-        if (newFrameOffset !== this.initialFrameOffset) {
-          self.updateWaveform(newFrameOffset);
+          if (newFrameOffset !== this.initialFrameOffset) {
+            self.updateWaveform(newFrameOffset);
+          }
         }
       }
     },
 
     onMouseUp: function(/* mousePosX */) {
-      if (!this._seeking) {
-        // Set playhead position only on click release, when not dragging.
-        if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
-          let time = self.pixelOffsetToTime(this.mouseDownX);
-          const duration = self._getDuration();
-
-          // Prevent the playhead position from jumping by limiting click
-          // handling to the waveform duration.
-          if (time > duration) {
-            time = duration;
-          }
-
-          self._playheadLayer.updatePlayheadTime(time);
-
-          self._peaks.player.seek(time);
+      if (self._waveformDragMode === 'insert-segment') {
+        if (self._insertSegmentShape) {
+          self._insertSegmentShape.stopDrag();
+          self._insertSegmentShape = null;
         }
       }
+      else {
+        if (!this._seeking) {
+          // Set playhead position only on click release, when not dragging.
+          if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
+            let time = self.pixelOffsetToTime(this.mouseDownX);
+            const duration = self._getDuration();
 
-      // If the user was dragging the playhead while the playhead is within
-      // a segment, restore the segment's original draggable state.
-      if (this._segment && this._seeking) {
-        if (this._segmentIsDraggable) {
-          this._segment.draggable(true);
+            // Prevent the playhead position from jumping by limiting click
+            // handling to the waveform duration.
+            if (time > duration) {
+              time = duration;
+            }
+
+            self._playheadLayer.updatePlayheadTime(time);
+
+            self._peaks.player.seek(time);
+          }
+        }
+
+        // If the user was dragging the playhead while the playhead is within
+        // a segment, restore the segment's original draggable state.
+        if (this._segment && this._seeking) {
+          if (this._segmentIsDraggable) {
+            this._segment.draggable(true);
+          }
         }
       }
     },
@@ -271,10 +303,6 @@ WaveformZoomView.prototype._onClick = function(event) {
 
 WaveformZoomView.prototype._onDblClick = function(event) {
   this._clickHandler(event, 'dblclick');
-};
-
-WaveformZoomView.prototype._onMouseDown = function(event) {
-  this._clickHandler(event, 'mousedown');
 };
 
 WaveformZoomView.prototype._onContextMenu = function(event) {
@@ -313,7 +341,9 @@ WaveformZoomView.prototype._clickHandler = function(event, eventName) {
             }
           };
 
-          this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          if (this._segmentsLayer) {
+            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+          }
         }
       }
     }
@@ -408,11 +438,17 @@ WaveformZoomView.prototype._onWheelCaptureVerticalScroll = function(event) {
   this.updateWaveform(newFrameOffset);
 };
 
+WaveformZoomView.prototype.setWaveformDragMode = function(mode) {
+  this._waveformDragMode = mode;
+};
+
 WaveformZoomView.prototype.enableSegmentDragging = function(enable) {
   this._enableSegmentDragging = enable;
 
   // Update all existing segments
-  this._segmentsLayer.enableSegmentDragging(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableSegmentDragging(enable);
+  }
 };
 
 WaveformZoomView.prototype.isSegmentDraggingEnabled = function() {
@@ -530,7 +566,7 @@ WaveformZoomView.prototype.playheadPosChanged = function(time) {
 WaveformZoomView.prototype._syncPlayhead = function(time) {
   this._playheadLayer.updatePlayheadTime(time);
 
-  if (this._enableAutoScroll) {
+  if (this._autoScroll) {
     // Check for the playhead reaching the right-hand side of the window.
 
     const pixelIndex = this.timeToPixels(time);
@@ -538,10 +574,11 @@ WaveformZoomView.prototype._syncPlayhead = function(time) {
     // TODO: move this code to animation function?
     // TODO: don't scroll if user has positioned view manually (e.g., using
     // the keyboard)
-    const endThreshold = this._frameOffset + this._width - (this._width / 2);
+    const endThreshold = this._frameOffset + this._width - this._autoScrollOffset;
 
     if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
-      this._frameOffset = pixelIndex - Math.round(this._width / 2);
+      // Put the playhead at 100 pixels from the left edge
+      this._frameOffset = pixelIndex - this._autoScrollOffset;
 
       if (this._frameOffset < 0) {
         this._frameOffset = 0;
@@ -647,10 +684,6 @@ WaveformZoomView.prototype.setZoom = function(options) {
   // Update the playhead position after zooming.
   this._playheadLayer.updatePlayheadTime(currentTime);
 
-  // const adapter = this.createZoomAdapter(currentScale, previousScale);
-
-  // adapter.start(relativePosition);
-
   this._peaks.emit('zoom.update', scale, prevScale);
 
   return true;
@@ -752,21 +785,6 @@ WaveformZoomView.prototype.timeToPixelOffset = function(time) {
   return Math.floor(time * this._data.sample_rate / this._data.scale) - this._frameOffset;
 };
 
-/* const zoomAdapterMap = {
-  'animated': AnimatedZoomAdapter,
-  'static': StaticZoomAdapter
-};
-
-WaveformZoomView.prototype.createZoomAdapter = function(currentScale, previousScale) {
-  const ZoomAdapter = zoomAdapterMap[this._viewOptions.zoomAdapter];
-
-  if (!ZoomAdapter) {
-    throw new Error('Invalid zoomAdapter: ' + this._viewOptions.zoomAdapter);
-  }
-
-  return ZoomAdapter.create(this, currentScale, previousScale);
-}; */
-
 /**
  * @returns {Number} The start position of the waveform shown in the view,
  *   in pixels.
@@ -822,7 +840,10 @@ WaveformZoomView.prototype.setAmplitudeScale = function(scale) {
   this._amplitudeScale = scale;
 
   this._drawWaveformLayer();
-  this._segmentsLayer.draw();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.draw();
+  }
 };
 
 WaveformZoomView.prototype.getAmplitudeScale = function() {
@@ -956,8 +977,13 @@ WaveformZoomView.prototype.updateWaveform = function(frameOffset) {
   const frameStartTime = this.getStartTime();
   const frameEndTime   = this.getEndTime();
 
-  this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-  this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  if (this._pointsLayer) {
+    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+  }
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+  }
 
   this._peaks.emit('zoomview.displaying', frameStartTime, frameEndTime);
 };
@@ -1006,17 +1032,26 @@ WaveformZoomView.prototype.showAxisLabels = function(show) {
   this._axisLayer.draw();
 };
 
-WaveformZoomView.prototype.enableAutoScroll = function(enable) {
-  this._enableAutoScroll = enable;
+WaveformZoomView.prototype.enableAutoScroll = function(enable, options) {
+  this._autoScroll = enable;
+
+  if (objectHasProperty(options, 'offset')) {
+    this._autoScrollOffset = options.offset;
+  }
 };
 
 WaveformZoomView.prototype.enableMarkerEditing = function(enable) {
-  this._segmentsLayer.enableEditing(enable);
-  this._pointsLayer.enableEditing(enable);
+  if (this._segmentsLayer) {
+    this._segmentsLayer.enableEditing(enable);
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.enableEditing(enable);
+  }
 };
 
 WaveformZoomView.prototype.getMinSegmentDragWidth = function() {
-  return this._minSegmentDragWidth;
+  return this._insertSegmentShape ? 0 : this._minSegmentDragWidth;
 };
 
 WaveformZoomView.prototype.setMinSegmentDragWidth = function(width) {
@@ -1062,8 +1097,14 @@ WaveformZoomView.prototype.fitToContainer = function() {
 
   this._waveformShape.fitToView();
   this._playheadLayer.fitToView();
-  this._segmentsLayer.fitToView();
-  this._pointsLayer.fitToView();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.fitToView();
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.fitToView();
+  }
 
   if (updateWaveform) {
     this.updateWaveform(this._frameOffset);
@@ -1075,33 +1116,6 @@ WaveformZoomView.prototype.fitToContainer = function() {
 WaveformZoomView.prototype.getViewOptions = function() {
   return this._viewOptions;
 };
-
-/* WaveformZoomView.prototype.beginZoom = function() {
-  // Fade out the time axis and the segments
-  // this._axis.axisShape.setAttr('opacity', 0);
-
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(false);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(false);
-  }
-};
-
-WaveformZoomView.prototype.endZoom = function() {
-  if (this._pointsLayer) {
-    this._pointsLayer.setVisible(true);
-  }
-
-  if (this._segmentsLayer) {
-    this._segmentsLayer.setVisible(true);
-  }
-
-  const time = this._peaks.player.getCurrentTime();
-
-  this.seekFrame(this.timeToPixels(time));
-}; */
 
 WaveformZoomView.prototype.destroy = function() {
   if (this._resizeTimeoutId) {
@@ -1120,8 +1134,14 @@ WaveformZoomView.prototype.destroy = function() {
   this._peaks.off('keyboard.shift_right', this._onKeyboardShiftRight);
 
   this._playheadLayer.destroy();
-  this._segmentsLayer.destroy();
-  this._pointsLayer.destroy();
+
+  if (this._segmentsLayer) {
+    this._segmentsLayer.destroy();
+  }
+
+  if (this._pointsLayer) {
+    this._pointsLayer.destroy();
+  }
 
   if (this._stage) {
     this._stage.destroy();
