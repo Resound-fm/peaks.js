@@ -21,6 +21,7 @@ import { Text } from 'konva/lib/shapes/Text';
 
 function DefaultPointMarker(options) {
   this._options = options;
+  this._draggable = options.editable;
 }
 
 DefaultPointMarker.prototype.init = function(group) {
@@ -46,15 +47,14 @@ DefaultPointMarker.prototype.init = function(group) {
 
   // Handle - create with default y, the real value is set in fitToView().
 
-  if (this._options.draggable) {
-    this._handle = new Rect({
-      x:      handleX,
-      y:      0,
-      width:  handleWidth,
-      height: handleHeight,
-      fill:   this._options.color
-    });
-  }
+  this._handle = new Rect({
+    x:       handleX,
+    y:       0,
+    width:   handleWidth,
+    height:  handleHeight,
+    fill:    this._options.color,
+    visible: this._draggable
+  });
 
   // Line - create with default y and points, the real values
   // are set in fitToView().
@@ -65,27 +65,22 @@ DefaultPointMarker.prototype.init = function(group) {
     strokeWidth: 1
   });
 
-  // Time label
+  // Time label - create with default y, the real value is set
+  // in fitToView().
+  this._time = new Text({
+    x:          -24,
+    y:          0,
+    text:       this._options.layer.formatTime(this._options.point.time),
+    fontFamily: this._options.fontFamily,
+    fontSize:   this._options.fontSize,
+    fontStyle:  this._options.fontStyle,
+    fill:       '#000',
+    textAlign:  'center'
+  });
 
-  if (this._handle) {
-    // Time - create with default y, the real value is set in fitToView().
-    this._time = new Text({
-      x:          -24,
-      y:          0,
-      text:       this._options.layer.formatTime(this._options.point.time),
-      fontFamily: this._options.fontFamily,
-      fontSize:   this._options.fontSize,
-      fontStyle:  this._options.fontStyle,
-      fill:       '#000',
-      textAlign:  'center'
-    });
+  this._time.hide();
 
-    this._time.hide();
-  }
-
-  if (this._handle) {
-    group.add(this._handle);
-  }
+  group.add(this._handle);
 
   group.add(this._line);
 
@@ -93,9 +88,7 @@ DefaultPointMarker.prototype.init = function(group) {
     group.add(this._label);
   }
 
-  if (this._time) {
-    group.add(this._time);
-  }
+  group.add(this._time);
 
   this.fitToView();
 
@@ -105,26 +98,28 @@ DefaultPointMarker.prototype.init = function(group) {
 DefaultPointMarker.prototype.bindEventHandlers = function(group) {
   const self = this;
 
-  if (self._handle) {
-    self._handle.on('mouseover touchstart', function() {
+  self._handle.on('mouseover touchstart', function() {
+    if (self._draggable) {
       // Position text to the left of the marker
       self._time.setX(-24 - self._time.getWidth());
       self._time.show();
-    });
+    }
+  });
 
-    self._handle.on('mouseout touchend', function() {
+  self._handle.on('mouseout touchend', function() {
+    if (self._draggable) {
       self._time.hide();
-    });
+    }
+  });
 
-    group.on('dragstart', function() {
-      self._time.setX(-24 - self._time.getWidth());
-      self._time.show();
-    });
+  group.on('dragstart', function() {
+    self._time.setX(-24 - self._time.getWidth());
+    self._time.show();
+  });
 
-    group.on('dragend', function() {
-      self._time.hide();
-    });
-  }
+  group.on('dragend', function() {
+    self._time.hide();
+  });
 };
 
 DefaultPointMarker.prototype.fitToView = function() {
@@ -145,9 +140,31 @@ DefaultPointMarker.prototype.fitToView = function() {
   }
 };
 
-DefaultPointMarker.prototype.timeUpdated = function(time) {
-  if (this._time) {
-    this._time.setText(this._options.layer.formatTime(time));
+DefaultPointMarker.prototype.update = function(options) {
+  if (options.time !== undefined) {
+    if (this._time) {
+      this._time.setText(this._options.layer.formatTime(options.time));
+    }
+  }
+
+  if (options.labelText !== undefined) {
+    if (this._label) {
+      this._label.text(options.labelText);
+    }
+  }
+
+  if (options.color !== undefined) {
+    if (this._handle) {
+      this._handle.fill(options.color);
+    }
+
+    this._line.stroke(options.color);
+  }
+
+  if (options.editable !== undefined) {
+    this._draggable = options.editable;
+
+    this._handle.visible(this._draggable);
   }
 };
 

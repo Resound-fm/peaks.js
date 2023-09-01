@@ -71,6 +71,10 @@ PointsLayer.prototype.enableEditing = function(enable) {
   this._allowEditing = enable;
 };
 
+PointsLayer.prototype.getPointMarker = function(point) {
+  return this._pointMarkers[point.pid];
+};
+
 PointsLayer.prototype.formatTime = function(time) {
   return this._view.formatTime(time);
 };
@@ -79,7 +83,7 @@ PointsLayer.prototype._onPointsUpdate = function(point, options) {
   const frameStartTime = this._view.getStartTime();
   const frameEndTime   = this._view.getEndTime();
 
-  const pointMarker = this._pointMarkers[point.id];
+  const pointMarker = this.getPointMarker(point);
   const isVisible = point.isVisible(frameStartTime, frameEndTime);
 
   if (pointMarker && !isVisible) {
@@ -98,30 +102,29 @@ PointsLayer.prototype._onPointsUpdate = function(point, options) {
       const pointMarkerX = pointMarkerOffset - this._view.getFrameOffset();
 
       pointMarker.setX(pointMarkerX);
-      pointMarker.timeUpdated(point.time);
     }
 
-    pointMarker.update();
+    pointMarker.update(options);
   }
 };
 
-PointsLayer.prototype._onPointsAdd = function(points) {
+PointsLayer.prototype._onPointsAdd = function(event) {
   const self = this;
 
   const frameStartTime = self._view.getStartTime();
   const frameEndTime   = self._view.getEndTime();
 
-  points.forEach(function(point) {
+  event.points.forEach(function(point) {
     if (point.isVisible(frameStartTime, frameEndTime)) {
       self._updatePoint(point);
     }
   });
 };
 
-PointsLayer.prototype._onPointsRemove = function(points) {
+PointsLayer.prototype._onPointsRemove = function(event) {
   const self = this;
 
-  points.forEach(function(point) {
+  event.points.forEach(function(point) {
     self._removePoint(point);
   });
 };
@@ -144,8 +147,8 @@ PointsLayer.prototype._createPointMarker = function(point) {
 
   const marker = this._peaks.options.createPointMarker({
     point:      point,
-    draggable:  editable,
-    color:      point.color ? point.color : this._peaks.options.pointMarkerColor,
+    editable:   editable,
+    color:      point.color,
     fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
     fontSize:   this._peaks.options.fontSize || defaultFontSize,
     fontStyle:  this._peaks.options.fontStyle || defaultFontShape,
@@ -181,7 +184,7 @@ PointsLayer.prototype.getHeight = function() {
 PointsLayer.prototype._addPointMarker = function(point) {
   const pointMarker = this._createPointMarker(point);
 
-  this._pointMarkers[point.id] = pointMarker;
+  this._pointMarkers[point.pid] = pointMarker;
 
   pointMarker.addToLayer(this._layer);
 
@@ -191,27 +194,7 @@ PointsLayer.prototype._addPointMarker = function(point) {
 PointsLayer.prototype._onPointsDrag = function(event) {
   const pointMarker = this._updatePoint(event.point);
 
-  pointMarker.timeUpdated(event.point.time);
-  pointMarker.update();
-};
-
-/**
- * @param {Point} point
- */
-
-PointsLayer.prototype._onPointMarkerDragMove = function(event, point) {
-  const pointMarker = this._pointMarkers[point.id];
-
-  const markerX = pointMarker.getX();
-
-  const offset = markerX + pointMarker.getWidth();
-
-  point._setTime(this._view.pixelOffsetToTime(offset));
-
-  this._peaks.emit('points.dragmove', {
-    point: point,
-    evt: event.evt
-  });
+  pointMarker.update({ time: event.point.time });
 };
 
 /**
@@ -244,9 +227,29 @@ PointsLayer.prototype._onPointMarkerMouseLeave = function(event, point) {
  */
 
 PointsLayer.prototype._onPointMarkerDragStart = function(event, point) {
-  this._dragPointMarker = this._pointMarkers[point.id];
+  this._dragPointMarker = this.getPointMarker(point);
 
   this._peaks.emit('points.dragstart', {
+    point: point,
+    evt: event.evt
+  });
+};
+
+/**
+ * @param {KonvaEventObject} event
+ * @param {Point} point
+ */
+
+PointsLayer.prototype._onPointMarkerDragMove = function(event, point) {
+  const pointMarker = this._pointMarkers[point.pid];
+
+  const markerX = pointMarker.getX();
+
+  const offset = markerX + pointMarker.getWidth();
+
+  point._setTime(this._view.pixelOffsetToTime(offset));
+
+  this._peaks.emit('points.dragmove', {
     point: point,
     evt: event.evt
   });
@@ -299,28 +302,16 @@ PointsLayer.prototype.updatePoints = function(startTime, endTime) {
  */
 
 PointsLayer.prototype._updatePoint = function(point) {
-  const pointMarker = this._findOrAddPointMarker(point);
+  let pointMarker = this.getPointMarker(point);
+
+  if (!pointMarker) {
+    pointMarker = this._addPointMarker(point);
+  }
 
   const pointMarkerOffset = this._view.timeToPixels(point.time);
   const pointMarkerX = pointMarkerOffset - this._view.getFrameOffset();
 
   pointMarker.setX(pointMarkerX);
-
-  return pointMarker;
-};
-
-/**
- * @private
- * @param {Point} point
- * @return {PointMarker}
- */
-
-PointsLayer.prototype._findOrAddPointMarker = function(point) {
-  let pointMarker = this._pointMarkers[point.id];
-
-  if (!pointMarker) {
-    pointMarker = this._addPointMarker(point);
-  }
 
   return pointMarker;
 };
@@ -335,9 +326,9 @@ PointsLayer.prototype._findOrAddPointMarker = function(point) {
  */
 
 PointsLayer.prototype._removeInvisiblePoints = function(startTime, endTime) {
-  for (const pointId in this._pointMarkers) {
-    if (objectHasProperty(this._pointMarkers, pointId)) {
-      const point = this._pointMarkers[pointId].getPoint();
+  for (const pointPid in this._pointMarkers) {
+    if (objectHasProperty(this._pointMarkers, pointPid)) {
+      const point = this._pointMarkers[pointPid].getPoint();
 
       if (!point.isVisible(startTime, endTime)) {
         this._removePoint(point);
@@ -354,11 +345,11 @@ PointsLayer.prototype._removeInvisiblePoints = function(startTime, endTime) {
  */
 
 PointsLayer.prototype._removePoint = function(point) {
-  const pointMarker = this._pointMarkers[point.id];
+  const pointMarker = this.getPointMarker(point);
 
   if (pointMarker) {
     pointMarker.destroy();
-    delete this._pointMarkers[point.id];
+    delete this._pointMarkers[point.pid];
   }
 };
 
@@ -383,9 +374,9 @@ PointsLayer.prototype.destroy = function() {
 };
 
 PointsLayer.prototype.fitToView = function() {
-  for (const pointId in this._pointMarkers) {
-    if (objectHasProperty(this._pointMarkers, pointId)) {
-      const pointMarker = this._pointMarkers[pointId];
+  for (const pointPid in this._pointMarkers) {
+    if (objectHasProperty(this._pointMarkers, pointPid)) {
+      const pointMarker = this._pointMarkers[pointPid];
 
       pointMarker.fitToView();
     }

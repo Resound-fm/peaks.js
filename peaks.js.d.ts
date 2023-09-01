@@ -20,7 +20,7 @@ declare module 'peaks.js' {
 
   type WaveformColor = string | LinearGradientColor;
 
-  interface SegmentAddOptions {
+  interface SegmentOptions {
     startTime: number;
     endTime: number;
     editable?: boolean;
@@ -30,20 +30,11 @@ declare module 'peaks.js' {
     [userAttributes: string]: unknown;
   }
 
-  interface SegmentUpdateOptions {
-    startTime?: number;
-    endTime?: number;
-    editable?: boolean;
-    color?: WaveformColor;
-    labelText?: string;
-    [userAttributes: string]: unknown;
+  interface Segment extends SegmentOptions {
+    update: (options: SegmentOptions) => void;
   }
 
-  interface Segment extends SegmentAddOptions {
-    update: (options: SegmentUpdateOptions) => void;
-  }
-
-  interface PointAddOptions {
+  interface PointOptions {
     time: number;
     editable?: boolean;
     color?: string;
@@ -52,40 +43,32 @@ declare module 'peaks.js' {
     [userAttributes: string]: unknown;
   }
 
-  interface PointUpdateOptions {
-    time?: number;
-    editable?: boolean;
-    color?: string;
-    labelText?: string;
-    [userAttributes: string]: unknown;
-  }
-
-  interface Point extends PointAddOptions {
-    update: (options: PointUpdateOptions) => void;
+  interface Point extends PointOptions {
+    update: (options: PointOptions) => void;
   }
 
   type LabelHorizontalAlign = 'left' | 'center' | 'right';
   type LabelVerticalAlign = 'top' | 'middle' | 'bottom';
 
   interface SegmentDisplayOptions {
-    markers?:                   boolean;
-    overlay?:                   boolean;
-    startMarkerColor?:          string;
-    endMarkerColor?:            string;
-    waveformColor?:             WaveformColor;
-    overlayColor?:              string;
-    overlayOpacity?:            number;
-    overlayBorderColor?:        string;
-    overlayBorderWidth?:        number;
-    overlayCornerRadius?:       number;
-    overlayOffset?:             number;
-    overlayLabelAlign?:         LabelHorizontalAlign;
+    markers?: boolean;
+    overlay?: boolean;
+    startMarkerColor?: string;
+    endMarkerColor?: string;
+    waveformColor?: WaveformColor;
+    overlayColor?: string;
+    overlayOpacity?: number;
+    overlayBorderColor?: string;
+    overlayBorderWidth?: number;
+    overlayCornerRadius?: number;
+    overlayOffset?: number;
+    overlayLabelAlign?: LabelHorizontalAlign;
     overlayLabelVerticalAlign?: LabelVerticalAlign;
-    overlayLabelPadding?:       number;
-    overlayLabelColor?:         string;
-    overlayFontFamily?:         string;
-    overlayFontSize?:           number;
-    overlayFontStyle?:          string;
+    overlayLabelPadding?: number;
+    overlayLabelColor?: string;
+    overlayFontFamily?: string;
+    overlayFontSize?: number;
+    overlayFontStyle?: string;
   }
 
   /**
@@ -116,12 +99,16 @@ declare module 'peaks.js' {
     showAxisLabels?: boolean;
     formatAxisTime?: FormatTimeFunction;
     waveformColor?: WaveformColor;
+    enablePoints?: boolean;
+    enableSegments?: boolean;
     segmentOptions?: SegmentDisplayOptions;
   }
 
   interface ZoomViewOptions extends ViewOptions {
     wheelMode?: "none" | "scroll";
     playheadClickTolerance?: number;
+    autoScroll?: boolean;
+    autoScrollOffset?: number;
   }
 
   interface OverviewOptions extends ViewOptions {
@@ -197,19 +184,34 @@ declare module 'peaks.js' {
 
   type AudioOptions = OneOf<RemoteWaveformDataOptions, LocalWaveformDataOptions, WebAudioOptions>;
 
+  export interface PointMarkerUpdateOptions {
+    time?: number;
+    editable?: boolean;
+    color?: string;
+    labelText?: string;
+    [userAttributes: string]: unknown;
+  }
+
   export interface PointMarker {
     init: (group: object) => void; // TODO: group: Konva.Group
     fitToView: () => void;
-    timeUpdated?: (time: number) => void;
-    update?: () => void;
+    update?: (options: PointMarkerUpdateOptions) => void;
     destroy?: () => void;
+  }
+
+  export interface SegmentMarkerUpdateOptions {
+    startTime?: number;
+    endTime?: number;
+    editable?: boolean;
+    color?: string;
+    labelText?: string;
+    [userAttributes: string]: unknown;
   }
 
   export interface SegmentMarker {
     init: (group: object) => void; // TODO: group: Konva.Group
     fitToView: () => void;
-    timeUpdated?: (time: number) => void;
-    update?: () => void;
+    update?: (options: SegmentMarkerUpdateOptions) => void;
     destroy?: () => void;
   }
 
@@ -309,9 +311,9 @@ declare module 'peaks.js' {
      */
     zoomAdapter?: string;
     /** Array of initial segment objects */
-    segments?: SegmentAddOptions[];
+    segments?: SegmentOptions[];
     /** Array of initial point objects */
-    points?: PointAddOptions[];
+    points?: PointOptions[];
     /** Emit cue events when playing */
     emitCueEvents?: boolean;
     /** Custom segment marker factory function */
@@ -343,6 +345,14 @@ declare module 'peaks.js' {
     evt: PointerEvent;
   }
 
+  interface PointsAddEvent {
+    points: Point[];
+  }
+
+  interface PointsRemoveEvent {
+    points: Point[];
+  }
+
   interface PointClickEvent {
     point: Point;
     evt: MouseEvent;
@@ -358,6 +368,11 @@ declare module 'peaks.js' {
     point: Point;
     evt: PointerEvent;
     preventViewEvent: () => void;
+  }
+
+  interface PointCueEvent {
+    point: Point;
+    time: number;
   }
 
   interface SegmentClickEvent {
@@ -384,9 +399,32 @@ declare module 'peaks.js' {
     evt: MouseEvent;
   }
 
+  interface SegmentsAddEvent {
+    segments: Segment[];
+    insert: boolean;
+  }
+
+  interface SegmentsInsertEvent {
+    segment: Segment;
+  }
+
+  interface SegmentsRemoveEvent {
+    segments: Segment[];
+  }
+
+  interface SegmentCueEvent {
+    segment: Segment;
+    time: number;
+  }
+
+  interface ZoomChangeEvent {
+    currentZoom: number;
+    previousZoom: number;
+  }
+
   interface InstanceEvents {
     'peaks.ready': () => void;
-    'points.add': (points: Point[]) => void;
+    'points.add': (event: PointsAddEvent) => void;
     'points.click': (event: PointClickEvent) => void;
     'points.dblclick': (event: PointClickEvent) => void;
     'points.contextmenu': (event: PointPointerEvent) => void;
@@ -396,14 +434,15 @@ declare module 'peaks.js' {
     'points.mouseenter': (event: PointMouseEvent) => void;
     'points.mouseleave': (event: PointMouseEvent) => void;
     'points.remove_all': () => void;
-    'points.remove': (points: Point[]) => void;
-    'points.enter': (point: Point) => void;
-    'segments.add': (segments: Segment[]) => void;
+    'points.remove': (event: PointsRemoveEvent) => void;
+    'points.enter': (event: PointCueEvent) => void;
+    'segments.add': (event: SegmentsAddEvent) => void;
+    'segments.insert': (event: SegmentsInsertEvent) => void;
     'segments.dragstart': (event: SegmentDragEvent) => void;
     'segments.dragged': (event: SegmentDragEvent) => void;
     'segments.dragend': (event: SegmentDragEvent) => void;
     'segments.remove_all': () => void;
-    'segments.remove': (segments: Segment[]) => void;
+    'segments.remove': (event: SegmentsRemoveEvent) => void;
     'segments.mouseenter': (event: SegmentMouseEvent) => void;
     'segments.mouseleave': (event: SegmentMouseEvent) => void;
     'segments.mousedown': (event: SegmentMouseEvent) => void;
@@ -411,15 +450,15 @@ declare module 'peaks.js' {
     'segments.click': (event: SegmentClickEvent) => void;
     'segments.dblclick': (event: SegmentClickEvent) => void;
     'segments.contextmenu': (event: SegmentPointerEvent) => void;
-    'segments.enter': (segment: Segment) => void;
-    'segments.exit': (segment: Segment) => void;
+    'segments.enter': (event: SegmentCueEvent) => void;
+    'segments.exit': (event: SegmentCueEvent) => void;
     'overview.click': (event: WaveformViewMouseEvent) => void;
     'zoomview.click': (event: WaveformViewMouseEvent) => void;
     'overview.dblclick': (event: WaveformViewMouseEvent) => void;
     'zoomview.dblclick': (event: WaveformViewMouseEvent) => void;
     'overview.contextmenu': (event: WaveformViewPointerEvent) => void;
     'zoomview.contextmenu': (event: WaveformViewPointerEvent) => void;
-    'zoom.update': (currentZoomLevel: number, previousZoomLevel: number) => void;
+    'zoom.update': (event: ZoomChangeEvent) => void;
   }
 
   interface PlayerEvents {
@@ -453,13 +492,18 @@ declare module 'peaks.js' {
 
   type EventData<T> = [T] extends [(...eventData: infer U) => any] ? U : [T] extends [void] ? [] : [T];
 
+  interface ShowAxisLabelOptions {
+    topMarkerHeight?: number;
+    bottomMarkerHeight?: number;
+  }
+
   interface WaveformView {
     setAmplitudeScale: (scale: number) => void;
     setWaveformColor: (color: WaveformColor) => void;
     setPlayedWaveformColor: (color: WaveformColor | null) => void;
     showPlayheadTime: (show: boolean) => void;
     setTimeLabelPrecision: (precision: number) => void;
-    showAxisLabels: (show: boolean) => void;
+    showAxisLabels: (show: boolean, options?: ShowAxisLabelOptions) => void;
     enableMarkerEditing: (enable: boolean) => void;
     enableSeek: (enable: boolean) => void;
     fitToContainer: () => void;
@@ -468,19 +512,28 @@ declare module 'peaks.js' {
   interface WaveformOverview extends WaveformView {
   }
 
+  interface EnableAutoScrollOptions {
+    offset?: number;
+  }
+
   interface SetWheelModeOptions {
     captureVerticalScroll?: boolean;
   }
 
   interface WaveformZoomView extends WaveformView {
-    enableAutoScroll: (enable: boolean) => void;
+    enableAutoScroll: (enable: boolean, options?: EnableAutoScrollOptions) => void;
     scrollWaveform: (options: XOR<{ seconds: number }, { pixels: number }>) => void;
     setStartTime: (time: number) => void;
     setWheelMode: (mode: 'scroll' | 'none', options?: SetWheelModeOptions) => void;
     setZoom: (options: XOR<{ scale: number | 'auto' }, { seconds: number | 'auto' }>) => void;
+    setWaveformDragMode: (mode: 'scroll' | 'insert-segment') => void;
     enableSegmentDragging: (enable: boolean) => void;
     setSegmentDragMode: (mode: 'overlap' | 'no-overlap' | 'compress') => void;
     setMinSegmentDragWidth: (width: number) => void;
+  }
+
+  interface Scrollbar {
+    fitToContainer: () => void;
   }
 
   export interface PeaksInstance {
@@ -505,6 +558,7 @@ declare module 'peaks.js' {
       getView(name?: null): WaveformView | null;
       getView(name: 'overview'): WaveformOverview | null;
       getView(name: 'zoomview'): WaveformZoomView | null;
+      getScrollbar() : Scrollbar | null;
     };
     /** Zoom API */
     zoom: {
@@ -515,8 +569,8 @@ declare module 'peaks.js' {
     };
     /** Segments API */
     segments: {
-      add(segment: SegmentAddOptions): Segment;
-      add(segments: SegmentAddOptions[]): Segment[];
+      add(segment: SegmentOptions): Segment;
+      add(segments: SegmentOptions[]): Segment[];
       getSegments: () => Segment[];
       getSegment: (id: string) => Segment | undefined;
       removeByTime: (startTime: number, endTime?: number) => Segment[];
@@ -525,8 +579,8 @@ declare module 'peaks.js' {
     };
     /** Points API */
     points: {
-      add(point: PointAddOptions): Point;
-      add(points: PointAddOptions[]): Point[];
+      add(point: PointOptions): Point;
+      add(points: PointOptions[]): Point[];
       getPoints: () => Point[];
       getPoint: (id: string) => Point | undefined;
       removeByTime: (time: number) => Point[];
