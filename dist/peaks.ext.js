@@ -1,13 +1,12 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('konva/lib/Core'), require('konva/lib/shapes/Line'), require('konva/lib/shapes/Rect'), require('konva/lib/shapes/Text'), require('konva/lib/Animation'), require('waveform-data')) :
-  typeof define === 'function' && define.amd ? define(['konva/lib/Core', 'konva/lib/shapes/Line', 'konva/lib/shapes/Rect', 'konva/lib/shapes/Text', 'konva/lib/Animation', 'waveform-data'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.peaks = factory(global.Konva, global.Konva, global.Konva, global.Konva, global.Konva, global.WaveformData));
-})(this, (function (Konva, Line, Rect, Text, Animation, WaveformData) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('konva/lib/Core'), require('konva/lib/shapes/Line'), require('konva/lib/shapes/Rect'), require('konva/lib/shapes/Text'), require('konva/lib/Animation')) :
+  typeof define === 'function' && define.amd ? define(['konva/lib/Core', 'konva/lib/shapes/Line', 'konva/lib/shapes/Rect', 'konva/lib/shapes/Text', 'konva/lib/Animation'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.peaks = factory(global.Konva, global.Konva, global.Konva, global.Konva, global.Konva));
+})(this, (function (Konva, Line, Rect, Text, Animation) { 'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
   var Konva__default = /*#__PURE__*/_interopDefaultLegacy(Konva);
-  var WaveformData__default = /*#__PURE__*/_interopDefaultLegacy(WaveformData);
 
   var eventemitter3 = {exports: {}};
 
@@ -325,63 +324,14 @@
   })(eventemitter3);
   var EventEmitter = eventemitter3.exports;
 
-  function _iterableToArrayLimit(arr, i) {
-    var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
-    if (null != _i) {
-      var _s,
-        _e,
-        _x,
-        _r,
-        _arr = [],
-        _n = !0,
-        _d = !1;
-      try {
-        if (_x = (_i = _i.call(arr)).next, 0 === i) {
-          if (Object(_i) !== _i) return;
-          _n = !1;
-        } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);
-      } catch (err) {
-        _d = !0, _e = err;
-      } finally {
-        try {
-          if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
-        } finally {
-          if (_d) throw _e;
-        }
-      }
-      return _arr;
-    }
-  }
-  function _typeof(obj) {
+  function _typeof(o) {
     "@babel/helpers - typeof";
 
-    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-      return typeof obj;
-    } : function (obj) {
-      return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    }, _typeof(obj);
-  }
-  function _slicedToArray(arr, i) {
-    return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-  }
-  function _arrayWithHoles(arr) {
-    if (Array.isArray(arr)) return arr;
-  }
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-  }
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-    return arr2;
-  }
-  function _nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+      return typeof o;
+    } : function (o) {
+      return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+    }, _typeof(o);
   }
 
   /**
@@ -604,17 +554,6 @@
   }
 
   /**
-   * Checks whether the given value is a valid ArrayBuffer.
-   *
-   * @param {ArrayBuffer} value The value to test
-   * @returns {Boolean}
-   */
-
-  function isArrayBuffer(value) {
-    return Object.prototype.toString.call(value).includes('ArrayBuffer');
-  }
-
-  /**
    * Checks whether the given value is null or undefined.
    *
    * @param {Object} value The value to test
@@ -715,6 +654,10 @@
   eventNames[EVENT_TYPE_POINT] = 'points.enter';
   eventNames[EVENT_TYPE_SEGMENT_ENTER] = 'segments.enter';
   eventNames[EVENT_TYPE_SEGMENT_EXIT] = 'segments.exit';
+  var eventAttributes = {};
+  eventAttributes[EVENT_TYPE_POINT] = 'point';
+  eventAttributes[EVENT_TYPE_SEGMENT_ENTER] = 'segment';
+  eventAttributes[EVENT_TYPE_SEGMENT_EXIT] = 'segment';
 
   /**
    * Given a cue instance, returns the corresponding {@link Point}
@@ -753,11 +696,10 @@
     this._peaks = peaks;
     this._previousTime = -1;
     this._updateCues = this._updateCues.bind(this);
-    // Event handlers:
-    this._onPlaying = this.onPlaying.bind(this);
-    this._onSeeked = this.onSeeked.bind(this);
-    this._onTimeUpdate = this.onTimeUpdate.bind(this);
-    this._onAnimationFrame = this.onAnimationFrame.bind(this);
+    this._onPlaying = this._onPlaying.bind(this);
+    this._onSeeked = this._onSeeked.bind(this);
+    this._onTimeUpdate = this._onTimeUpdate.bind(this);
+    this._onAnimationFrame = this._onAnimationFrame.bind(this);
     this._rAFHandle = null;
     this._activeSegments = {};
     this._attachEventHandlers();
@@ -811,7 +753,8 @@
       step = -1;
     }
 
-    // Cues are sorted
+    // Cues are sorted.
+
     for (var i = start; isForward ? i < end : i > end; i += step) {
       var cue = this._cues[i];
       if (isForward ? cue.time > previousTime : cue.time < previousTime) {
@@ -819,7 +762,7 @@
           break;
         }
 
-        // Cue falls between time and previousTime
+        // Cue falls between time and previousTime.
 
         var marker = getPointOrSegment(this._peaks, cue);
         var eventType = isForward ? eventTypes.forward[cue.type] : eventTypes.reverse[cue.type];
@@ -828,16 +771,20 @@
         } else if (eventType === EVENT_TYPE_SEGMENT_EXIT) {
           delete this._activeSegments[marker.id];
         }
-        this._peaks.emit(eventNames[eventType], marker);
+        var event = {
+          time: time
+        };
+        event[eventAttributes[eventType]] = marker;
+        this._peaks.emit(eventNames[eventType], event);
       }
     }
   };
 
-  // the next handler and onAnimationFrame are bound together
+  // The next handler and onAnimationFrame are bound together
   // when the window isn't in focus, rAF is throttled
-  // falling back to timeUpdate
+  // falling back to timeUpdate.
 
-  CueEmitter.prototype.onTimeUpdate = function (time) {
+  CueEmitter.prototype._onTimeUpdate = function (time) {
     if (windowIsVisible()) {
       return;
     }
@@ -846,7 +793,7 @@
     }
     this._previousTime = time;
   };
-  CueEmitter.prototype.onAnimationFrame = function () {
+  CueEmitter.prototype._onAnimationFrame = function () {
     var time = this._peaks.player.getCurrentTime();
     if (!this._peaks.player.isSeeking()) {
       this._onUpdate(time, this._previousTime);
@@ -856,11 +803,11 @@
       this._rAFHandle = requestAnimationFrame(this._onAnimationFrame);
     }
   };
-  CueEmitter.prototype.onPlaying = function () {
+  CueEmitter.prototype._onPlaying = function () {
     this._previousTime = this._peaks.player.getCurrentTime();
     this._rAFHandle = requestAnimationFrame(this._onAnimationFrame);
   };
-  CueEmitter.prototype.onSeeked = function (time) {
+  CueEmitter.prototype._onSeeked = function (time) {
     this._previousTime = time;
     this._updateActiveSegments(time);
   };
@@ -886,7 +833,10 @@
       if (objectHasProperty(self._activeSegments, id)) {
         var segment = activeSegments.find(getSegmentIdComparator(id));
         if (!segment) {
-          self._peaks.emit('segments.exit', self._activeSegments[id]);
+          self._peaks.emit('segments.exit', {
+            segment: self._activeSegments[id],
+            time: time
+          });
           delete self._activeSegments[id];
         }
       }
@@ -897,7 +847,10 @@
     activeSegments.forEach(function (segment) {
       if (!(segment.id in self._activeSegments)) {
         self._activeSegments[segment.id] = segment;
-        self._peaks.emit('segments.enter', segment);
+        self._peaks.emit('segments.enter', {
+          segment: segment,
+          time: time
+        });
       }
     });
   };
@@ -935,14 +888,17 @@
    *
    * @module point
    */
-  var pointOptions = ['id', 'time', 'labelText', 'color', 'editable'];
-  var invalidOptions$1 = ['update', 'isVisible', 'peaks'];
-  function setDefaultPointOptions(options) {
+  var pointOptions = ['id', 'pid', 'time', 'labelText', 'color', 'editable'];
+  var invalidOptions$1 = ['update', 'isVisible', 'peaks', 'pid'];
+  function setDefaultPointOptions(options, peaksOptions) {
     if (isNullOrUndefined(options.labelText)) {
       options.labelText = '';
     }
     if (isNullOrUndefined(options.editable)) {
       options.editable = false;
+    }
+    if (isNullOrUndefined(options.color)) {
+      options.color = peaksOptions.pointMarkerColor;
     }
   }
   function validatePointOptions(options, updating) {
@@ -986,17 +942,13 @@
    * @alias Point
    *
    * @param {Peaks} peaks A reference to the Peaks instance.
-   * @param {String} id A unique identifier for the point.
-   * @param {Number} time Point time, in seconds.
-   * @param {String} labelText Point label text.
-   * @param {String} color Point marker color.
-   * @param {Boolean} editable If <code>true</code> the segment start and
-   *   end times can be adjusted via the user interface.
-   * @param {*} data Optional application specific data.
+   * @param {Number} pid An internal unique identifier for the point.
+   * @param {PointOptions} options User specified point attributes.
    */
 
-  function Point(options) {
-    this._peaks = options.peaks;
+  function Point(peaks, pid, options) {
+    this._peaks = peaks;
+    this._pid = pid;
     this._setUserData(options);
   }
   Point.prototype._setUserData = function (options) {
@@ -1015,6 +967,12 @@
       enumerable: true,
       get: function get() {
         return this._id;
+      }
+    },
+    pid: {
+      enumerable: true,
+      get: function get() {
+        return this._pid;
       }
     },
     time: {
@@ -1042,10 +1000,13 @@
     }
   });
   Point.prototype.update = function (options) {
-    if (objectHasProperty(options, 'id')) {
-      throw new Error('peaks.points.update(): id cannot be updated');
-    }
     validatePointOptions(options, true);
+    if (objectHasProperty(options, 'id')) {
+      if (isNullOrUndefined(options.id)) {
+        throw new TypeError('point.update(): invalid id');
+      }
+      this._peaks.points.updatePointId(this, options.id);
+    }
     this._setUserData(options);
     this._peaks.emit('points.update', this, options);
   };
@@ -1078,7 +1039,7 @@
    *
    * @typedef {Object} PointOptions
    * @global
-   * @property {Number} point Point time, in seconds.
+   * @property {Number} time Point time, in seconds.
    * @property {Boolean=} editable If <code>true</code> the point time can be
    *   adjusted via the user interface.
    *   Default: <code>false</code>.
@@ -1088,6 +1049,7 @@
    *   Default: an empty string.
    * @property {String=} id A unique point identifier.
    *   Default: an automatically generated identifier.
+   * @property {*} data Optional application-specific data.
    */
 
   /**
@@ -1104,7 +1066,9 @@
     this._peaks = peaks;
     this._points = [];
     this._pointsById = {};
+    this._pointsByPid = {};
     this._pointIdCounter = 0;
+    this._pointPid = 0;
   }
 
   /**
@@ -1118,6 +1082,17 @@
   };
 
   /**
+   * Returns a new unique point id value, for internal use within
+   * Peaks.js only.
+   *
+   * @returns {Number}
+   */
+
+  WaveformPoints.prototype._getNextPid = function () {
+    return this._pointPid++;
+  };
+
+  /**
    * Adds a new point object.
    *
    * @private
@@ -1127,6 +1102,7 @@
   WaveformPoints.prototype._addPoint = function (point) {
     this._points.push(point);
     this._pointsById[point.id] = point;
+    this._pointsByPid[point.pid] = point;
   };
 
   /**
@@ -1143,10 +1119,10 @@
     if (isNullOrUndefined(pointOptions.id)) {
       pointOptions.id = this._getNextPointId();
     }
-    setDefaultPointOptions(pointOptions);
+    var pid = this._getNextPid();
+    setDefaultPointOptions(pointOptions, this._peaks.options);
     validatePointOptions(pointOptions, false);
-    pointOptions.peaks = this._peaks;
-    return new Point(pointOptions);
+    return new Point(this._peaks, pid, pointOptions);
   };
 
   /**
@@ -1207,8 +1183,20 @@
     points.forEach(function (point) {
       self._addPoint(point);
     });
-    this._peaks.emit('points.add', points);
+    this._peaks.emit('points.add', {
+      points: points
+    });
     return arrayArgs ? points : points[0];
+  };
+  WaveformPoints.prototype.updatePointId = function (point, newPointId) {
+    if (this._pointsById[point.id]) {
+      if (this._pointsById[newPointId]) {
+        throw new Error('point.update(): duplicate id');
+      } else {
+        delete this._pointsById[point.id];
+        this._pointsById[newPointId] = point;
+      }
+    }
   };
 
   /**
@@ -1244,6 +1232,7 @@
       var index = indexes[i] - removed.length;
       var itemRemoved = this._points.splice(index, 1)[0];
       delete this._pointsById[itemRemoved.id];
+      delete this._pointsByPid[itemRemoved.pid];
       removed.push(itemRemoved);
     }
     return removed;
@@ -1265,7 +1254,9 @@
   WaveformPoints.prototype._removePoints = function (predicate) {
     var indexes = this._findPoint(predicate);
     var removed = this._removeIndexes(indexes);
-    this._peaks.emit('points.remove', removed);
+    this._peaks.emit('points.remove', {
+      points: removed
+    });
     return removed;
   };
 
@@ -1318,6 +1309,7 @@
   WaveformPoints.prototype.removeAll = function () {
     this._points = [];
     this._pointsById = {};
+    this._pointsByPid = {};
     this._peaks.emit('points.remove_all');
   };
 
@@ -1328,8 +1320,8 @@
    *
    * @module segment
    */
-  var segmentOptions = ['id', 'startTime', 'endTime', 'labelText', 'color', 'borderColor', 'editable'];
-  var invalidOptions = ['update', 'isVisible', 'peaks'];
+  var segmentOptions = ['id', 'pid', 'startTime', 'endTime', 'labelText', 'color', 'borderColor', 'editable'];
+  var invalidOptions = ['update', 'isVisible', 'peaks', 'pid'];
   function setDefaultSegmentOptions(options, globalSegmentOptions) {
     if (isNullOrUndefined(options.color)) {
       if (globalSegmentOptions.overlay) {
@@ -1408,19 +1400,13 @@
    * @alias Segment
    *
    * @param {Peaks} peaks A reference to the Peaks instance.
-   * @param {String} id A unique identifier for the segment.
-   * @param {Number} startTime Segment start time, in seconds.
-   * @param {Number} endTime Segment end time, in seconds.
-   * @param {String} labelText Segment label text.
-   * @param {String | LinearGradientColor} color Segment color.
-   * @param {String} borderColor Segment border color.
-   * @param {Boolean} editable If <code>true</code> the segment start and
-   *   end times can be adjusted via the user interface.
-   * @param {*} data Optional application specific data.
+   * @param {Number} pid An internal unique identifier for the segment.
+   * @param {SegmentOptions} options User specified segment attributes.
    */
 
-  function Segment(options) {
-    this._peaks = options.peaks;
+  function Segment(peaks, pid, options) {
+    this._peaks = peaks;
+    this._pid = pid;
     this._id = options.id;
     this._startTime = options.startTime;
     this._endTime = options.endTime;
@@ -1446,6 +1432,12 @@
       enumerable: true,
       get: function get() {
         return this._id;
+      }
+    },
+    pid: {
+      enumerable: true,
+      get: function get() {
+        return this._pid;
       }
     },
     startTime: {
@@ -1486,10 +1478,13 @@
     }
   });
   Segment.prototype.update = function (options) {
-    if (objectHasProperty(options, 'id')) {
-      throw new Error('peaks.segments.update(): id cannot be updated');
-    }
     validateSegmentOptions(options, true);
+    if (objectHasProperty(options, 'id')) {
+      if (isNullOrUndefined(options.id)) {
+        throw new TypeError('segment.update(): invalid id');
+      }
+      this._peaks.segments.updateSegmentId(this, options.id);
+    }
     this._setUserData(options);
     this._peaks.emit('segments.update', this, options);
   };
@@ -1541,6 +1536,7 @@
    *   Default: an empty string.
    * @property {String=} id A unique segment identifier.
    *   Default: an automatically generated identifier.
+   * @property {*} data Optional application specific data.
    */
 
   /**
@@ -1557,7 +1553,10 @@
     this._peaks = peaks;
     this._segments = [];
     this._segmentsById = {};
+    this._segmentsByPid = {};
     this._segmentIdCounter = 0;
+    this._segmentPid = 0;
+    this._isInserting = false;
   }
 
   /**
@@ -1572,6 +1571,18 @@
   };
 
   /**
+   * Returns a new unique segment id value, for internal use within
+   * Peaks.js only.
+   *
+   * @private
+   * @returns {Number}
+   */
+
+  WaveformSegments.prototype._getNextPid = function () {
+    return this._segmentPid++;
+  };
+
+  /**
    * Adds a new segment object.
    *
    * @private
@@ -1581,6 +1592,7 @@
   WaveformSegments.prototype._addSegment = function (segment) {
     this._segments.push(segment);
     this._segmentsById[segment.id] = segment;
+    this._segmentsByPid[segment.pid] = segment;
   };
 
   /**
@@ -1597,10 +1609,10 @@
     if (isNullOrUndefined(segmentOptions.id)) {
       segmentOptions.id = this._getNextSegmentId();
     }
+    var pid = this._getNextPid();
     setDefaultSegmentOptions(segmentOptions, this._peaks.options.segmentOptions);
     validateSegmentOptions(segmentOptions, false);
-    segmentOptions.peaks = this._peaks;
-    return new Segment(segmentOptions);
+    return new Segment(this._peaks, pid, segmentOptions);
   };
 
   /**
@@ -1707,8 +1719,21 @@
     segments.forEach(function (segment) {
       self._addSegment(segment);
     });
-    this._peaks.emit('segments.add', segments);
+    this._peaks.emit('segments.add', {
+      segments: segments,
+      insert: this._isInserting
+    });
     return arrayArgs ? segments : segments[0];
+  };
+  WaveformSegments.prototype.updateSegmentId = function (segment, newSegmentId) {
+    if (this._segmentsById[segment.id]) {
+      if (this._segmentsById[newSegmentId]) {
+        throw new Error('segment.update(): duplicate id');
+      } else {
+        delete this._segmentsById[segment.id];
+        this._segmentsById[newSegmentId] = segment;
+      }
+    }
   };
 
   /**
@@ -1744,6 +1769,7 @@
       var index = indexes[i] - removed.length;
       var itemRemoved = this._segments.splice(index, 1)[0];
       delete this._segmentsById[itemRemoved.id];
+      delete this._segmentsByPid[itemRemoved.pid];
       removed.push(itemRemoved);
     }
     return removed;
@@ -1765,7 +1791,9 @@
   WaveformSegments.prototype._removeSegments = function (predicate) {
     var indexes = this._findSegment(predicate);
     var removed = this._removeIndexes(indexes);
-    this._peaks.emit('segments.remove', removed);
+    this._peaks.emit('segments.remove', {
+      segments: removed
+    });
     return removed;
   };
 
@@ -1829,7 +1857,14 @@
   WaveformSegments.prototype.removeAll = function () {
     this._segments = [];
     this._segmentsById = {};
+    this._segmentsByPid = {};
     this._peaks.emit('segments.remove_all');
+  };
+  WaveformSegments.prototype.setInserting = function (value) {
+    this._isInserting = value;
+  };
+  WaveformSegments.prototype.isInserting = function () {
+    return this._isInserting;
   };
 
   /**
@@ -2304,6 +2339,7 @@
 
   function DefaultPointMarker(options) {
     this._options = options;
+    this._draggable = options.editable;
   }
   DefaultPointMarker.prototype.init = function (group) {
     var handleWidth = 10;
@@ -2328,15 +2364,14 @@
 
     // Handle - create with default y, the real value is set in fitToView().
 
-    if (this._options.draggable) {
-      this._handle = new Rect.Rect({
-        x: handleX,
-        y: 0,
-        width: handleWidth,
-        height: handleHeight,
-        fill: this._options.color
-      });
-    }
+    this._handle = new Rect.Rect({
+      x: handleX,
+      y: 0,
+      width: handleWidth,
+      height: handleHeight,
+      fill: this._options.color,
+      visible: this._draggable
+    });
 
     // Line - create with default y and points, the real values
     // are set in fitToView().
@@ -2347,54 +2382,49 @@
       strokeWidth: 1
     });
 
-    // Time label
-
-    if (this._handle) {
-      // Time - create with default y, the real value is set in fitToView().
-      this._time = new Text.Text({
-        x: -24,
-        y: 0,
-        text: this._options.layer.formatTime(this._options.point.time),
-        fontFamily: this._options.fontFamily,
-        fontSize: this._options.fontSize,
-        fontStyle: this._options.fontStyle,
-        fill: '#000',
-        textAlign: 'center'
-      });
-      this._time.hide();
-    }
-    if (this._handle) {
-      group.add(this._handle);
-    }
+    // Time label - create with default y, the real value is set
+    // in fitToView().
+    this._time = new Text.Text({
+      x: -24,
+      y: 0,
+      text: this._options.layer.formatTime(this._options.point.time),
+      fontFamily: this._options.fontFamily,
+      fontSize: this._options.fontSize,
+      fontStyle: this._options.fontStyle,
+      fill: '#000',
+      textAlign: 'center'
+    });
+    this._time.hide();
+    group.add(this._handle);
     group.add(this._line);
     if (this._label) {
       group.add(this._label);
     }
-    if (this._time) {
-      group.add(this._time);
-    }
+    group.add(this._time);
     this.fitToView();
     this.bindEventHandlers(group);
   };
   DefaultPointMarker.prototype.bindEventHandlers = function (group) {
     var self = this;
-    if (self._handle) {
-      self._handle.on('mouseover touchstart', function () {
+    self._handle.on('mouseover touchstart', function () {
+      if (self._draggable) {
         // Position text to the left of the marker
         self._time.setX(-24 - self._time.getWidth());
         self._time.show();
-      });
-      self._handle.on('mouseout touchend', function () {
+      }
+    });
+    self._handle.on('mouseout touchend', function () {
+      if (self._draggable) {
         self._time.hide();
-      });
-      group.on('dragstart', function () {
-        self._time.setX(-24 - self._time.getWidth());
-        self._time.show();
-      });
-      group.on('dragend', function () {
-        self._time.hide();
-      });
-    }
+      }
+    });
+    group.on('dragstart', function () {
+      self._time.setX(-24 - self._time.getWidth());
+      self._time.show();
+    });
+    group.on('dragend', function () {
+      self._time.hide();
+    });
   };
   DefaultPointMarker.prototype.fitToView = function () {
     var height = this._options.layer.getHeight();
@@ -2409,11 +2439,36 @@
       this._time.y(height / 2 - 5);
     }
   };
-  DefaultPointMarker.prototype.timeUpdated = function (time) {
-    if (this._time) {
-      this._time.setText(this._options.layer.formatTime(time));
+  DefaultPointMarker.prototype.update = function (options) {
+    if (options.time !== undefined) {
+      if (this._time) {
+        this._time.setText(this._options.layer.formatTime(options.time));
+      }
+    }
+    if (options.labelText !== undefined) {
+      if (this._label) {
+        this._label.text(options.labelText);
+      }
+    }
+    if (options.color !== undefined) {
+      if (this._handle) {
+        this._handle.fill(options.color);
+      }
+      this._line.stroke(options.color);
+    }
+    if (options.editable !== undefined) {
+      this._draggable = options.editable;
+      this._handle.visible(this._draggable);
     }
   };
+
+  /**
+   * @file
+   *
+   * Defines the {@link DefaultSegmentMarker} class.
+   *
+   * @module default-segment-marker
+   */
 
   /**
    * Creates a segment marker handle.
@@ -2426,18 +2481,15 @@
 
   function DefaultSegmentMarker(options) {
     this._options = options;
+    this._editable = options.editable;
   }
   DefaultSegmentMarker.prototype.init = function (group) {
-    var _this = this;
-    var handleWidth = 15;
-    var handleHeight = 48;
-    var handleX = -(handleWidth / 2) - 8; // Place off to the side of the segment
+    var handleWidth = 10;
+    var handleHeight = 20;
+    var handleX = -(handleWidth / 2) + 0.5; // Place in the middle of the marker
 
-    handleX = this._options.startMarker ? handleX * -1 - 14.9 : handleX;
     var xPosition = this._options.startMarker ? -24 : 24;
     var time = this._options.startMarker ? this._options.segment.startTime : this._options.segment.endTime;
-    var handleLineColor = this._options.segment.borderColor;
-    var handleColor = this._options.segment.handleColor;
 
     // Label - create with default y, the real value is set in fitToView().
     this._label = new Text.Text({
@@ -2448,7 +2500,8 @@
       fontSize: this._options.fontSize,
       fontStyle: this._options.fontStyle,
       fill: '#000',
-      textAlign: 'center'
+      textAlign: 'center',
+      visible: this._editable
     });
     this._label.hide();
 
@@ -2458,203 +2511,68 @@
       y: 0,
       width: handleWidth,
       height: handleHeight,
-      fill: handleColor,
-      stroke: handleColor,
-      strokeWidth: 0
-    });
-    this._handleLineOne = new Rect.Rect({
-      name: 'handleLineOne',
-      x: handleX + 4.5,
-      y: 0,
-      width: 0.5,
-      height: 16,
-      fill: handleLineColor,
-      stroke: handleLineColor,
-      strokeWidth: 1
-    });
-    this._handleLineTwo = new Rect.Rect({
-      name: 'handleLineTwo',
-      x: handleX + 9.5,
-      y: 0,
-      width: 0.5,
-      height: 16,
-      fill: handleLineColor,
-      stroke: handleLineColor,
-      strokeWidth: 1
-    });
-    this._handleLineSingle = new Rect.Rect({
-      name: 'handleLineSingle',
-      x: handleX + 7,
-      y: 0,
-      width: 0.5,
-      height: 16,
-      fill: handleLineColor,
-      stroke: handleLineColor,
+      fill: this._options.color,
+      stroke: this._options.color,
       strokeWidth: 1,
-      visible: false
+      visible: this._editable
     });
 
     // Vertical Line - create with default y and points, the real values
     // are set in fitToView().
     this._line = new Line.Line({
       x: 0,
-      y: 0
+      y: 0,
+      stroke: this._options.color,
+      strokeWidth: 1,
+      visible: this._editable
     });
     group.add(this._label);
-    // group.add(this._line);
-    group.add(this._handleLineOne);
-    group.add(this._handleLineTwo);
-    group.add(this._handleLineSingle);
+    group.add(this._line);
     group.add(this._handle);
     this.fitToView();
     this.bindEventHandlers(group);
-    setTimeout(function () {
-      var focusedSegmentShape;
-      var segmentShapes = _this._options.layer._segmentShapes;
-      for (var _i = 0, _Object$entries = Object.entries(segmentShapes); _i < _Object$entries.length; _i++) {
-        var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 1),
-          value = _Object$entries$_i[0];
-        var segmentShape = segmentShapes[value];
-        if (segmentShape._endMarker !== null) {
-          focusedSegmentShape = segmentShape;
-          break;
-        }
-      }
-      var segmentShapeWidth = focusedSegmentShape._overlay.width();
-      if (segmentShapeWidth <= 32.5) {
-        var markerInfo = _this.getMarkerInfo(focusedSegmentShape);
-        _this.updateMarkersSmall(segmentShapeWidth, markerInfo);
-      }
-    }, 0);
   };
   DefaultSegmentMarker.prototype.bindEventHandlers = function (group) {
     var self = this;
-
-    // const xPosition = self._options.startMarker ? -24 : 24;
-
-    if (self._options.draggable) {
-      group.on('dragstart', function () {
-        // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
-        // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
-        // if (self._options.startMarker) {
-        //   self._label.setX(xPosition - self._label.getWidth());
-        // }
-
-        // self._label.show();
-      });
-      group.on('dragend', function () {
-        // self._label.hide();
-      });
-    }
+    var xPosition = self._options.startMarker ? -24 : 24;
+    group.on('dragstart', function () {
+      if (self._options.startMarker) {
+        self._label.setX(xPosition - self._label.getWidth());
+      }
+      self._label.show();
+    });
+    group.on('dragend', function () {
+      self._label.hide();
+    });
     self._handle.on('mouseover touchstart', function () {
-      document.body.style.cursor = 'col-resize';
-      // self._handle.attrs.fill = '#3641414D'; // neutral-800 .30a
-      // self._handle.attrs.stroke = '#3641414D'; // neutral-800 .30a
-      // if (self._options.startMarker) {
-      //   self._label.setX(xPosition - self._label.getWidth());
-      // }
-
-      // self._label.show();
-      this.parent.parent.draw();
+      if (self._options.startMarker) {
+        self._label.setX(xPosition - self._label.getWidth());
+      }
+      self._label.show();
     });
     self._handle.on('mouseout touchend', function () {
-      document.body.style.cursor = 'default';
-      // self._handle.attrs.fill = '#6E797A4D'; // neutral-600 .30a
-      // self._handle.attrs.stroke = '#6E797A4D'; // neutral-600 .30a
-      // self._label.hide();
-      this.parent.parent.draw();
+      self._label.hide();
     });
   };
   DefaultSegmentMarker.prototype.fitToView = function () {
     var height = this._options.layer.getHeight();
     this._label.y(height / 2 - 5);
-    this._handle.y(height / 2 + 45);
-    this._handleLineOne.y(height / 2 + 61);
-    this._handleLineTwo.y(height / 2 + 61);
-    this._handleLineSingle.y(height / 2 + 61);
-    // this._line.points([0.5, 0, 0.5, height]);
+    this._handle.y(height / 2 - 10.5);
+    this._line.points([0.5, 0, 0.5, height]);
   };
-
-  DefaultSegmentMarker.prototype.updateMarkersSmall = function (segmentShapeWidth, markerInfo) {
-    var endMarkerHandleLineSingle = markerInfo.endMarkerHandleLineSingle,
-      startMarkerHandleLineSingle = markerInfo.startMarkerHandleLineSingle;
-    var newHandleWidth = segmentShapeWidth / 2 - 0.5;
-    markerInfo.endMarker._handle.x(-newHandleWidth + 1);
-    markerInfo.startMarker._handle.attrs.width = newHandleWidth;
-    markerInfo.endMarker._handle.attrs.width = newHandleWidth;
-    markerInfo.endMarkerHandleLines.forEach(function (line) {
-      return line.hide();
-    });
-    endMarkerHandleLineSingle.show();
-    endMarkerHandleLineSingle.x(newHandleWidth / 2 - newHandleWidth);
-    markerInfo.startMarkerHandleLines.forEach(function (line) {
-      return line.hide();
-    });
-    startMarkerHandleLineSingle.show();
-    startMarkerHandleLineSingle.x(newHandleWidth / 2);
-  };
-  DefaultSegmentMarker.prototype.getMarkerInfo = function (segmentShape) {
-    var _endMarker = segmentShape._endMarker,
-      _startMarker = segmentShape._startMarker;
-    var endMarker = _endMarker._marker;
-    var endMarkerGroupChildren = _endMarker._group.children;
-    var startMarker = _startMarker._marker;
-    var startMarkerGroupChildren = _startMarker._group.children;
-    var endMarkerHandleLines = endMarkerGroupChildren.filter(function (child) {
-      return child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo';
-    });
-    var endMarkerHandleLineSingle = endMarkerGroupChildren.find(function (child) {
-      return child.attrs.name === 'handleLineSingle';
-    });
-    var startMarkerHandleLines = startMarkerGroupChildren.filter(function (child) {
-      return child.attrs.name === 'handleLineOne' || child.attrs.name === 'handleLineTwo';
-    });
-    var startMarkerHandleLineSingle = startMarkerGroupChildren.find(function (child) {
-      return child.attrs.name === 'handleLineSingle';
-    });
-    return {
-      endMarker: endMarker,
-      startMarker: startMarker,
-      endMarkerHandleLines: endMarkerHandleLines,
-      endMarkerHandleLineSingle: endMarkerHandleLineSingle,
-      startMarkerHandleLines: startMarkerHandleLines,
-      startMarkerHandleLineSingle: startMarkerHandleLineSingle
-    };
-  };
-  DefaultSegmentMarker.prototype.timeUpdated = function (time) {
-    var focusedSegmentShape;
-    var segmentShapes = this._options.layer._segmentShapes;
-    for (var _i2 = 0, _Object$entries2 = Object.entries(segmentShapes); _i2 < _Object$entries2.length; _i2++) {
-      var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i2], 1),
-        value = _Object$entries2$_i[0];
-      var segmentShape = segmentShapes[value];
-      if (segmentShape._endMarker !== null) {
-        focusedSegmentShape = segmentShape;
-        break;
-      }
+  DefaultSegmentMarker.prototype.update = function (options) {
+    if (options.startTime !== undefined && this._options.startMarker) {
+      this._label.text(this._options.layer.formatTime(options.startTime));
     }
-    var markerInfo = this.getMarkerInfo(focusedSegmentShape);
-    var segmentShapeWidth = focusedSegmentShape._overlay.width();
-    if (segmentShapeWidth <= 32.5) {
-      this.updateMarkersSmall(segmentShapeWidth, markerInfo);
-    } else {
-      var handleX = -(15 / 2) - 8;
-      var startHandleX = handleX * -1 - 14.9;
-      var endHandleX = handleX;
-      markerInfo.endMarker._handle.x(endHandleX);
-      markerInfo.startMarker._handle.x(startHandleX);
-      markerInfo.startMarker._handle.attrs.width = 15;
-      markerInfo.endMarker._handle.attrs.width = 15;
-      markerInfo.endMarkerHandleLines.forEach(function (line) {
-        return line.show();
-      });
-      markerInfo.endMarkerHandleLineSingle.hide();
-      markerInfo.startMarkerHandleLines.forEach(function (line) {
-        return line.show();
-      });
-      markerInfo.startMarkerHandleLineSingle.hide();
+    if (options.endTime !== undefined && !this._options.startMarker) {
+      this._label.text(this._options.layer.formatTime(options.endTime));
     }
-    this._label.setText(this._options.layer.formatTime(time));
+    if (options.editable !== undefined) {
+      this._editable = options.editable;
+      this._label.visible(this._editable);
+      this._handle.visible(this._editable);
+      this._line.visible(this._editable);
+    }
   };
 
   /**
@@ -2738,7 +2656,7 @@
    * @typedef {Object} CreatePointMarkerOptions
    * @global
    * @property {Point} point
-   * @property {Boolean} draggable If true, marker is draggable.
+   * @property {Boolean} editable If true, marker is draggable.
    * @property {String} color
    * @property {Layer} layer
    * @property {String} view
@@ -2757,189 +2675,6 @@
   function createPointMarker(options) {
     return new DefaultPointMarker(options);
   }
-
-  /**
-   * @file
-   *
-   * Defines the {@link Scrollbar} class.
-   *
-   * @module scrollbar
-   */
-
-  /**
-   * Creates a scrollbar.
-   *
-   * @class
-   * @alias Scrollbar
-   *
-   * @param {WaveformData} waveformData
-   * @param {HTMLElement} container
-   * @param {Peaks} peaks
-   */
-
-  function Scrollbar(waveformData, container, peaks) {
-    this._waveformData = waveformData;
-    this._container = container;
-    this._peaks = peaks;
-    this._options = peaks.options.scrollbar;
-    this._zoomview = peaks.views.getView('zoomview');
-    this._dragBoundFunc = this._dragBoundFunc.bind(this);
-    this._onScrollboxDragStart = this._onScrollboxDragStart.bind(this);
-    this._onScrollboxDragMove = this._onScrollboxDragMove.bind(this);
-    this._onScrollboxDragEnd = this._onScrollboxDragEnd.bind(this);
-    this._onZoomviewDisplaying = this._onZoomviewDisplaying.bind(this);
-    this._onScrollbarClick = this._onScrollbarClick.bind(this);
-    this._onWindowResize = this._onWindowResize.bind(this);
-    peaks.on('zoomview.displaying', this._onZoomviewDisplaying);
-    peaks.on('window_resize', this._onWindowResize);
-    this._width = container.clientWidth;
-    // this._height = container.clientHeight;
-    this._height = 10;
-    this._stage = new Konva__default["default"].Stage({
-      container: container,
-      width: this._width,
-      height: this._height
-    });
-    this._layer = new Konva__default["default"].Layer();
-    this._stage.on('click', this._onScrollbarClick);
-    this._stage.add(this._layer);
-    this._color = this._options.color;
-    this._scrollboxX = 0;
-    this._minScrollboxWidth = this._options.minWidth;
-    this._offsetY = 0;
-    this._scrollbox = new Konva__default["default"].Group({
-      draggable: true,
-      dragBoundFunc: this._dragBoundFunc
-    });
-    this._scrollboxRect = new Rect.Rect({
-      x: this._scrollboxX,
-      y: this._offsetY,
-      width: 0,
-      height: this._height,
-      fill: this._color,
-      cornerRadius: 10
-    });
-    this._scrollbox.add(this._scrollboxRect);
-    this._setScrollboxWidth();
-    this._scrollbox.on('dragstart', this._onScrollboxDragStart);
-    this._scrollbox.on('dragmove', this._onScrollboxDragMove);
-    this._scrollbox.on('dragend', this._onScrollboxDragEnd);
-    this._layer.add(this._scrollbox);
-    this._layer.draw();
-  }
-
-  /**
-   * Sets the width of the scrollbox, based on the visible waveform region
-   * in the zoomview and minimum scrollbox width option.
-   */
-
-  Scrollbar.prototype._setScrollboxWidth = function () {
-    if (this._zoomview) {
-      this._scrollboxWidth = Math.floor(this._width * this._zoomview.pixelsToTime(this._zoomview.getWidth()) / this._peaks.player.getDuration());
-      if (this._scrollboxWidth < this._minScrollboxWidth) {
-        this._scrollboxWidth = this._minScrollboxWidth;
-      }
-    } else {
-      this._scrollboxWidth = this._minScrollboxWidth;
-    }
-    this._scrollboxRect.width(this._scrollboxWidth);
-  };
-
-  /**
-   * @returns {Number} The maximum scrollbox position, in pixels.
-   */
-
-  Scrollbar.prototype._getScrollbarRange = function () {
-    return this._width - this._scrollboxWidth;
-  };
-  Scrollbar.prototype._dragBoundFunc = function (pos) {
-    // Allow the scrollbar to be moved horizontally but not vertically.
-    return {
-      x: pos.x,
-      y: 0
-    };
-  };
-  Scrollbar.prototype._onScrollboxDragStart = function () {
-    this._dragging = true;
-  };
-  Scrollbar.prototype._onScrollboxDragEnd = function () {
-    this._dragging = false;
-  };
-  Scrollbar.prototype._onScrollboxDragMove = function () {
-    var range = this._getScrollbarRange();
-    var x = this._scrollbox.x();
-    x = clamp(x, 0, range);
-    this._scrollbox.x(x);
-    if (x !== this._scrollboxX) {
-      this._scrollboxX = x;
-      if (this._zoomview) {
-        this._updateWaveform(x);
-      }
-    }
-  };
-  Scrollbar.prototype._onZoomviewDisplaying = function /* startTime , endTime */
-  () {
-    if (!this._dragging) {
-      this._updateScrollbarWidthAndPosition();
-    }
-  };
-  Scrollbar.prototype._updateScrollbarWidthAndPosition = function () {
-    this._setScrollboxWidth();
-    if (this._zoomview) {
-      var startTime = this._zoomview.getStartTime();
-      var zoomviewRange = this._zoomview.getPixelLength() - this._zoomview.getWidth();
-      var scrollBoxPos = Math.floor(this._zoomview.timeToPixels(startTime) * this._getScrollbarRange() / zoomviewRange);
-      this._scrollbox.x(scrollBoxPos);
-      this._layer.draw();
-    }
-  };
-  Scrollbar.prototype._onScrollbarClick = function (event) {
-    // Handle clicks on the scrollbar outside the scrollbox.
-    if (event.target === this._stage) {
-      if (this._zoomview) {
-        var x = event.evt.layerX;
-
-        // Centre the scrollbox where the user clicked.
-        x = Math.floor(x - this._scrollboxWidth / 2);
-        if (x < 0) {
-          x = 0;
-        }
-        this._updateWaveform(x);
-      }
-    }
-  };
-
-  /**
-   * Sets the zoomview waveform position based on scrollbar position.
-   */
-
-  Scrollbar.prototype._updateWaveform = function (x) {
-    var offset = Math.floor((this._zoomview.getPixelLength() - this._zoomview.getWidth()) * x / this._getScrollbarRange());
-    this._zoomview.updateWaveform(offset);
-  };
-  Scrollbar.prototype._onWindowResize = function () {
-    this._width = this._container.clientWidth;
-    this._stage.width(this._width);
-    this._updateScrollbarWidthAndPosition();
-  };
-  Scrollbar.prototype.fitToContainer = function () {
-    if (this._container.clientWidth === 0 && this._container.clientHeight === 0) {
-      return;
-    }
-    if (this._container.clientWidth !== this._width) {
-      this._width = this._container.clientWidth;
-      this._stage.width(this._width);
-    }
-    this._height = this._container.clientHeight;
-    this._stage.height(this._height);
-    this._stage.draw();
-  };
-  Scrollbar.prototype.destroy = function () {
-    this._peaks.off('window_resize', this._onWindowResize);
-    this._layer.destroy();
-    this._stage.destroy();
-    this._stage = null;
-  };
 
   /**
    * @file
@@ -3054,189 +2789,6 @@
         height: height - offset * 2
       });
     }
-  };
-
-  /**
-   * @file
-   *
-   * Defines the {@link MouseDragHandler} class.
-   *
-   * @module mouse-drag-handler
-   */
-
-  /**
-   * An object to receive callbacks on mouse drag events. Each function is
-   * called with the current mouse X position, relative to the stage's
-   * container HTML element.
-   *
-   * @typedef {Object} MouseDragHandlers
-   * @global
-   * @property {Function} onMouseDown Mouse down event handler.
-   * @property {Function} onMouseMove Mouse move event handler.
-   * @property {Function} onMouseUp Mouse up event handler.
-   */
-
-  /**
-   * Creates a handler for mouse events to allow interaction with the waveform
-   * views by clicking and dragging the mouse.
-   *
-   * @class
-   * @alias MouseDragHandler
-   *
-   * @param {Konva.Stage} stage
-   * @param {MouseDragHandlers} handlers
-   */
-
-  function MouseDragHandler(stage, handlers) {
-    this._stage = stage;
-    this._handlers = handlers;
-    this._dragging = false;
-    this._mouseDown = this._mouseDown.bind(this);
-    this._mouseUp = this._mouseUp.bind(this);
-    this._mouseMove = this._mouseMove.bind(this);
-    this._stage.on('mousedown', this._mouseDown);
-    this._stage.on('touchstart', this._mouseDown);
-    this._lastMouseClientX = null;
-  }
-
-  /**
-   * Mouse down event handler.
-   *
-   * @param {MouseEvent} event
-   */
-
-  MouseDragHandler.prototype._mouseDown = function (event) {
-    var segment = null;
-    if (event.type === 'mousedown' && event.evt.button !== 0) {
-      // Mouse drag only applies to the primary mouse button.
-      // The secondary button may be used to show a context menu
-      // and we don't want to also treat this as a mouse drag operation.
-      return;
-    }
-    var marker = getMarkerObject(event.target);
-    if (marker && marker.attrs.draggable) {
-      // Avoid interfering with drag/drop of point and segment markers.
-      if (marker.attrs.name === 'point-marker' || marker.attrs.name === 'segment-marker') {
-        return;
-      }
-
-      // Check if we're dragging a segment.
-      if (marker.attrs.name === 'segment-overlay') {
-        segment = marker;
-      }
-    }
-    this._lastMouseClientX = Math.floor(event.type === 'touchstart' ? event.evt.touches[0].clientX : event.evt.clientX);
-    if (this._handlers.onMouseDown) {
-      var mouseDownPosX = this._getMousePosX(this._lastMouseClientX);
-      this._handlers.onMouseDown(mouseDownPosX, segment);
-    }
-
-    // Use the window mousemove and mouseup handlers instead of the
-    // Konva.Stage ones so that we still receive events if the user moves the
-    // mouse outside the stage.
-    window.addEventListener('mousemove', this._mouseMove, {
-      capture: false,
-      passive: true
-    });
-    window.addEventListener('touchmove', this._mouseMove, {
-      capture: false,
-      passive: true
-    });
-    window.addEventListener('mouseup', this._mouseUp, {
-      capture: false,
-      passive: true
-    });
-    window.addEventListener('touchend', this._mouseUp, {
-      capture: false,
-      passive: true
-    });
-    window.addEventListener('blur', this._mouseUp, {
-      capture: false,
-      passive: true
-    });
-  };
-
-  /**
-   * Mouse move event handler.
-   *
-   * @param {MouseEvent} event
-   */
-
-  MouseDragHandler.prototype._mouseMove = function (event) {
-    var clientX = Math.floor(event.type === 'touchmove' ? event.changedTouches[0].clientX : event.clientX);
-
-    // Don't update on vertical mouse movement.
-    if (clientX === this._lastMouseClientX) {
-      return;
-    }
-    this._lastMouseClientX = clientX;
-    this._dragging = true;
-    if (this._handlers.onMouseMove) {
-      var mousePosX = this._getMousePosX(clientX);
-      this._handlers.onMouseMove(mousePosX);
-    }
-  };
-
-  /**
-   * Mouse up event handler.
-   *
-   * @param {MouseEvent} event
-   */
-
-  MouseDragHandler.prototype._mouseUp = function (event) {
-    var clientX;
-    if (event.type === 'touchend') {
-      clientX = Math.floor(event.changedTouches[0].clientX);
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-    } else {
-      clientX = Math.floor(event.clientX);
-    }
-    if (this._handlers.onMouseUp) {
-      var mousePosX = this._getMousePosX(clientX);
-      this._handlers.onMouseUp(mousePosX);
-    }
-    window.removeEventListener('mousemove', this._mouseMove, {
-      capture: false
-    });
-    window.removeEventListener('touchmove', this._mouseMove, {
-      capture: false
-    });
-    window.removeEventListener('mouseup', this._mouseUp, {
-      capture: false
-    });
-    window.removeEventListener('touchend', this._mouseUp, {
-      capture: false
-    });
-    window.removeEventListener('blur', this._mouseUp, {
-      capture: false
-    });
-    this._dragging = false;
-  };
-
-  /**
-   * @returns {Number} The mouse X position, relative to the container that
-   * received the mouse down event.
-   *
-   * @private
-   * @param {Number} clientX Mouse client X position.
-   */
-
-  MouseDragHandler.prototype._getMousePosX = function (clientX) {
-    var containerPos = this._stage.getContainer().getBoundingClientRect();
-    return clientX - containerPos.left;
-  };
-
-  /**
-   * Returns <code>true</code> if the mouse is being dragged, i.e., moved with
-   * the mouse button held down.
-   *
-   * @returns {Boolean}
-   */
-
-  MouseDragHandler.prototype.isDragging = function () {
-    return this._dragging;
   };
 
   /**
@@ -3460,17 +3012,6 @@
     }
     this._syncPlayhead(time);
   };
-
-  /**
-   * Returns the position of the playhead marker, in pixels relative to the
-   * left hand side of the waveform view.
-   *
-   * @return {Number}
-   */
-
-  PlayheadLayer.prototype.getPlayheadOffset = function () {
-    return this._playheadPixel - this._view.getFrameOffset();
-  };
   PlayheadLayer.prototype.getPlayheadPixel = function () {
     return this._playheadPixel;
   };
@@ -3517,7 +3058,7 @@
    * @typedef {Object} PointMarkerOptions
    * @global
    * @property {Point} point Point object with timestamp.
-   * @property {Boolean} draggable If true, marker is draggable.
+   * @property {Boolean} editable If true, marker is draggable.
    * @property {Marker} marker
    * @property {Function} onclick
    * @property {Function} onDblClick
@@ -3602,14 +3143,12 @@
   PointMarker.prototype.getAbsolutePosition = function () {
     return this._group.getAbsolutePosition();
   };
-  PointMarker.prototype.timeUpdated = function (time) {
-    if (this._marker.timeUpdated) {
-      this._marker.timeUpdated(time);
+  PointMarker.prototype.update = function (options) {
+    if (options.editable !== undefined) {
+      this._group.draggable(options.editable);
     }
-  };
-  PointMarker.prototype.update = function () {
     if (this._marker.update) {
-      this._marker.update();
+      this._marker.update(options);
     }
   };
   PointMarker.prototype.destroy = function () {
@@ -3681,13 +3220,16 @@
   PointsLayer.prototype.enableEditing = function (enable) {
     this._allowEditing = enable;
   };
+  PointsLayer.prototype.getPointMarker = function (point) {
+    return this._pointMarkers[point.pid];
+  };
   PointsLayer.prototype.formatTime = function (time) {
     return this._view.formatTime(time);
   };
   PointsLayer.prototype._onPointsUpdate = function (point, options) {
     var frameStartTime = this._view.getStartTime();
     var frameEndTime = this._view.getEndTime();
-    var pointMarker = this._pointMarkers[point.id];
+    var pointMarker = this.getPointMarker(point);
     var isVisible = point.isVisible(frameStartTime, frameEndTime);
     if (pointMarker && !isVisible) {
       // Remove point marker that is no longer visible.
@@ -3701,24 +3243,23 @@
         var pointMarkerOffset = this._view.timeToPixels(point.time);
         var pointMarkerX = pointMarkerOffset - this._view.getFrameOffset();
         pointMarker.setX(pointMarkerX);
-        pointMarker.timeUpdated(point.time);
       }
-      pointMarker.update();
+      pointMarker.update(options);
     }
   };
-  PointsLayer.prototype._onPointsAdd = function (points) {
+  PointsLayer.prototype._onPointsAdd = function (event) {
     var self = this;
     var frameStartTime = self._view.getStartTime();
     var frameEndTime = self._view.getEndTime();
-    points.forEach(function (point) {
+    event.points.forEach(function (point) {
       if (point.isVisible(frameStartTime, frameEndTime)) {
         self._updatePoint(point);
       }
     });
   };
-  PointsLayer.prototype._onPointsRemove = function (points) {
+  PointsLayer.prototype._onPointsRemove = function (event) {
     var self = this;
-    points.forEach(function (point) {
+    event.points.forEach(function (point) {
       self._removePoint(point);
     });
   };
@@ -3739,8 +3280,8 @@
     var editable = this._allowEditing && point.editable;
     var marker = this._peaks.options.createPointMarker({
       point: point,
-      draggable: editable,
-      color: point.color ? point.color : this._peaks.options.pointMarkerColor,
+      editable: editable,
+      color: point.color,
       fontFamily: this._peaks.options.fontFamily || defaultFontFamily$1,
       fontSize: this._peaks.options.fontSize || defaultFontSize$1,
       fontStyle: this._peaks.options.fontStyle || defaultFontShape$1,
@@ -3773,28 +3314,14 @@
 
   PointsLayer.prototype._addPointMarker = function (point) {
     var pointMarker = this._createPointMarker(point);
-    this._pointMarkers[point.id] = pointMarker;
+    this._pointMarkers[point.pid] = pointMarker;
     pointMarker.addToLayer(this._layer);
     return pointMarker;
   };
   PointsLayer.prototype._onPointsDrag = function (event) {
     var pointMarker = this._updatePoint(event.point);
-    pointMarker.timeUpdated(event.point.time);
-    pointMarker.update();
-  };
-
-  /**
-   * @param {Point} point
-   */
-
-  PointsLayer.prototype._onPointMarkerDragMove = function (event, point) {
-    var pointMarker = this._pointMarkers[point.id];
-    var markerX = pointMarker.getX();
-    var offset = markerX + pointMarker.getWidth();
-    point._setTime(this._view.pixelOffsetToTime(offset));
-    this._peaks.emit('points.dragmove', {
-      point: point,
-      evt: event.evt
+    pointMarker.update({
+      time: event.point.time
     });
   };
 
@@ -3828,8 +3355,24 @@
    */
 
   PointsLayer.prototype._onPointMarkerDragStart = function (event, point) {
-    this._dragPointMarker = this._pointMarkers[point.id];
+    this._dragPointMarker = this.getPointMarker(point);
     this._peaks.emit('points.dragstart', {
+      point: point,
+      evt: event.evt
+    });
+  };
+
+  /**
+   * @param {KonvaEventObject} event
+   * @param {Point} point
+   */
+
+  PointsLayer.prototype._onPointMarkerDragMove = function (event, point) {
+    var pointMarker = this._pointMarkers[point.pid];
+    var markerX = pointMarker.getX();
+    var offset = markerX + pointMarker.getWidth();
+    point._setTime(this._view.pixelOffsetToTime(offset));
+    this._peaks.emit('points.dragmove', {
       point: point,
       evt: event.evt
     });
@@ -3879,24 +3422,13 @@
    */
 
   PointsLayer.prototype._updatePoint = function (point) {
-    var pointMarker = this._findOrAddPointMarker(point);
-    var pointMarkerOffset = this._view.timeToPixels(point.time);
-    var pointMarkerX = pointMarkerOffset - this._view.getFrameOffset();
-    pointMarker.setX(pointMarkerX);
-    return pointMarker;
-  };
-
-  /**
-   * @private
-   * @param {Point} point
-   * @return {PointMarker}
-   */
-
-  PointsLayer.prototype._findOrAddPointMarker = function (point) {
-    var pointMarker = this._pointMarkers[point.id];
+    var pointMarker = this.getPointMarker(point);
     if (!pointMarker) {
       pointMarker = this._addPointMarker(point);
     }
+    var pointMarkerOffset = this._view.timeToPixels(point.time);
+    var pointMarkerX = pointMarkerOffset - this._view.getFrameOffset();
+    pointMarker.setX(pointMarkerX);
     return pointMarker;
   };
 
@@ -3910,9 +3442,9 @@
    */
 
   PointsLayer.prototype._removeInvisiblePoints = function (startTime, endTime) {
-    for (var pointId in this._pointMarkers) {
-      if (objectHasProperty(this._pointMarkers, pointId)) {
-        var point = this._pointMarkers[pointId].getPoint();
+    for (var pointPid in this._pointMarkers) {
+      if (objectHasProperty(this._pointMarkers, pointPid)) {
+        var point = this._pointMarkers[pointPid].getPoint();
         if (!point.isVisible(startTime, endTime)) {
           this._removePoint(point);
         }
@@ -3928,10 +3460,10 @@
    */
 
   PointsLayer.prototype._removePoint = function (point) {
-    var pointMarker = this._pointMarkers[point.id];
+    var pointMarker = this.getPointMarker(point);
     if (pointMarker) {
       pointMarker.destroy();
-      delete this._pointMarkers[point.id];
+      delete this._pointMarkers[point.pid];
     }
   };
 
@@ -3954,9 +3486,9 @@
     this._peaks.off('points.dragend', this._onPointsDrag);
   };
   PointsLayer.prototype.fitToView = function () {
-    for (var pointId in this._pointMarkers) {
-      if (objectHasProperty(this._pointMarkers, pointId)) {
-        var pointMarker = this._pointMarkers[pointId];
+    for (var pointPid in this._pointMarkers) {
+      if (objectHasProperty(this._pointMarkers, pointPid)) {
+        var pointMarker = this._pointMarkers[pointPid];
         pointMarker.fitToView();
       }
     }
@@ -4002,9 +3534,9 @@
       fontSize: this._options.fontSize,
       fontStyle: this._options.fontStyle,
       fill: '#000',
-      textAlign: 'center'
+      textAlign: 'center',
+      visible: false
     });
-    this._label.hide();
 
     // Handle - create with default y, the real value is set in fitToView().
     this._handle = new Rect.Rect({
@@ -4021,17 +3553,15 @@
   OverlaySegmentMarker.prototype.bindEventHandlers = function (group) {
     var self = this;
     var xPosition = self._options.startMarker ? -24 : 24;
-    if (self._options.draggable) {
-      group.on('dragstart', function () {
-        if (self._options.startMarker) {
-          self._label.setX(xPosition - self._label.getWidth());
-        }
-        self._label.show();
-      });
-      group.on('dragend', function () {
-        self._label.hide();
-      });
-    }
+    group.on('dragstart', function () {
+      if (self._options.startMarker) {
+        self._label.setX(xPosition - self._label.getWidth());
+      }
+      self._label.show();
+    });
+    group.on('dragend', function () {
+      self._label.hide();
+    });
     self._handle.on('mouseover touchstart', function () {
       if (self._options.startMarker) {
         self._label.setX(xPosition - self._label.getWidth());
@@ -4052,8 +3582,13 @@
     this._handle.y(overlayOffset);
     this._handle.height(overlayRectHeight);
   };
-  OverlaySegmentMarker.prototype.timeUpdated = function (time) {
-    this._label.setText(this._options.layer.formatTime(time));
+  OverlaySegmentMarker.prototype.update = function (options) {
+    if (options.startTime !== undefined && this._options.startMarker) {
+      this._label.text(this._options.layer.formatTime(options.startTime));
+    }
+    if (options.endTime !== undefined && !this._options.startMarker) {
+      this._label.text(this._options.layer.formatTime(options.endTime));
+    }
   };
 
   /**
@@ -4071,7 +3606,7 @@
    * @global
    * @property {Segment} segment
    * @property {SegmentShape} segmentShape
-   * @property {Boolean} draggable If true, marker is draggable.
+   * @property {Boolean} editable If true, marker is draggable.
    * @property {Boolean} startMarker If <code>true</code>, the marker indicates
    *   the start time of the segment. If <code>false</code>, the marker
    *   indicates the end time of the segment.
@@ -4095,7 +3630,7 @@
     self._segment = options.segment;
     self._marker = options.marker;
     self._segmentShape = options.segmentShape;
-    self._draggable = options.draggable;
+    self._editable = options.editable;
     self._startMarker = options.startMarker;
     self._onDragStart = options.onDragStart;
     self._onDragMove = options.onDragMove;
@@ -4103,7 +3638,8 @@
     self._group = new Konva__default["default"].Group({
       name: 'segment-marker',
       segment: self._segment,
-      draggable: self._draggable,
+      draggable: self._editable,
+      visible: self._editable,
       dragBoundFunc: function dragBoundFunc(pos) {
         return options.dragBoundFunc(self, pos);
       }
@@ -4113,17 +3649,15 @@
   }
   SegmentMarker.prototype._bindDefaultEventHandlers = function () {
     var self = this;
-    if (self._draggable) {
-      self._group.on('dragstart', function (event) {
-        self._onDragStart(self, event);
-      });
-      self._group.on('dragmove', function (event) {
-        self._onDragMove(self, event);
-      });
-      self._group.on('dragend', function (event) {
-        self._onDragEnd(self, event);
-      });
-    }
+    self._group.on('dragstart', function (event) {
+      self._onDragStart(self, event);
+    });
+    self._group.on('dragmove', function (event) {
+      self._onDragMove(self, event);
+    });
+    self._group.on('dragend', function (event) {
+      self._onDragEnd(self, event);
+    });
   };
   SegmentMarker.prototype.addToLayer = function (layer) {
     layer.add(this._group);
@@ -4152,12 +3686,11 @@
   SegmentMarker.prototype.isStartMarker = function () {
     return this._startMarker;
   };
-  SegmentMarker.prototype.timeUpdated = function (time) {
-    if (this._marker.timeUpdated) {
-      this._marker.timeUpdated(time);
-    }
-  };
   SegmentMarker.prototype.update = function (options) {
+    if (options.editable !== undefined) {
+      this._group.visible(options.editable);
+      this._group.draggable(options.editable);
+    }
     if (this._marker.update) {
       this._marker.update(options);
     }
@@ -4168,6 +3701,12 @@
     }
     this._group.destroyChildren();
     this._group.destroy();
+  };
+  SegmentMarker.prototype.startDrag = function () {
+    this._group.startDrag();
+  };
+  SegmentMarker.prototype.stopDrag = function () {
+    this._group.stopDrag();
   };
 
   /**
@@ -4458,7 +3997,11 @@
     // Create with default y and height, the real values are set in fitToView().
     var segmentStartOffset = this._view.timeToPixelOffset(this._segment.startTime);
     var segmentEndOffset = this._view.timeToPixelOffset(this._segment.endTime);
-    var overlayRectHeight = clamp(0, this._view.getHeight());
+    var overlayRectHeight = clamp(0, this._view.getHeight() - 2 * this._overlayOffset);
+
+    // The clip rectangle prevents text in the overlay from appearing
+    // outside the overlay.
+
     this._overlay = new Konva__default["default"].Group({
       name: 'segment-overlay',
       segment: this._segment,
@@ -4525,6 +4068,64 @@
     }
     this._createMarkers();
   }
+  function createOverlayMarker(options) {
+    return new OverlaySegmentMarker(options);
+  }
+  SegmentShape.prototype._createMarkers = function () {
+    var editable = this._layer.isEditingEnabled() && this._segment.editable;
+    var segmentOptions = this._view.getViewOptions().segmentOptions;
+    var createSegmentMarker = segmentOptions.markers ? this._peaks.options.createSegmentMarker : createOverlayMarker;
+    var startMarker = createSegmentMarker({
+      segment: this._segment,
+      editable: editable,
+      startMarker: true,
+      color: segmentOptions.startMarkerColor,
+      fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
+      fontSize: this._peaks.options.fontSize || defaultFontSize,
+      fontStyle: this._peaks.options.fontStyle || defaultFontShape,
+      layer: this._layer,
+      view: this._view.getName(),
+      segmentOptions: this._view.getViewOptions().segmentOptions
+    });
+    if (startMarker) {
+      this._startMarker = new SegmentMarker({
+        segment: this._segment,
+        segmentShape: this,
+        editable: editable,
+        startMarker: true,
+        marker: startMarker,
+        onDragStart: this._onSegmentMarkerDragStart,
+        onDragMove: this._onSegmentMarkerDragMove,
+        onDragEnd: this._onSegmentMarkerDragEnd,
+        dragBoundFunc: this._segmentMarkerDragBoundFunc
+      });
+    }
+    var endMarker = createSegmentMarker({
+      segment: this._segment,
+      editable: editable,
+      startMarker: false,
+      color: segmentOptions.endMarkerColor,
+      fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
+      fontSize: this._peaks.options.fontSize || defaultFontSize,
+      fontStyle: this._peaks.options.fontStyle || defaultFontShape,
+      layer: this._layer,
+      view: this._view.getName(),
+      segmentOptions: this._view.getViewOptions().segmentOptions
+    });
+    if (endMarker) {
+      this._endMarker = new SegmentMarker({
+        segment: this._segment,
+        segmentShape: this,
+        editable: editable,
+        startMarker: false,
+        marker: endMarker,
+        onDragStart: this._onSegmentMarkerDragStart,
+        onDragMove: this._onSegmentMarkerDragMove,
+        onDragEnd: this._onSegmentMarkerDragEnd,
+        dragBoundFunc: this._segmentMarkerDragBoundFunc
+      });
+    }
+  };
   SegmentShape.prototype._dragBoundFunc = function (pos) {
     // Allow the segment to be moved horizontally but not vertically.
     return {
@@ -4544,23 +4145,19 @@
     var marker;
     if (marker = this.getStartMarker()) {
       marker.setX(segmentStartOffset - marker.getWidth());
-      marker.update();
-      if (options && objectHasProperty(options, 'startTime')) {
-        marker.timeUpdated(options.startTime);
+      if (options) {
+        marker.update(options);
       }
     }
     if (marker = this.getEndMarker()) {
       marker.setX(segmentEndOffset);
-      marker.update();
-      if (options && objectHasProperty(options, 'endTime')) {
-        marker.timeUpdated(options.endTime);
+      if (options) {
+        marker.update(options);
       }
     }
     this._color = this._segment.color;
     this._borderColor = this._segment.bordercolor;
     if (this._overlayText) {
-      var labelColor = this._segment.labelColor;
-      this._overlayText.fill(labelColor);
       this._overlayText.text(this._segment.labelText);
     }
     var segmentOptions = this._view.getViewOptions().segmentOptions;
@@ -4625,69 +4222,11 @@
   SegmentShape.prototype.isDragging = function () {
     return this._dragging;
   };
-  function createOverlayMarker(options) {
-    return new OverlaySegmentMarker(options);
-  }
-  SegmentShape.prototype._createMarkers = function () {
-    var editable = this._layer.isEditingEnabled() && this._segment.editable;
-    if (!editable) {
-      return;
-    }
-    var segmentOptions = this._view.getViewOptions().segmentOptions;
-    var createSegmentMarker = segmentOptions.markers ? this._peaks.options.createSegmentMarker : createOverlayMarker;
-    var startMarker = createSegmentMarker({
-      segment: this._segment,
-      draggable: editable,
-      startMarker: true,
-      color: segmentOptions.startMarkerColor,
-      fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
-      fontSize: this._peaks.options.fontSize || defaultFontSize,
-      fontStyle: this._peaks.options.fontStyle || defaultFontShape,
-      layer: this._layer,
-      view: this._view.getName(),
-      segmentOptions: this._view.getViewOptions().segmentOptions
-    });
-    if (startMarker) {
-      this._startMarker = new SegmentMarker({
-        segment: this._segment,
-        segmentShape: this,
-        draggable: editable,
-        startMarker: true,
-        marker: startMarker,
-        onDragStart: this._onSegmentMarkerDragStart,
-        onDragMove: this._onSegmentMarkerDragMove,
-        onDragEnd: this._onSegmentMarkerDragEnd,
-        dragBoundFunc: this._segmentMarkerDragBoundFunc
-      });
-    }
-    var endMarker = createSegmentMarker({
-      segment: this._segment,
-      draggable: editable,
-      startMarker: false,
-      color: segmentOptions.endMarkerColor,
-      fontFamily: this._peaks.options.fontFamily || defaultFontFamily,
-      fontSize: this._peaks.options.fontSize || defaultFontSize,
-      fontStyle: this._peaks.options.fontStyle || defaultFontShape,
-      layer: this._layer,
-      view: this._view.getName(),
-      segmentOptions: this._view.getViewOptions().segmentOptions
-    });
-    if (endMarker) {
-      this._endMarker = new SegmentMarker({
-        segment: this._segment,
-        segmentShape: this,
-        draggable: editable,
-        startMarker: false,
-        marker: endMarker,
-        onDragStart: this._onSegmentMarkerDragStart,
-        onDragMove: this._onSegmentMarkerDragMove,
-        onDragEnd: this._onSegmentMarkerDragEnd,
-        dragBoundFunc: this._segmentMarkerDragBoundFunc
-      });
-    }
-  };
   SegmentShape.prototype._onMouseEnter = function (event) {
-    if (this._label) ;
+    if (this._label) {
+      this._label.moveToTop();
+      this._label.show();
+    }
     this._peaks.emit('segments.mouseenter', {
       segment: this._segment,
       evt: event.evt
@@ -4717,6 +4256,10 @@
   SegmentShape.prototype.segmentClicked = function (eventName, event) {
     this._moveToTop();
     this._peaks.emit('segments.' + eventName, event);
+  };
+  SegmentShape.prototype._moveToTop = function () {
+    this._overlay.moveToTop();
+    this._layer.moveSegmentMarkersToTop();
   };
   SegmentShape.prototype.enableSegmentDragging = function (enable) {
     if (!this._segment.editable) {
@@ -4876,13 +4419,22 @@
       evt: event.evt
     });
   };
-  SegmentShape.prototype._moveToTop = function () {
-    this._overlay.moveToTop();
+  SegmentShape.prototype.moveMarkersToTop = function () {
+    if (this._startMarker) {
+      this._startMarker.moveToTop();
+    }
     if (this._endMarker) {
       this._endMarker.moveToTop();
     }
-    if (this._startMarker) {
-      this._startMarker.moveToTop();
+  };
+  SegmentShape.prototype.startDrag = function () {
+    if (this._endMarker) {
+      this._endMarker.startDrag();
+    }
+  };
+  SegmentShape.prototype.stopDrag = function () {
+    if (this._endMarker) {
+      this._endMarker.stopDrag();
     }
   };
 
@@ -4913,68 +4465,85 @@
   SegmentShape.prototype._onSegmentMarkerDragMove = function (segmentMarker, event) {
     if (segmentMarker.isStartMarker()) {
       this._segmentStartMarkerDragMove(segmentMarker, event);
-      segmentMarker.timeUpdated(segmentMarker.getSegment().startTime);
+      segmentMarker.update({
+        startTime: this._segment.startTime
+      });
     } else {
       this._segmentEndMarkerDragMove(segmentMarker, event);
-      segmentMarker.timeUpdated(segmentMarker.getSegment().endTime);
+      segmentMarker.update({
+        endTime: this._segment.endTime
+      });
     }
-    segmentMarker.update();
   };
+  function getDuration(segment) {
+    return segment.endTime - segment.startTime;
+  }
   SegmentShape.prototype._segmentStartMarkerDragMove = function (segmentMarker, event) {
+    var width = this._view.getWidth();
     var startMarkerX = this._startMarker.getX();
     var endMarkerX = this._endMarker.getX();
     var minSegmentDuration = this._view.pixelsToTime(50);
     var minSegmentWidth = this._view.getMinSegmentDragWidth();
     var upperLimit = this._endMarker.getX() - minSegmentWidth;
-    var lowerLimit;
-    var previousSegmentVisible = true;
-    var previousSegmentUpdated = false;
-    if (this._previousSegment) {
-      var dragMode = this._view.getSegmentDragMode();
-      if (dragMode === 'no-overlap' || dragMode === 'compress' && !this._previousSegment.editable) {
-        lowerLimit = this._view.timeToPixelOffset(this._previousSegment.endTime);
-        if (lowerLimit < 0) {
-          lowerLimit = 0;
-          previousSegmentVisible = false;
-        }
-      } else if (dragMode === 'compress') {
-        var segmentDuration = this._previousSegment.endTime - this._previousSegment.startTime;
-        if (segmentDuration < minSegmentDuration) {
-          minSegmentDuration = segmentDuration;
-        }
-        lowerLimit = this._view.timeToPixelOffset(this._previousSegment.startTime + minSegmentDuration);
-        if (lowerLimit < 0) {
-          lowerLimit = 0;
-          previousSegmentVisible = false;
-        }
-      }
-    } else {
-      lowerLimit = 0;
+    if (upperLimit > width) {
+      upperLimit = width;
     }
-    if (startMarkerX >= lowerLimit && startMarkerX < upperLimit) {
-      this._overlay.clipWidth(endMarkerX - startMarkerX);
-      segmentMarker.setX(startMarkerX);
-      this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
-      segmentMarker.timeUpdated(this._segment.startTime);
-      if (this._previousSegment) {
-        var prevSegmentEndX = this._view.timeToPixelOffset(this._previousSegment.endTime);
-        if (startMarkerX < prevSegmentEndX) {
+    var previousSegmentVisible = false;
+    var previousSegmentUpdated = false;
+    var previousSegmentEndX;
+    if (this._previousSegment) {
+      previousSegmentEndX = this._view.timeToPixelOffset(this._previousSegment.endTime);
+      previousSegmentVisible = previousSegmentEndX >= 0;
+    }
+    if (startMarkerX > upperLimit) {
+      segmentMarker.setX(upperLimit);
+      this._overlay.clipWidth(upperLimit - endMarkerX);
+      if (minSegmentWidth === 0 && upperLimit < width) {
+        this._segment._setStartTime(this._segment.endTime);
+      } else {
+        this._segment._setStartTime(this._view.pixelOffsetToTime(upperLimit));
+      }
+    } else if (this._previousSegment && previousSegmentVisible) {
+      var dragMode = this._view.getSegmentDragMode();
+      var fixedPreviousSegment = dragMode === 'no-overlap' || dragMode === 'compress' && !this._previousSegment.editable;
+      var compressPreviousSegment = dragMode === 'compress' && this._previousSegment.editable;
+      if (startMarkerX <= previousSegmentEndX) {
+        if (fixedPreviousSegment) {
+          segmentMarker.setX(previousSegmentEndX);
+          this._overlay.clipWidth(previousSegmentEndX - endMarkerX);
+          this._segment._setStartTime(this._previousSegment.endTime);
+        } else if (compressPreviousSegment) {
+          var previousSegmentDuration = getDuration(this._previousSegment);
+          if (previousSegmentDuration < minSegmentDuration) {
+            minSegmentDuration = previousSegmentDuration;
+          }
+          var lowerLimit = this._view.timeToPixelOffset(this._previousSegment.startTime + minSegmentDuration);
+          if (startMarkerX < lowerLimit) {
+            startMarkerX = lowerLimit;
+          }
+          segmentMarker.setX(startMarkerX);
+          this._overlay.clipWidth(endMarkerX - startMarkerX);
+          this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
           this._previousSegment.update({
             endTime: this._view.pixelOffsetToTime(startMarkerX)
           });
           previousSegmentUpdated = true;
         }
+      } else {
+        if (startMarkerX < 0) {
+          startMarkerX = 0;
+        }
+        segmentMarker.setX(startMarkerX);
+        this._overlay.clipWidth(endMarkerX - startMarkerX);
+        this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
       }
     } else {
-      var x = startMarkerX >= upperLimit ? upperLimit : lowerLimit;
-      this._overlay.clipWidth(endMarkerX - x);
-      segmentMarker.setX(x);
-      if (this._previousSegment && previousSegmentVisible && startMarkerX < lowerLimit) {
-        this._segment._setStartTime(this._previousSegment.endTime);
-      } else {
-        this._segment._setStartTime(this._view.pixelOffsetToTime(x));
+      if (startMarkerX < 0) {
+        startMarkerX = 0;
       }
-      segmentMarker.timeUpdated(this._segment.startTime);
+      segmentMarker.setX(startMarkerX);
+      this._overlay.clipWidth(endMarkerX - startMarkerX);
+      this._segment._setStartTime(this._view.pixelOffsetToTime(startMarkerX));
     }
     this._peaks.emit('segments.dragged', {
       segment: this._segment,
@@ -4992,61 +4561,71 @@
     }
   };
   SegmentShape.prototype._segmentEndMarkerDragMove = function (segmentMarker, event) {
+    var width = this._view.getWidth();
     var startMarkerX = this._startMarker.getX();
     var endMarkerX = this._endMarker.getX();
     var minSegmentDuration = this._view.pixelsToTime(50);
     var minSegmentWidth = this._view.getMinSegmentDragWidth();
     var lowerLimit = this._startMarker.getX() + minSegmentWidth;
-    var upperLimit;
-    var nextSegmentVisible = true;
-    var nextSegmentUpdated = false;
-    var width = this._view.getWidth();
-    if (this._nextSegment) {
-      var dragMode = this._view.getSegmentDragMode();
-      if (dragMode === 'no-overlap' || dragMode === 'compress' && !this._nextSegment.editable) {
-        upperLimit = this._view.timeToPixelOffset(this._nextSegment.startTime);
-        if (upperLimit > width) {
-          upperLimit = width;
-          nextSegmentVisible = false;
-        }
-      } else if (dragMode === 'compress') {
-        var segmentDuration = this._nextSegment.endTime - this._nextSegment.startTime;
-        if (segmentDuration < minSegmentDuration) {
-          minSegmentDuration = segmentDuration;
-        }
-        upperLimit = this._view.timeToPixelOffset(this._nextSegment.endTime - minSegmentDuration);
-        if (upperLimit > width) {
-          upperLimit = width;
-          nextSegmentVisible = false;
-        }
-      }
-    } else {
-      upperLimit = width;
+    if (lowerLimit < 0) {
+      lowerLimit = 0;
     }
-    if (endMarkerX >= lowerLimit && endMarkerX < upperLimit) {
-      this._overlay.clipWidth(endMarkerX - startMarkerX);
-      segmentMarker.setX(endMarkerX);
-      this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
-      segmentMarker.timeUpdated(this._segment.endTime);
-      if (this._nextSegment) {
-        var nextSegmentStartX = this._view.timeToPixelOffset(this._nextSegment.startTime);
-        if (endMarkerX > nextSegmentStartX) {
+    var nextSegmentVisible = false;
+    var nextSegmentUpdated = false;
+    var nextSegmentStartX;
+    if (this._nextSegment) {
+      nextSegmentStartX = this._view.timeToPixelOffset(this._nextSegment.startTime);
+      nextSegmentVisible = nextSegmentStartX < width;
+    }
+    if (endMarkerX < lowerLimit) {
+      segmentMarker.setX(lowerLimit);
+      this._overlay.clipWidth(lowerLimit - startMarkerX);
+      if (minSegmentWidth === 0 && lowerLimit > 0) {
+        this._segment._setEndTime(this._segment.startTime);
+      } else {
+        this._segment._setEndTime(this._view.pixelOffsetToTime(lowerLimit));
+      }
+    } else if (this._nextSegment && nextSegmentVisible) {
+      var dragMode = this._view.getSegmentDragMode();
+      var fixedNextSegment = dragMode === 'no-overlap' || dragMode === 'compress' && !this._nextSegment.editable;
+      var compressNextSegment = dragMode === 'compress' && this._nextSegment.editable;
+      if (endMarkerX >= nextSegmentStartX) {
+        if (fixedNextSegment) {
+          segmentMarker.setX(nextSegmentStartX);
+          this._overlay.clipWidth(nextSegmentStartX - startMarkerX);
+          this._segment._setEndTime(this._nextSegment.startTime);
+        } else if (compressNextSegment) {
+          var nextSegmentDuration = getDuration(this._nextSegment);
+          if (nextSegmentDuration < minSegmentDuration) {
+            minSegmentDuration = nextSegmentDuration;
+          }
+          var upperLimit = this._view.timeToPixelOffset(this._nextSegment.endTime - minSegmentDuration);
+          if (endMarkerX > upperLimit) {
+            endMarkerX = upperLimit;
+          }
+          segmentMarker.setX(endMarkerX);
+          this._overlay.clipWidth(endMarkerX - startMarkerX);
+          this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
           this._nextSegment.update({
             startTime: this._view.pixelOffsetToTime(endMarkerX)
           });
           nextSegmentUpdated = true;
         }
+      } else {
+        if (endMarkerX > width) {
+          endMarkerX = width;
+        }
+        segmentMarker.setX(endMarkerX);
+        this._overlay.clipWidth(endMarkerX - startMarkerX);
+        this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
       }
     } else {
-      var x = endMarkerX >= upperLimit ? upperLimit : lowerLimit;
-      this._overlay.clipWidth(x - startMarkerX);
-      segmentMarker.setX(x);
-      if (this._nextSegment && nextSegmentVisible && endMarkerX >= upperLimit) {
-        this._segment._setEndTime(this._nextSegment.startTime);
-      } else {
-        this._segment._setEndTime(this._view.pixelOffsetToTime(x));
+      if (endMarkerX > width) {
+        endMarkerX = width;
       }
-      segmentMarker.timeUpdated(this._segment.endTime);
+      segmentMarker.setX(endMarkerX);
+      this._overlay.clipWidth(endMarkerX - startMarkerX);
+      this._segment._setEndTime(this._view.pixelOffsetToTime(endMarkerX));
     }
     this._peaks.emit('segments.dragged', {
       segment: this._segment,
@@ -5188,11 +4767,14 @@
     return this._allowEditing;
   };
   SegmentsLayer.prototype.enableSegmentDragging = function (enable) {
-    for (var segmentId in this._segmentShapes) {
-      if (objectHasProperty(this._segmentShapes, segmentId)) {
-        this._segmentShapes[segmentId].enableSegmentDragging(enable);
+    for (var segmentPid in this._segmentShapes) {
+      if (objectHasProperty(this._segmentShapes, segmentPid)) {
+        this._segmentShapes[segmentPid].enableSegmentDragging(enable);
       }
     }
+  };
+  SegmentsLayer.prototype.getSegmentShape = function (segment) {
+    return this._segmentShapes[segment.pid];
   };
   SegmentsLayer.prototype.formatTime = function (time) {
     return this._view.formatTime(time);
@@ -5200,7 +4782,7 @@
   SegmentsLayer.prototype._onSegmentsUpdate = function (segment, options) {
     var frameStartTime = this._view.getStartTime();
     var frameEndTime = this._view.getEndTime();
-    var segmentShape = this._segmentShapes[segment.id];
+    var segmentShape = this.getSegmentShape(segment);
     var isVisible = segment.isVisible(frameStartTime, frameEndTime);
     if (segmentShape && !isVisible) {
       // Remove segment shape that is no longer visible.
@@ -5210,27 +4792,29 @@
       }
     } else if (!segmentShape && isVisible) {
       // Add segment shape for visible segment.
-      // segmentShape = this._addSegmentShape(segment);
       segmentShape = this._updateSegment(segment);
     } else if (segmentShape && isVisible) {
       // Update the segment shape with the changed attributes.
       segmentShape.update(options);
     }
   };
-  SegmentsLayer.prototype._onSegmentsAdd = function (segments) {
+  SegmentsLayer.prototype._onSegmentsAdd = function (event) {
     var self = this;
     var frameStartTime = self._view.getStartTime();
     var frameEndTime = self._view.getEndTime();
-    segments.forEach(function (segment) {
+    event.segments.forEach(function (segment) {
       if (segment.isVisible(frameStartTime, frameEndTime)) {
         var segmentShape = self._addSegmentShape(segment);
         segmentShape.update();
       }
     });
+
+    // Ensure segment markers are always draggable.
+    this.moveSegmentMarkersToTop();
   };
-  SegmentsLayer.prototype._onSegmentsRemove = function (segments) {
+  SegmentsLayer.prototype._onSegmentsRemove = function (event) {
     var self = this;
-    segments.forEach(function (segment) {
+    event.segments.forEach(function (segment) {
       self._removeSegment(segment);
     });
   };
@@ -5265,7 +4849,7 @@
   SegmentsLayer.prototype._addSegmentShape = function (segment) {
     var segmentShape = this._createSegmentShape(segment);
     segmentShape.addToLayer(this._layer);
-    this._segmentShapes[segment.id] = segmentShape;
+    this._segmentShapes[segment.pid] = segmentShape;
     return segmentShape;
   };
 
@@ -5293,21 +4877,11 @@
    */
 
   SegmentsLayer.prototype._updateSegment = function (segment) {
-    var segmentShape = this._findOrAddSegmentShape(segment);
-    segmentShape.update();
-  };
-
-  /**
-   * @private
-   * @param {Segment} segment
-   */
-
-  SegmentsLayer.prototype._findOrAddSegmentShape = function (segment) {
-    var segmentShape = this._segmentShapes[segment.id];
+    var segmentShape = this.getSegmentShape(segment);
     if (!segmentShape) {
       segmentShape = this._addSegmentShape(segment);
     }
-    return segmentShape;
+    segmentShape.update();
   };
 
   /**
@@ -5320,9 +4894,9 @@
    */
 
   SegmentsLayer.prototype._removeInvisibleSegments = function (startTime, endTime) {
-    for (var segmentId in this._segmentShapes) {
-      if (objectHasProperty(this._segmentShapes, segmentId)) {
-        var segment = this._segmentShapes[segmentId].getSegment();
+    for (var segmentPid in this._segmentShapes) {
+      if (objectHasProperty(this._segmentShapes, segmentPid)) {
+        var segment = this._segmentShapes[segmentPid].getSegment();
         if (!segment.isVisible(startTime, endTime)) {
           this._removeSegment(segment);
         }
@@ -5337,10 +4911,23 @@
    */
 
   SegmentsLayer.prototype._removeSegment = function (segment) {
-    var segmentShape = this._segmentShapes[segment.id];
+    var segmentShape = this._segmentShapes[segment.pid];
     if (segmentShape) {
       segmentShape.destroy();
-      delete this._segmentShapes[segment.id];
+      delete this._segmentShapes[segment.pid];
+    }
+  };
+
+  /**
+   * Moves all segment markers to the top of the z-order,
+   * so the user can always drag them.
+   */
+
+  SegmentsLayer.prototype.moveSegmentMarkersToTop = function () {
+    for (var segmentPid in this._segmentShapes) {
+      if (objectHasProperty(this._segmentShapes, segmentPid)) {
+        this._segmentShapes[segmentPid].moveMarkersToTop();
+      }
     }
   };
 
@@ -5354,7 +4941,7 @@
     this._layer.setVisible(visible);
   };
   SegmentsLayer.prototype.segmentClicked = function (eventName, event) {
-    var segmentShape = this._segmentShapes[event.segment.id];
+    var segmentShape = this._segmentShapes[event.segment.pid];
     if (segmentShape) {
       segmentShape.segmentClicked(eventName, event);
     }
@@ -5367,9 +4954,9 @@
     this._peaks.off('segments.dragged', this._onSegmentsDragged);
   };
   SegmentsLayer.prototype.fitToView = function () {
-    for (var segmentId in this._segmentShapes) {
-      if (objectHasProperty(this._segmentShapes, segmentId)) {
-        var segmentShape = this._segmentShapes[segmentId];
+    for (var segmentPid in this._segmentShapes) {
+      if (objectHasProperty(this._segmentShapes, segmentPid)) {
+        var segmentShape = this._segmentShapes[segmentPid];
         segmentShape.fitToView();
       }
     }
@@ -5406,11 +4993,13 @@
    * @param {String} options.fontStyle
    */
 
-  function WaveformAxis(view, options) {
+  function WaveformAxis$1(view, options) {
     var self = this;
     self._axisGridlineColor = options.axisGridlineColor;
     self._axisLabelColor = options.axisLabelColor;
     self._showAxisLabels = options.showAxisLabels;
+    self._axisTopMarkerHeight = options.axisTopMarkerHeight;
+    self._axisBottomMarkerHeight = options.axisBottomMarkerHeight;
     if (options.formatAxisTime) {
       self._formatAxisTime = options.formatAxisTime;
     } else {
@@ -5419,14 +5008,14 @@
         return formatTime(time, 0);
       };
     }
-    self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
+    self._axisLabelFont = WaveformAxis$1._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
     self._axisShape = new Konva__default["default"].Shape({
       sceneFunc: function sceneFunc(context) {
         self._drawAxis(context, view);
       }
     });
   }
-  WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
+  WaveformAxis$1._buildFontString = function (fontFamily, fontSize, fontStyle) {
     if (!fontSize) {
       fontSize = 11;
     }
@@ -5438,11 +5027,19 @@
     }
     return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
   };
-  WaveformAxis.prototype.addToLayer = function (layer) {
+  WaveformAxis$1.prototype.addToLayer = function (layer) {
     layer.add(this._axisShape);
   };
-  WaveformAxis.prototype.showAxisLabels = function (show) {
+  WaveformAxis$1.prototype.showAxisLabels = function (show, options) {
     this._showAxisLabels = show;
+    if (options) {
+      if (objectHasProperty(options, 'topMarkerHeight')) {
+        this._axisTopMarkerHeight = options.topMarkerHeight;
+      }
+      if (objectHasProperty(options, 'bottomMarkerHeight')) {
+        this._axisBottomMarkerHeight = options.bottomMarkerHeight;
+      }
+    }
   };
 
   /**
@@ -5456,7 +5053,7 @@
    * @returns {Number}
    */
 
-  WaveformAxis.prototype._getAxisLabelScale = function (view) {
+  WaveformAxis$1.prototype._getAxisLabelScale = function (view) {
     var baseSecs = 1; // seconds
     var steps = [1, 2, 5, 10, 20, 30];
     var minSpacing = 60;
@@ -5484,7 +5081,7 @@
    * @param {WaveformOverview|WaveformZoomView} view
    */
 
-  WaveformAxis.prototype._drawAxis = function (context, view) {
+  WaveformAxis$1.prototype._drawAxis = function (context, view) {
     var currentFrameStartTime = view.getStartTime();
 
     // Draw axis markers
@@ -5541,6 +5138,251 @@
   /**
    * @file
    *
+   * Defines the {@link MouseDragHandler} class.
+   *
+   * @module mouse-drag-handler
+   */
+
+  /**
+   * An object to receive callbacks on mouse drag events. Each function is
+   * called with the current mouse X position, relative to the stage's
+   * container HTML element.
+   *
+   * @typedef {Object} MouseDragHandlers
+   * @global
+   * @property {Function} onMouseDown Mouse down event handler.
+   * @property {Function} onMouseMove Mouse move event handler.
+   * @property {Function} onMouseUp Mouse up event handler.
+   */
+
+  /**
+   * Creates a handler for mouse events to allow interaction with the waveform
+   * views by clicking and dragging the mouse.
+   *
+   * @class
+   * @alias MouseDragHandler
+   *
+   * @param {Konva.Stage} stage
+   * @param {MouseDragHandlers} handlers
+   */
+
+  function MouseDragHandler(stage, handlers) {
+    this._stage = stage;
+    this._handlers = handlers;
+    this._dragging = false;
+    this._mouseDown = this._mouseDown.bind(this);
+    this._mouseUp = this._mouseUp.bind(this);
+    this._mouseMove = this._mouseMove.bind(this);
+    this._stage.on('mousedown', this._mouseDown);
+    this._stage.on('touchstart', this._mouseDown);
+    this._lastMouseClientX = null;
+  }
+
+  /**
+   * Mouse down event handler.
+   *
+   * @param {MouseEvent} event
+   */
+
+  MouseDragHandler.prototype._mouseDown = function (event) {
+    var segment = null;
+    if (event.type === 'mousedown' && event.evt.button !== 0) {
+      // Mouse drag only applies to the primary mouse button.
+      // The secondary button may be used to show a context menu
+      // and we don't want to also treat this as a mouse drag operation.
+      return;
+    }
+    var marker = getMarkerObject(event.target);
+    if (marker && marker.attrs.draggable) {
+      // Avoid interfering with drag/drop of point and segment markers.
+      if (marker.attrs.name === 'point-marker' || marker.attrs.name === 'segment-marker') {
+        return;
+      }
+
+      // Check if we're dragging a segment.
+      if (marker.attrs.name === 'segment-overlay') {
+        segment = marker;
+      }
+    }
+    this._lastMouseClientX = Math.floor(event.type === 'touchstart' ? event.evt.touches[0].clientX : event.evt.clientX);
+    if (this._handlers.onMouseDown) {
+      var mouseDownPosX = this._getMousePosX(this._lastMouseClientX);
+      this._handlers.onMouseDown(mouseDownPosX, segment);
+    }
+
+    // Use the window mousemove and mouseup handlers instead of the
+    // Konva.Stage ones so that we still receive events if the user moves the
+    // mouse outside the stage.
+    window.addEventListener('mousemove', this._mouseMove, {
+      capture: false,
+      passive: true
+    });
+    window.addEventListener('touchmove', this._mouseMove, {
+      capture: false,
+      passive: true
+    });
+    window.addEventListener('mouseup', this._mouseUp, {
+      capture: false,
+      passive: true
+    });
+    window.addEventListener('touchend', this._mouseUp, {
+      capture: false,
+      passive: true
+    });
+    window.addEventListener('blur', this._mouseUp, {
+      capture: false,
+      passive: true
+    });
+  };
+
+  /**
+   * Mouse move event handler.
+   *
+   * @param {MouseEvent} event
+   */
+
+  MouseDragHandler.prototype._mouseMove = function (event) {
+    var clientX = Math.floor(event.type === 'touchmove' ? event.changedTouches[0].clientX : event.clientX);
+
+    // Don't update on vertical mouse movement.
+    if (clientX === this._lastMouseClientX) {
+      return;
+    }
+    this._lastMouseClientX = clientX;
+    this._dragging = true;
+    if (this._handlers.onMouseMove) {
+      var mousePosX = this._getMousePosX(clientX);
+      this._handlers.onMouseMove(mousePosX);
+    }
+  };
+
+  /**
+   * Mouse up event handler.
+   *
+   * @param {MouseEvent} event
+   */
+
+  MouseDragHandler.prototype._mouseUp = function (event) {
+    var clientX;
+    if (event.type === 'touchend') {
+      clientX = Math.floor(event.changedTouches[0].clientX);
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    } else {
+      clientX = Math.floor(event.clientX);
+    }
+    if (this._handlers.onMouseUp) {
+      var mousePosX = this._getMousePosX(clientX);
+      this._handlers.onMouseUp(mousePosX);
+    }
+    window.removeEventListener('mousemove', this._mouseMove, {
+      capture: false
+    });
+    window.removeEventListener('touchmove', this._mouseMove, {
+      capture: false
+    });
+    window.removeEventListener('mouseup', this._mouseUp, {
+      capture: false
+    });
+    window.removeEventListener('touchend', this._mouseUp, {
+      capture: false
+    });
+    window.removeEventListener('blur', this._mouseUp, {
+      capture: false
+    });
+    this._dragging = false;
+  };
+
+  /**
+   * @returns {Number} The mouse X position, relative to the container that
+   * received the mouse down event.
+   *
+   * @private
+   * @param {Number} clientX Mouse client X position.
+   */
+
+  MouseDragHandler.prototype._getMousePosX = function (clientX) {
+    var containerPos = this._stage.getContainer().getBoundingClientRect();
+    return clientX - containerPos.left;
+  };
+
+  /**
+   * Returns <code>true</code> if the mouse is being dragged, i.e., moved with
+   * the mouse button held down.
+   *
+   * @returns {Boolean}
+   */
+
+  MouseDragHandler.prototype.isDragging = function () {
+    return this._dragging;
+  };
+  MouseDragHandler.prototype.destroy = function () {
+    this._stage.off('mousedown', this._mouseDown);
+    this._stage.off('touchstart', this._mouseDown);
+  };
+
+  /**
+   * @file
+   *
+   * Defines the {@link SeekMouseDragHandler} class.
+   *
+   * @module seek-mouse-drag-handler
+   */
+
+  /**
+   * Creates a handler for mouse events to allow seeking the waveform
+   * views by clicking and dragging the mouse.
+   *
+   * @class
+   * @alias SeekMouseDragHandler
+   *
+   * @param {Peaks} peaks
+   * @param {WaveformOverview} view
+   */
+
+  function SeekMouseDragHandler(peaks, view) {
+    this._peaks = peaks;
+    this._view = view;
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._mouseDragHandler = new MouseDragHandler(view._stage, {
+      onMouseDown: this._onMouseDown,
+      onMouseMove: this._onMouseMove
+    });
+  }
+  SeekMouseDragHandler.prototype._onMouseDown = function (mousePosX) {
+    this._seek(mousePosX);
+  };
+  SeekMouseDragHandler.prototype._onMouseMove = function (mousePosX) {
+    this._seek(mousePosX);
+  };
+  SeekMouseDragHandler.prototype._seek = function (mousePosX) {
+    if (!this._view.isSeekEnabled()) {
+      return;
+    }
+    mousePosX = clamp(mousePosX, 0, this._width);
+    var time = this._view.pixelsToTime(mousePosX);
+    var duration = this._peaks.player.getDuration();
+
+    // Prevent the playhead position from jumping by limiting click
+    // handling to the waveform duration.
+    if (time > duration) {
+      time = duration;
+    }
+
+    // Update the playhead position. This gives a smoother visual update
+    // than if we only use the player.timeupdate event.
+    this._view.updatePlayheadTime(time);
+    this._peaks.player.seek(time);
+  };
+  SeekMouseDragHandler.prototype.destroy = function () {
+    this._mouseDragHandler.destroy();
+  };
+
+  /**
+   * @file
+   *
    * Defines the {@link WaveformOverview} class.
    *
    * @module waveform-overview
@@ -5570,14 +5412,12 @@
     self._onPlaying = self._onPlaying.bind(this);
     self._onPause = self._onPause.bind(this);
     self._onZoomviewDisplaying = self._onZoomviewDisplaying.bind(this);
-    self._onWindowResize = self._onWindowResize.bind(this);
 
     // Register event handlers
     peaks.on('player.timeupdate', self._onTimeUpdate);
     peaks.on('player.playing', self._onPlaying);
     peaks.on('player.pause', self._onPause);
     peaks.on('zoomview.displaying', self._onZoomviewDisplaying);
-    peaks.on('window_resize', self._onWindowResize);
     self._amplitudeScale = 1.0;
     self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
     self._enableSeek = true;
@@ -5592,20 +5432,12 @@
     self._height = container.clientHeight;
     self._data = waveformData;
     if (self._width !== 0) {
-      try {
-        self._data = waveformData.resample({
-          width: self._width
-        });
-      } catch (error) {
-        // This error usually indicates that the waveform length
-        // is less than the container width
-      }
+      self._resampleAndSetWaveformData(waveformData, self._width);
     }
 
     // Disable warning: The stage has 6 layers.
     // Recommended maximum number of layers is 3-5.
     Konva__default["default"].showWarnings = false;
-    self._resizeTimeoutId = null;
     self._stage = new Konva__default["default"].Stage({
       container: container,
       width: self._width,
@@ -5614,10 +5446,14 @@
     self._waveformColor = self._viewOptions.waveformColor;
     self._playedWaveformColor = self._viewOptions.playedWaveformColor;
     self._createWaveform();
-    self._segmentsLayer = new SegmentsLayer(peaks, self, false);
-    self._segmentsLayer.addToStage(self._stage);
-    self._pointsLayer = new PointsLayer(peaks, self, false);
-    self._pointsLayer.addToStage(self._stage);
+    if (self._viewOptions.enableSegments) {
+      self._segmentsLayer = new SegmentsLayer(peaks, self, false);
+      self._segmentsLayer.addToStage(self._stage);
+    }
+    if (self._viewOptions.enablePoints) {
+      self._pointsLayer = new PointsLayer(peaks, self, false);
+      self._pointsLayer.addToStage(self._stage);
+    }
     self._highlightLayer = new HighlightLayer(self, self._viewOptions);
     self._highlightLayer.addToStage(self._stage);
     self._createAxisLabels();
@@ -5633,47 +5469,20 @@
     });
     self._playheadLayer.addToStage(self._stage);
     var time = self._peaks.player.getCurrentTime();
-    this._playheadLayer.updatePlayheadTime(time);
-    self._createMouseDragHandler();
-    self._onClick = self._onClick.bind(this);
-    self._onDblClick = self._onDblClick.bind(this);
-    self._onContextMenu = self._onContextMenu.bind(this);
+    self._playheadLayer.updatePlayheadTime(time);
+    self._mouseDragHandler = new SeekMouseDragHandler(peaks, self);
+    self._onClick = self._onClick.bind(self);
+    self._onDblClick = self._onDblClick.bind(self);
+    self._onContextMenu = self._onContextMenu.bind(self);
     self._stage.on('click', self._onClick);
     self._stage.on('dblclick', self._onDblClick);
     self._stage.on('contextmenu', self._onContextMenu);
   }
-  WaveformOverview.prototype._createMouseDragHandler = function () {
-    var self = this;
-    self._mouseDragHandler = new MouseDragHandler(self._stage, {
-      onMouseDown: function onMouseDown(mousePosX) {
-        this._seek(mousePosX);
-      },
-      onMouseMove: function onMouseMove(mousePosX) {
-        this._seek(mousePosX);
-      },
-      _seek: function _seek(mousePosX) {
-        if (!self._enableSeek) {
-          return;
-        }
-        mousePosX = clamp(mousePosX, 0, self._width);
-        var time = self.pixelsToTime(mousePosX);
-        var duration = self._getDuration();
-
-        // Prevent the playhead position from jumping by limiting click
-        // handling to the waveform duration.
-        if (time > duration) {
-          time = duration;
-        }
-
-        // Update the playhead position. This gives a smoother visual update
-        // than if we only use the player.timeupdate event.
-        self._playheadLayer.updatePlayheadTime(time);
-        self._peaks.player.seek(time);
-      }
-    });
-  };
   WaveformOverview.prototype.enableSeek = function (enable) {
     this._enableSeek = enable;
+  };
+  WaveformOverview.prototype.isSeekEnabled = function () {
+    return this._enableSeek;
   };
   WaveformOverview.prototype._onClick = function (event) {
     this._clickHandler(event, 'click');
@@ -5710,7 +5519,9 @@
                 emitViewEvent = false;
               }
             };
-            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+            if (this._segmentsLayer) {
+              this._segmentsLayer.segmentClicked(eventName, clickEvent);
+            }
           }
         }
       }
@@ -5742,40 +5553,34 @@
   WaveformOverview.prototype._onZoomviewDisplaying = function (startTime, endTime) {
     this.showHighlight(startTime, endTime);
   };
+  WaveformOverview.prototype.updatePlayheadTime = function (time) {
+    this._playheadLayer.updatePlayheadTime(time);
+  };
   WaveformOverview.prototype.showHighlight = function (startTime, endTime) {
     this._highlightLayer.showHighlight(startTime, endTime);
-  };
-  WaveformOverview.prototype._onWindowResize = function () {
-    var self = this;
-    if (self._resizeTimeoutId) {
-      clearTimeout(self._resizeTimeoutId);
-      self._resizeTimeoutId = null;
-    }
-
-    // Avoid resampling waveform data to zero width
-    if (self._container.clientWidth !== 0) {
-      self._width = self._container.clientWidth;
-      self._stage.setWidth(self._width);
-      self._resizeTimeoutId = setTimeout(function () {
-        self._width = self._container.clientWidth;
-        self._data = self._originalWaveformData.resample({
-          width: self._width
-        });
-        self._stage.setWidth(self._width);
-        self._updateWaveform();
-      }, 500);
-    }
   };
   WaveformOverview.prototype.setWaveformData = function (waveformData) {
     this._originalWaveformData = waveformData;
     if (this._width !== 0) {
-      this._data = waveformData.resample({
-        width: this._width
-      });
+      this._resampleAndSetWaveformData(waveformData, this._width);
     } else {
       this._data = waveformData;
     }
     this._updateWaveform();
+  };
+  WaveformOverview.prototype._resampleAndSetWaveformData = function (waveformData, width) {
+    try {
+      this._data = waveformData.resample({
+        width: width
+      });
+      return true;
+    } catch (error) {
+      // This error usually indicates that the waveform length
+      // is less than the container width. Ignore, and use the
+      // given waveform data
+      this._data = waveformData;
+      return false;
+    }
   };
   WaveformOverview.prototype.playheadPosChanged = function (time) {
     if (this._playedWaveformShape) {
@@ -5881,7 +5686,9 @@
     }
     this._amplitudeScale = scale;
     this._waveformLayer.draw();
-    this._segmentsLayer.draw();
+    if (this._segmentsLayer) {
+      this._segmentsLayer.draw();
+    }
   };
   WaveformOverview.prototype.getAmplitudeScale = function () {
     return this._amplitudeScale;
@@ -5939,7 +5746,7 @@
     this._axisLayer = new Konva__default["default"].Layer({
       listening: false
     });
-    this._axis = new WaveformAxis(this, this._viewOptions);
+    this._axis = new WaveformAxis$1(this, this._viewOptions);
     this._axis.addToLayer(this._axisLayer);
     this._stage.add(this._axisLayer);
   };
@@ -5954,8 +5761,12 @@
     this._highlightLayer.updateHighlight();
     var frameStartTime = 0;
     var frameEndTime = this.pixelsToTime(this._width);
-    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+    if (this._pointsLayer) {
+      this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+    }
+    if (this._segmentsLayer) {
+      this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+    }
   };
   WaveformOverview.prototype.setWaveformColor = function (color) {
     this._waveformColor = color;
@@ -5984,13 +5795,17 @@
   WaveformOverview.prototype.formatTime = function (time) {
     return this._formatPlayheadTime(time);
   };
-  WaveformOverview.prototype.showAxisLabels = function (show) {
-    this._axis.showAxisLabels(show);
+  WaveformOverview.prototype.showAxisLabels = function (show, options) {
+    this._axis.showAxisLabels(show, options);
     this._axisLayer.draw();
   };
   WaveformOverview.prototype.enableMarkerEditing = function (enable) {
-    this._segmentsLayer.enableEditing(enable);
-    this._pointsLayer.enableEditing(enable);
+    if (this._segmentsLayer) {
+      this._segmentsLayer.enableEditing(enable);
+    }
+    if (this._pointsLayer) {
+      this._pointsLayer.enableEditing(enable);
+    }
   };
   WaveformOverview.prototype.fitToContainer = function () {
     if (this._container.clientWidth === 0 && this._container.clientHeight === 0) {
@@ -6000,47 +5815,236 @@
     if (this._container.clientWidth !== this._width) {
       this._width = this._container.clientWidth;
       this._stage.setWidth(this._width);
-      try {
-        this._data = this._originalWaveformData.resample({
-          width: this._width
-        });
+      if (this._resampleAndSetWaveformData(this._originalWaveformData, this._width)) {
         updateWaveform = true;
-      } catch (error) {
-        // Ignore, and leave this._data as it was
       }
     }
-    this._height = this._container.clientHeight;
-    this._stage.setHeight(this._height);
-    this._waveformShape.fitToView();
-    this._playheadLayer.fitToView();
-    this._segmentsLayer.fitToView();
-    this._pointsLayer.fitToView();
-    this._highlightLayer.fitToView();
+    if (this._container.clientHeight !== this._height) {
+      this._height = this._container.clientHeight;
+      this._stage.setHeight(this._height);
+      this._waveformShape.fitToView();
+      this._playheadLayer.fitToView();
+      if (this._segmentsLayer) {
+        this._segmentsLayer.fitToView();
+      }
+      if (this._pointsLayer) {
+        this._pointsLayer.fitToView();
+      }
+      this._highlightLayer.fitToView();
+    }
     if (updateWaveform) {
       this._updateWaveform();
     }
-    this._stage.draw();
   };
   WaveformOverview.prototype.getViewOptions = function () {
     return this._viewOptions;
   };
   WaveformOverview.prototype.destroy = function () {
-    if (this._resizeTimeoutId) {
-      clearTimeout(this._resizeTimeoutId);
-      this._resizeTimeoutId = null;
-    }
     this._peaks.off('player.playing', this._onPlaying);
     this._peaks.off('player.pause', this._onPause);
     this._peaks.off('player.timeupdate', this._onTimeUpdate);
     this._peaks.off('zoomview.displaying', this._onZoomviewDisplaying);
-    this._peaks.off('window_resize', this._onWindowResize);
+    this._mouseDragHandler.destroy();
     this._playheadLayer.destroy();
-    this._segmentsLayer.destroy();
-    this._pointsLayer.destroy();
+    if (this._segmentsLayer) {
+      this._segmentsLayer.destroy();
+    }
+    if (this._pointsLayer) {
+      this._pointsLayer.destroy();
+    }
     if (this._stage) {
       this._stage.destroy();
       this._stage = null;
     }
+  };
+
+  /**
+   * @file
+   *
+   * Defines the {@link InsertSegmentMouseDragHandler} class.
+   *
+   * @module insert-segment-mouse-drag-handler
+   */
+
+  /**
+   * Creates a handler for mouse events to allow inserting new waveform
+   * segments by clicking and dragging the mouse.
+   *
+   * @class
+   * @alias InsertSegmentMouseDragHandler
+   *
+   * @param {Peaks} peaks
+   * @param {WaveformZoomView} view
+   */
+
+  function InsertSegmentMouseDragHandler(peaks, view) {
+    this._peaks = peaks;
+    this._view = view;
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onMouseUp = this._onMouseUp.bind(this);
+    this._mouseDragHandler = new MouseDragHandler(view._stage, {
+      onMouseDown: this._onMouseDown,
+      onMouseMove: this._onMouseMove,
+      onMouseUp: this._onMouseUp
+    });
+  }
+  InsertSegmentMouseDragHandler.prototype.isDragging = function () {
+    return this._mouseDragHandler.isDragging();
+  };
+  InsertSegmentMouseDragHandler.prototype._onMouseDown = function (mousePosX, segment) {
+    this._segment = segment;
+    if (this._segment) {
+      // The user has clicked within a segment. We want to prevent
+      // the segment from being dragged while the user inserts a new
+      // segment. So we temporarily make the segment non-draggable,
+      // and restore its draggable state in onMouseUp().
+      this._segmentIsDraggable = this._segment.draggable();
+      this._segment.draggable(false);
+    }
+    var time = this._view.pixelsToTime(mousePosX + this._view.getFrameOffset());
+    this._peaks.segments.setInserting(true);
+    this._insertSegment = this._peaks.segments.add({
+      startTime: time,
+      endTime: time,
+      editable: true
+    });
+    this._insertSegmentShape = this._view._segmentsLayer.getSegmentShape(this._insertSegment);
+    if (this._insertSegmentShape) {
+      this._insertSegmentShape.moveMarkersToTop();
+      this._insertSegmentShape.startDrag();
+    }
+  };
+  InsertSegmentMouseDragHandler.prototype._onMouseMove = function () {};
+  InsertSegmentMouseDragHandler.prototype._onMouseUp = function () {
+    if (this._insertSegmentShape) {
+      this._insertSegmentShape.stopDrag();
+      this._insertSegmentShape = null;
+    }
+
+    // If the user was dragging within an existing segment,
+    // restore the segment's original draggable state.
+    if (this._segment && this._segmentIsDraggable) {
+      this._segment.draggable(true);
+    }
+    this._peaks.emit('segments.insert', {
+      segment: this._insertSegment
+    });
+    this._peaks.segments.setInserting(false);
+  };
+  InsertSegmentMouseDragHandler.prototype.destroy = function () {
+    this._mouseDragHandler.destroy();
+  };
+
+  /**
+   * @file
+   *
+   * Defines the {@link ScrollMouseDragHandler} class.
+   *
+   * @module scroll-mouse-drag-handler
+   */
+
+  /**
+   * Creates a handler for mouse events to allow scrolling the zoomable
+   * waveform view by clicking and dragging the mouse.
+   *
+   * @class
+   * @alias ScrollMouseDragHandler
+   *
+   * @param {Peaks} peaks
+   * @param {WaveformZoomView} view
+   */
+
+  function ScrollMouseDragHandler(peaks, view) {
+    this._peaks = peaks;
+    this._view = view;
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onMouseUp = this._onMouseUp.bind(this);
+    this._mouseDragHandler = new MouseDragHandler(view._stage, {
+      onMouseDown: this._onMouseDown,
+      onMouseMove: this._onMouseMove,
+      onMouseUp: this._onMouseUp
+    });
+  }
+  ScrollMouseDragHandler.prototype.isDragging = function () {
+    return this._mouseDragHandler.isDragging();
+  };
+  ScrollMouseDragHandler.prototype._onMouseDown = function (mousePosX, segment) {
+    this._segment = segment;
+    this._seeking = false;
+    var playheadOffset = this._view.getPlayheadOffset();
+    if (this._view.isSeekEnabled() && Math.abs(mousePosX - playheadOffset) <= this._view.getPlayheadClickTolerance()) {
+      this._seeking = true;
+
+      // The user has clicked near the playhead, and the playhead is within
+      // a segment. In this case we want to allow the playhead to move, but
+      // prevent the segment from being dragged. So we temporarily make the
+      // segment non-draggable, and restore its draggable state in onMouseUp().
+      if (this._segment) {
+        this._segmentIsDraggable = this._segment.draggable();
+        this._segment.draggable(false);
+      }
+    }
+    if (this._seeking) {
+      this._seek(mousePosX);
+    } else {
+      this._initialFrameOffset = this._view.getFrameOffset();
+      this._mouseDownX = mousePosX;
+    }
+  };
+  ScrollMouseDragHandler.prototype._onMouseMove = function (mousePosX) {
+    // Prevent scrolling the waveform if the user is dragging a segment.
+    if (this._segment && !this._seeking) {
+      return;
+    }
+    if (this._seeking) {
+      mousePosX = clamp(mousePosX, 0, this._view.getWidth());
+      var time = this._view.pixelsToTime(mousePosX + this._view.getFrameOffset());
+      this._seek(time);
+    } else {
+      // Moving the mouse to the left increases the time position of the
+      // left-hand edge of the visible waveform.
+      var diff = this._mouseDownX - mousePosX;
+      var newFrameOffset = this._initialFrameOffset + diff;
+      if (newFrameOffset !== this._initialFrameOffset) {
+        this._view.updateWaveform(newFrameOffset);
+      }
+    }
+  };
+  ScrollMouseDragHandler.prototype._onMouseUp = function () {
+    if (!this._seeking) {
+      // Set playhead position only on click release, when not dragging.
+      if (this._view._enableSeek && !this._mouseDragHandler.isDragging()) {
+        var time = this._view.pixelOffsetToTime(this._mouseDownX);
+        this._seek(time);
+      }
+    }
+
+    // If the user was dragging within an existing segment,
+    // restore the segment's original draggable state.
+    if (this._segment && this._seeking) {
+      if (this._segmentIsDraggable) {
+        this._segment.draggable(true);
+      }
+    }
+  };
+  ScrollMouseDragHandler.prototype._seek = function (time) {
+    var duration = this._peaks.player.getDuration();
+
+    // Prevent the playhead position from jumping by limiting click
+    // handling to the waveform duration.
+    if (time > duration) {
+      time = duration;
+    }
+
+    // Update the playhead position. This gives a smoother visual update
+    // than if we only use the player.timeupdate event.
+    this._view.updatePlayheadTime(time);
+    this._peaks.player.seek(time);
+  };
+  ScrollMouseDragHandler.prototype.destroy = function () {
+    this._mouseDragHandler.destroy();
   };
 
   /**
@@ -6076,7 +6080,6 @@
     self._onTimeUpdate = self._onTimeUpdate.bind(self);
     self._onPlaying = self._onPlaying.bind(self);
     self._onPause = self._onPause.bind(self);
-    self._onWindowResize = self._onWindowResize.bind(self);
     self._onKeyboardLeft = self._onKeyboardLeft.bind(self);
     self._onKeyboardRight = self._onKeyboardRight.bind(self);
     self._onKeyboardShiftLeft = self._onKeyboardShiftLeft.bind(self);
@@ -6086,18 +6089,19 @@
     self._peaks.on('player.timeupdate', self._onTimeUpdate);
     self._peaks.on('player.playing', self._onPlaying);
     self._peaks.on('player.pause', self._onPause);
-    self._peaks.on('window_resize', self._onWindowResize);
     self._peaks.on('keyboard.left', self._onKeyboardLeft);
     self._peaks.on('keyboard.right', self._onKeyboardRight);
     self._peaks.on('keyboard.shift_left', self._onKeyboardShiftLeft);
     self._peaks.on('keyboard.shift_right', self._onKeyboardShiftRight);
-    self._enableAutoScroll = true;
+    self._autoScroll = self._viewOptions.autoScroll;
+    self._autoScrollOffset = self._viewOptions.autoScrollOffset;
     self._amplitudeScale = 1.0;
     self._timeLabelPrecision = self._viewOptions.timeLabelPrecision;
     self._enableSeek = true;
     self._enableSegmentDragging = false;
     self._segmentDragMode = 'overlap';
     self._minSegmentDragWidth = 0;
+    self._insertSegmentShape = null;
     if (self._viewOptions.formatPlayheadTime) {
       self._formatPlayheadTime = self._viewOptions.formatPlayheadTime;
     } else {
@@ -6111,7 +6115,6 @@
     var initialZoomLevel = peaks.zoom.getZoomLevel();
     self._zoomLevelAuto = false;
     self._zoomLevelSeconds = null;
-    self._resizeTimeoutId = null;
     self._resampleData({
       scale: initialZoomLevel
     });
@@ -6128,10 +6131,14 @@
     self._waveformColor = self._viewOptions.waveformColor;
     self._playedWaveformColor = self._viewOptions.playedWaveformColor;
     self._createWaveform();
-    self._segmentsLayer = new SegmentsLayer(peaks, self, true);
-    self._segmentsLayer.addToStage(self._stage);
-    self._pointsLayer = new PointsLayer(peaks, self, true);
-    self._pointsLayer.addToStage(self._stage);
+    if (self._viewOptions.enableSegments) {
+      self._segmentsLayer = new SegmentsLayer(peaks, self, true);
+      self._segmentsLayer.addToStage(self._stage);
+    }
+    if (self._viewOptions.enablePoints) {
+      self._pointsLayer = new PointsLayer(peaks, self, true);
+      self._pointsLayer.addToStage(self._stage);
+    }
     self._createAxisLabels();
     self._playheadLayer = new PlayheadLayer({
       player: self._peaks.player,
@@ -6146,14 +6153,14 @@
     self._playheadLayer.addToStage(self._stage);
     var time = self._peaks.player.getCurrentTime();
     self._syncPlayhead(time);
-    self._createMouseDragHandler();
+    self._mouseDragHandler = new ScrollMouseDragHandler(self._peaks, self);
     self._onWheel = self._onWheel.bind(self);
     self._onWheelCaptureVerticalScroll = self._onWheelCaptureVerticalScroll.bind(self);
     self.setWheelMode(self._viewOptions.wheelMode);
-    self._onClick = self._onClick.bind(this);
-    self._onDblClick = self._onDblClick.bind(this);
-    self._onMouseDown = self._onMouseDown.bind(this);
-    self._onContextMenu = self._onContextMenu.bind(this);
+    self._onClick = self._onClick.bind(self);
+    self._onDblClick = self._onDblClick.bind(self);
+    self._onMouseDown = self._onMouseDown.bind(self);
+    self._onContextMenu = self._onContextMenu.bind(self);
     self._stage.on('click', self._onClick);
     self._stage.on('dblclick', self._onDblClick);
     self._stage.on('mousedown', self._onMouseDown);
@@ -6166,95 +6173,11 @@
       this._waveformScales = [this._originalWaveformData.scale];
     }
   };
-  WaveformZoomView.prototype._createMouseDragHandler = function () {
-    var self = this;
-    self._mouseDragHandler = new MouseDragHandler(self._stage, {
-      onMouseDown: function onMouseDown(mousePosX, segment) {
-        this._seeking = false;
-        this._segment = segment;
-        var playheadOffset = self._playheadLayer.getPlayheadOffset();
-        if (self._enableSeek && Math.abs(mousePosX - playheadOffset) <= self._playheadClickTolerance) {
-          this._seeking = true;
-
-          // The user has clicked near the playhead, and the playhead is within
-          // a segment. In this case we want to allow the playhead to move, but
-          // prevent the segment from being dragged. So we temporarily make the
-          // segment non-draggable, and restore its draggable state in onMouseUp().
-          if (this._segment) {
-            this._segmentIsDraggable = this._segment.draggable();
-            this._segment.draggable(false);
-          }
-        }
-        if (this._seeking) {
-          this._seek(mousePosX);
-        } else {
-          this.initialFrameOffset = self._frameOffset;
-          this.mouseDownX = mousePosX;
-        }
-      },
-      onMouseMove: function onMouseMove(mousePosX) {
-        // Prevent scrolling the waveform if the user is dragging a segment.
-        if (this._segment && !this._seeking) {
-          return;
-        }
-        if (this._seeking) {
-          this._seek(mousePosX);
-        } else {
-          // Moving the mouse to the left increases the time position of the
-          // left-hand edge of the visible waveform.
-          var diff = this.mouseDownX - mousePosX;
-          var newFrameOffset = this.initialFrameOffset + diff;
-          if (newFrameOffset !== this.initialFrameOffset) {
-            self.updateWaveform(newFrameOffset);
-          }
-        }
-      },
-      onMouseUp: function onMouseUp( /* mousePosX */
-      ) {
-        if (!this._seeking) {
-          // Set playhead position only on click release, when not dragging.
-          if (self._enableSeek && !self._mouseDragHandler.isDragging()) {
-            var time = self.pixelOffsetToTime(this.mouseDownX);
-            var duration = self._getDuration();
-
-            // Prevent the playhead position from jumping by limiting click
-            // handling to the waveform duration.
-            if (time > duration) {
-              time = duration;
-            }
-            self._playheadLayer.updatePlayheadTime(time);
-            self._peaks.player.seek(time);
-          }
-        }
-
-        // If the user was dragging the playhead while the playhead is within
-        // a segment, restore the segment's original draggable state.
-        if (this._segment && this._seeking) {
-          if (this._segmentIsDraggable) {
-            this._segment.draggable(true);
-          }
-        }
-      },
-      _seek: function _seek(mousePosX) {
-        mousePosX = clamp(mousePosX, 0, self._width);
-        var time = self.pixelsToTime(mousePosX + self._frameOffset);
-        var duration = self._getDuration();
-
-        // Prevent the playhead position from jumping by limiting click
-        // handling to the waveform duration.
-        if (time > duration) {
-          time = duration;
-        }
-
-        // Update the playhead position. This gives a smoother visual update
-        // than if we only use the player.timeupdate event.
-        self._playheadLayer.updatePlayheadTime(time);
-        self._peaks.player.seek(time);
-      }
-    });
-  };
   WaveformZoomView.prototype.enableSeek = function (enable) {
     this._enableSeek = enable;
+  };
+  WaveformZoomView.prototype.isSeekEnabled = function () {
+    return this._enableSeek;
   };
   WaveformZoomView.prototype._onClick = function (event) {
     this._clickHandler(event, 'click');
@@ -6294,7 +6217,9 @@
                 emitViewEvent = false;
               }
             };
-            this._segmentsLayer.segmentClicked(eventName, clickEvent);
+            if (this._segmentsLayer) {
+              this._segmentsLayer.segmentClicked(eventName, clickEvent);
+            }
           }
         }
       }
@@ -6360,11 +6285,23 @@
     var newFrameOffset = clamp(this._frameOffset + Math.floor(delta), 0, this._pixelLength - this._width);
     this.updateWaveform(newFrameOffset);
   };
+  WaveformZoomView.prototype.setWaveformDragMode = function (mode) {
+    if (this._viewOptions.enableSegments) {
+      this._mouseDragHandler.destroy();
+      if (mode === 'insert-segment') {
+        this._mouseDragHandler = new InsertSegmentMouseDragHandler(this._peaks, this);
+      } else {
+        this._mouseDragHandler = new ScrollMouseDragHandler(this._peaks, this);
+      }
+    }
+  };
   WaveformZoomView.prototype.enableSegmentDragging = function (enable) {
     this._enableSegmentDragging = enable;
 
     // Update all existing segments
-    this._segmentsLayer.enableSegmentDragging(enable);
+    if (this._segmentsLayer) {
+      this._segmentsLayer.enableSegmentDragging(enable);
+    }
   };
   WaveformZoomView.prototype.isSegmentDraggingEnabled = function () {
     return this._enableSegmentDragging;
@@ -6389,34 +6326,6 @@
   };
   WaveformZoomView.prototype._onPause = function (time) {
     this._playheadLayer.stop(time);
-  };
-  WaveformZoomView.prototype._onWindowResize = function () {
-    var self = this;
-    var width = self._container.clientWidth;
-    if (!self._zoomLevelAuto) {
-      if (width !== 0) {
-        self._width = width;
-        self._stage.width(width);
-        self.updateWaveform(self._frameOffset);
-      }
-    } else {
-      if (self._resizeTimeoutId) {
-        clearTimeout(self._resizeTimeoutId);
-        self._resizeTimeoutId = null;
-      }
-
-      // Avoid resampling waveform data to zero width
-      if (width !== 0) {
-        self._width = width;
-        self._stage.width(width);
-        self._resizeTimeoutId = setTimeout(function () {
-          self._width = width;
-          self._data = self._originalWaveformData.resample(width);
-          self._stage.width(width);
-          self.updateWaveform(self._frameOffset);
-        }, 500);
-      }
-    }
   };
   WaveformZoomView.prototype._onKeyboardLeft = function () {
     this._keyboardScroll(-1, false);
@@ -6449,6 +6358,19 @@
     // Don't update the UI here, call setZoom().
   };
 
+  /**
+   * Returns the position of the playhead marker, in pixels relative to the
+   * left hand side of the waveform view.
+   *
+   * @return {Number}
+   */
+
+  WaveformZoomView.prototype.getPlayheadOffset = function () {
+    return this._playheadLayer.getPlayheadPixel() - this._frameOffset;
+  };
+  WaveformZoomView.prototype.getPlayheadClickTolerance = function () {
+    return this._playheadClickTolerance;
+  };
   WaveformZoomView.prototype.playheadPosChanged = function (time) {
     if (this._playedWaveformShape) {
       this._playedSegment.endTime = time;
@@ -6456,9 +6378,12 @@
       this._drawWaveformLayer();
     }
   };
+  WaveformZoomView.prototype.updatePlayheadTime = function (time) {
+    this._playheadLayer.updatePlayheadTime(time);
+  };
   WaveformZoomView.prototype._syncPlayhead = function (time) {
     this._playheadLayer.updatePlayheadTime(time);
-    if (this._enableAutoScroll) {
+    if (this._autoScroll) {
       // Check for the playhead reaching the right-hand side of the window.
 
       var pixelIndex = this.timeToPixels(time);
@@ -6466,7 +6391,7 @@
       // TODO: move this code to animation function?
       // TODO: don't scroll if user has positioned view manually (e.g., using
       // the keyboard)
-      var endThreshold = this._frameOffset + this._width - this._width / 2;
+      var endThreshold = this._frameOffset + this._width - this._autoScrollOffset;
       if (pixelIndex >= endThreshold || pixelIndex < this._frameOffset) {
         this._frameOffset = pixelIndex - Math.round(this._width / 2);
         if (this._frameOffset < 0) {
@@ -6531,7 +6456,7 @@
     }
     var currentTime = this._peaks.player.getCurrentTime();
     var apexTime;
-    var playheadOffsetPixels = this._playheadLayer.getPlayheadOffset();
+    var playheadOffsetPixels = this.getPlayheadOffset();
     if (playheadOffsetPixels >= 0 && playheadOffsetPixels < this._width) {
       // Playhead is visible. Change the zoom level while keeping the
       // playhead at the same position in the window.
@@ -6553,12 +6478,10 @@
 
     // Update the playhead position after zooming.
     this._playheadLayer.updatePlayheadTime(currentTime);
-
-    // const adapter = this.createZoomAdapter(currentScale, previousScale);
-
-    // adapter.start(relativePosition);
-
-    this._peaks.emit('zoom.update', scale, prevScale);
+    this._peaks.emit('zoom.update', {
+      currentZoom: scale,
+      previousZoom: prevScale
+    });
     return true;
   };
   WaveformZoomView.prototype._resampleData = function (options) {
@@ -6644,21 +6567,6 @@
     return Math.floor(time * this._data.sample_rate / this._data.scale) - this._frameOffset;
   };
 
-  /* const zoomAdapterMap = {
-    'animated': AnimatedZoomAdapter,
-    'static': StaticZoomAdapter
-  };
-
-  WaveformZoomView.prototype.createZoomAdapter = function(currentScale, previousScale) {
-    const ZoomAdapter = zoomAdapterMap[this._viewOptions.zoomAdapter];
-
-    if (!ZoomAdapter) {
-      throw new Error('Invalid zoomAdapter: ' + this._viewOptions.zoomAdapter);
-    }
-
-    return ZoomAdapter.create(this, currentScale, previousScale);
-  }; */
-
   /**
    * @returns {Number} The start position of the waveform shown in the view,
    *   in pixels.
@@ -6712,7 +6620,9 @@
     }
     this._amplitudeScale = scale;
     this._drawWaveformLayer();
-    this._segmentsLayer.draw();
+    if (this._segmentsLayer) {
+      this._segmentsLayer.draw();
+    }
   };
   WaveformZoomView.prototype.getAmplitudeScale = function () {
     return this._amplitudeScale;
@@ -6771,7 +6681,7 @@
     this._axisLayer = new Konva__default["default"].Layer({
       listening: false
     });
-    this._axis = new WaveformAxis(this, this._viewOptions);
+    this._axis = new WaveformAxis$1(this, this._viewOptions);
     this._axis.addToLayer(this._axisLayer);
     this._stage.add(this._axisLayer);
   };
@@ -6820,8 +6730,12 @@
     this._axisLayer.draw();
     var frameStartTime = this.getStartTime();
     var frameEndTime = this.getEndTime();
-    this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
-    this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+    if (this._pointsLayer) {
+      this._pointsLayer.updatePoints(frameStartTime, frameEndTime);
+    }
+    if (this._segmentsLayer) {
+      this._segmentsLayer.updateSegments(frameStartTime, frameEndTime);
+    }
     this._peaks.emit('zoomview.displaying', frameStartTime, frameEndTime);
   };
   WaveformZoomView.prototype._drawWaveformLayer = function () {
@@ -6854,19 +6768,26 @@
   WaveformZoomView.prototype.formatTime = function (time) {
     return this._formatPlayheadTime(time);
   };
-  WaveformZoomView.prototype.showAxisLabels = function (show) {
-    this._axis.showAxisLabels(show);
+  WaveformZoomView.prototype.showAxisLabels = function (show, options) {
+    this._axis.showAxisLabels(show, options);
     this._axisLayer.draw();
   };
-  WaveformZoomView.prototype.enableAutoScroll = function (enable) {
-    this._enableAutoScroll = enable;
+  WaveformZoomView.prototype.enableAutoScroll = function (enable, options) {
+    this._autoScroll = enable;
+    if (objectHasProperty(options, 'offset')) {
+      this._autoScrollOffset = options.offset;
+    }
   };
   WaveformZoomView.prototype.enableMarkerEditing = function (enable) {
-    this._segmentsLayer.enableEditing(enable);
-    this._pointsLayer.enableEditing(enable);
+    if (this._segmentsLayer) {
+      this._segmentsLayer.enableEditing(enable);
+    }
+    if (this._pointsLayer) {
+      this._pointsLayer.enableEditing(enable);
+    }
   };
   WaveformZoomView.prototype.getMinSegmentDragWidth = function () {
-    return this._minSegmentDragWidth;
+    return this._insertSegmentShape ? 0 : this._minSegmentDragWidth;
   };
   WaveformZoomView.prototype.setMinSegmentDragWidth = function (width) {
     this._minSegmentDragWidth = width;
@@ -6901,70 +6822,228 @@
         }
       }
     }
-    this._height = this._container.clientHeight;
-    this._stage.height(this._height);
-    this._waveformShape.fitToView();
-    this._playheadLayer.fitToView();
-    this._segmentsLayer.fitToView();
-    this._pointsLayer.fitToView();
+    if (this._container.clientHeight !== this._height) {
+      this._height = this._container.clientHeight;
+      this._stage.height(this._height);
+      this._waveformShape.fitToView();
+      this._playheadLayer.fitToView();
+      if (this._segmentsLayer) {
+        this._segmentsLayer.fitToView();
+      }
+      if (this._pointsLayer) {
+        this._pointsLayer.fitToView();
+      }
+    }
     if (updateWaveform) {
       this.updateWaveform(this._frameOffset);
     }
-    this._stage.draw();
+  };
+  WaveformZoomView.prototype.getStage = function () {
+    return this._stage;
+  };
+  WaveformZoomView.prototype.getSegmentsLayer = function () {
+    return this._segmentsLayer;
   };
   WaveformZoomView.prototype.getViewOptions = function () {
     return this._viewOptions;
   };
-
-  /* WaveformZoomView.prototype.beginZoom = function() {
-    // Fade out the time axis and the segments
-    // this._axis.axisShape.setAttr('opacity', 0);
-
-    if (this._pointsLayer) {
-      this._pointsLayer.setVisible(false);
-    }
-
-    if (this._segmentsLayer) {
-      this._segmentsLayer.setVisible(false);
-    }
-  };
-
-  WaveformZoomView.prototype.endZoom = function() {
-    if (this._pointsLayer) {
-      this._pointsLayer.setVisible(true);
-    }
-
-    if (this._segmentsLayer) {
-      this._segmentsLayer.setVisible(true);
-    }
-
-    const time = this._peaks.player.getCurrentTime();
-
-    this.seekFrame(this.timeToPixels(time));
-  }; */
-
   WaveformZoomView.prototype.destroy = function () {
-    if (this._resizeTimeoutId) {
-      clearTimeout(this._resizeTimeoutId);
-      this._resizeTimeoutId = null;
-    }
-
     // Unregister event handlers
     this._peaks.off('player.timeupdate', this._onTimeUpdate);
     this._peaks.off('player.playing', this._onPlaying);
     this._peaks.off('player.pause', this._onPause);
-    this._peaks.off('window_resize', this._onWindowResize);
     this._peaks.off('keyboard.left', this._onKeyboardLeft);
     this._peaks.off('keyboard.right', this._onKeyboardRight);
     this._peaks.off('keyboard.shift_left', this._onKeyboardShiftLeft);
     this._peaks.off('keyboard.shift_right', this._onKeyboardShiftRight);
+    this._mouseDragHandler.destroy();
     this._playheadLayer.destroy();
-    this._segmentsLayer.destroy();
-    this._pointsLayer.destroy();
+    if (this._segmentsLayer) {
+      this._segmentsLayer.destroy();
+    }
+    if (this._pointsLayer) {
+      this._pointsLayer.destroy();
+    }
     if (this._stage) {
       this._stage.destroy();
       this._stage = null;
     }
+  };
+
+  /**
+   * @file
+   *
+   * Defines the {@link Scrollbar} class.
+   *
+   * @module scrollbar
+   */
+
+  /**
+   * Creates a scrollbar.
+   *
+   * @class
+   * @alias Scrollbar
+   *
+   * @param {WaveformData} waveformData
+   * @param {HTMLElement} container
+   * @param {Peaks} peaks
+   */
+
+  function Scrollbar(waveformData, container, peaks) {
+    this._waveformData = waveformData;
+    this._container = container;
+    this._peaks = peaks;
+    this._options = peaks.options.scrollbar;
+    this._zoomview = peaks.views.getView('zoomview');
+    this._dragBoundFunc = this._dragBoundFunc.bind(this);
+    this._onScrollboxDragStart = this._onScrollboxDragStart.bind(this);
+    this._onScrollboxDragMove = this._onScrollboxDragMove.bind(this);
+    this._onScrollboxDragEnd = this._onScrollboxDragEnd.bind(this);
+    this._onZoomviewDisplaying = this._onZoomviewDisplaying.bind(this);
+    this._onScrollbarClick = this._onScrollbarClick.bind(this);
+    peaks.on('zoomview.displaying', this._onZoomviewDisplaying);
+    this._width = container.clientWidth;
+    // this._height = container.clientHeight;
+    this._height = 10;
+    this._stage = new Konva__default["default"].Stage({
+      container: container,
+      width: this._width,
+      height: this._height
+    });
+    this._layer = new Konva__default["default"].Layer();
+    this._stage.on('click', this._onScrollbarClick);
+    this._stage.add(this._layer);
+    this._color = this._options.color;
+    this._scrollboxX = 0;
+    this._minScrollboxWidth = this._options.minWidth;
+    this._offsetY = 0;
+    this._scrollbox = new Konva__default["default"].Group({
+      draggable: true,
+      dragBoundFunc: this._dragBoundFunc
+    });
+    this._scrollboxRect = new Rect.Rect({
+      x: this._scrollboxX,
+      y: this._offsetY,
+      width: 0,
+      height: this._height,
+      fill: this._color,
+      cornerRadius: 10
+    });
+    this._scrollbox.add(this._scrollboxRect);
+    this._setScrollboxWidth();
+    this._scrollbox.on('dragstart', this._onScrollboxDragStart);
+    this._scrollbox.on('dragmove', this._onScrollboxDragMove);
+    this._scrollbox.on('dragend', this._onScrollboxDragEnd);
+    this._layer.add(this._scrollbox);
+    this._layer.draw();
+  }
+  Scrollbar.prototype.setZoomview = function (zoomview) {
+    this._zoomview = zoomview;
+    this._updateScrollbarWidthAndPosition();
+  };
+
+  /**
+   * Sets the width of the scrollbox, based on the visible waveform region
+   * in the zoomview and minimum scrollbox width option.
+   */
+
+  Scrollbar.prototype._setScrollboxWidth = function () {
+    if (this._zoomview) {
+      this._scrollboxWidth = Math.floor(this._width * this._zoomview.pixelsToTime(this._zoomview.getWidth()) / this._peaks.player.getDuration());
+      if (this._scrollboxWidth < this._minScrollboxWidth) {
+        this._scrollboxWidth = this._minScrollboxWidth;
+      }
+    } else {
+      this._scrollboxWidth = this._width;
+    }
+    this._scrollboxRect.width(this._scrollboxWidth);
+  };
+
+  /**
+   * @returns {Number} The maximum scrollbox position, in pixels.
+   */
+
+  Scrollbar.prototype._getScrollbarRange = function () {
+    return this._width - this._scrollboxWidth;
+  };
+  Scrollbar.prototype._dragBoundFunc = function (pos) {
+    // Allow the scrollbar to be moved horizontally but not vertically.
+    return {
+      x: pos.x,
+      y: 0
+    };
+  };
+  Scrollbar.prototype._onScrollboxDragStart = function () {
+    this._dragging = true;
+  };
+  Scrollbar.prototype._onScrollboxDragEnd = function () {
+    this._dragging = false;
+  };
+  Scrollbar.prototype._onScrollboxDragMove = function () {
+    var range = this._getScrollbarRange();
+    var x = clamp(this._scrollbox.x(), 0, range);
+    this._scrollbox.x(x);
+    if (x !== this._scrollboxX) {
+      this._scrollboxX = x;
+      if (this._zoomview) {
+        this._updateWaveform(x);
+      }
+    }
+  };
+  Scrollbar.prototype._onZoomviewDisplaying = function /* startTime , endTime */
+  () {
+    if (!this._dragging) {
+      this._updateScrollbarWidthAndPosition();
+    }
+  };
+  Scrollbar.prototype._updateScrollbarWidthAndPosition = function () {
+    this._setScrollboxWidth();
+    if (this._zoomview) {
+      var startTime = this._zoomview.getStartTime();
+      var zoomviewRange = this._zoomview.getPixelLength() - this._zoomview.getWidth();
+      var scrollBoxPos = Math.floor(this._zoomview.timeToPixels(startTime) * this._getScrollbarRange() / zoomviewRange);
+      this._scrollbox.x(scrollBoxPos);
+      this._layer.draw();
+    }
+  };
+  Scrollbar.prototype._onScrollbarClick = function (event) {
+    // Handle clicks on the scrollbar outside the scrollbox.
+    if (event.target === this._stage) {
+      if (this._zoomview) {
+        // Centre the scrollbox where the user clicked.
+        var x = Math.floor(event.evt.layerX - this._scrollboxWidth / 2);
+        if (x < 0) {
+          x = 0;
+        }
+        this._updateWaveform(x);
+      }
+    }
+  };
+
+  /**
+   * Sets the zoomview waveform position based on scrollbar position.
+   */
+
+  Scrollbar.prototype._updateWaveform = function (x) {
+    var offset = Math.floor((this._zoomview.getPixelLength() - this._zoomview.getWidth()) * x / this._getScrollbarRange());
+    this._zoomview.updateWaveform(offset);
+  };
+  Scrollbar.prototype.fitToContainer = function () {
+    if (this._container.clientWidth === 0 && this._container.clientHeight === 0) {
+      return;
+    }
+    if (this._container.clientWidth !== this._width) {
+      this._width = this._container.clientWidth;
+      this._stage.width(this._width);
+      this._updateScrollbarWidthAndPosition();
+    }
+    this._height = this._container.clientHeight;
+    this._stage.height(this._height);
+  };
+  Scrollbar.prototype.destroy = function () {
+    this._layer.destroy();
+    this._stage.destroy();
+    this._stage = null;
   };
 
   /**
@@ -6988,6 +7067,7 @@
     this._peaks = peaks;
     this._overview = null;
     this._zoomview = null;
+    this._scrollbar = null;
   }
   ViewController.prototype.createOverview = function (container) {
     if (this._overview) {
@@ -7006,7 +7086,15 @@
     }
     var waveformData = this._peaks.getWaveformData();
     this._zoomview = new WaveformZoomView(waveformData, container, this._peaks);
+    if (this._scrollbar) {
+      this._scrollbar.setZoomview(this._zoomview);
+    }
     return this._zoomview;
+  };
+  ViewController.prototype.createScrollbar = function (container) {
+    var waveformData = this._peaks.getWaveformData();
+    this._scrollbar = new Scrollbar(waveformData, container, this._peaks);
+    return this._scrollbar;
   };
   ViewController.prototype.destroyOverview = function () {
     if (!this._overview) {
@@ -7038,6 +7126,10 @@
       this._zoomview.destroy();
       this._zoomview = null;
     }
+    if (this._scrollbar) {
+      this._scrollbar.destroy();
+      this._scrollbar = null;
+    }
   };
   ViewController.prototype.getView = function (name) {
     if (isNullOrUndefined(name)) {
@@ -7060,6 +7152,9 @@
           return null;
       }
     }
+  };
+  ViewController.prototype.getScrollbar = function () {
+    return this._scrollbar;
   };
 
   /**
@@ -7157,367 +7252,170 @@
   /**
    * @file
    *
-   * Defines the {@link WaveformBuilder} class.
+   * Defines the {@link WaveformAxis} class.
    *
-   * @module waveform-builder
+   * @module waveform-axis
    */
-  var isXhr2 = ('withCredentials' in new XMLHttpRequest());
 
   /**
-   * Creates and returns a WaveformData object, either by requesting the
-   * waveform data from the server, or by creating the waveform data using the
-   * Web Audio API.
+   * Creates the waveform axis shapes and adds them to the given view layer.
    *
    * @class
-   * @alias WaveformBuilder
+   * @alias WaveformAxis
    *
-   * @param {Peaks} peaks
+   * @param {WaveformOverview|WaveformZoomView} view
+   * @param {Object} options
+   * @param {String} options.axisGridlineColor
+   * @param {String} options.axisLabelColor
+   * @param {Boolean} options.showAxisLabels
+   * @param {Function} options.formatAxisTime
+   * @param {String} options.fontFamily
+   * @param {Number} options.fontSize
+   * @param {String} options.fontStyle
    */
 
-  function WaveformBuilder(peaks) {
-    this._peaks = peaks;
+  function WaveformAxis(view, options) {
+    var self = this;
+    self._axisGridlineColor = options.axisGridlineColor;
+    self._axisLabelColor = options.axisLabelColor;
+    self._showAxisLabels = options.showAxisLabels;
+    self._axisTopMarkerHeight = options.axisTopMarkerHeight;
+    self._axisBottomMarkerHeight = options.axisBottomMarkerHeight;
+    if (options.formatAxisTime) {
+      self._formatAxisTime = options.formatAxisTime;
+    } else {
+      self._formatAxisTime = function (time) {
+        // precision = 0, drops the fractional seconds
+        return formatTime(time, 0);
+      };
+    }
+    self._axisLabelFont = WaveformAxis._buildFontString(options.fontFamily, options.fontSize, options.fontStyle);
+    self._axisShape = new Konva__default["default"].Shape({
+      sceneFunc: function sceneFunc(context) {
+        self._drawAxis(context, view);
+      }
+    });
   }
-
-  /**
-   * Options for requesting remote waveform data.
-   *
-   * @typedef {Object} RemoteWaveformDataOptions
-   * @global
-   * @property {String=} arraybuffer
-   * @property {String=} json
-   */
-
-  /**
-   * Options for supplying local waveform data.
-   *
-   * @typedef {Object} LocalWaveformDataOptions
-   * @global
-   * @property {ArrayBuffer=} arraybuffer
-   * @property {Object=} json
-   */
-
-  /**
-   * Options for the Web Audio waveform builder.
-   *
-   * @typedef {Object} WaveformBuilderWebAudioOptions
-   * @global
-   * @property {AudioContext} audioContext
-   * @property {AudioBuffer=} audioBuffer
-   * @property {Number=} scale
-   * @property {Boolean=} multiChannel
-   */
-
-  /**
-   * Options for [WaveformBuilder.init]{@link WaveformBuilder#init}.
-   *
-   * @typedef {Object} WaveformBuilderInitOptions
-   * @global
-   * @property {RemoteWaveformDataOptions=} dataUri
-   * @property {LocalWaveformDataOptions=} waveformData
-   * @property {WaveformBuilderWebAudioOptions=} webAudio
-   * @property {Boolean=} withCredentials
-   * @property {Array<Number>=} zoomLevels
-   */
-
-  /**
-   * Callback for receiving the waveform data.
-   *
-   * @callback WaveformBuilderInitCallback
-   * @global
-   * @param {Error} error
-   * @param {WaveformData} waveformData
-   */
-
-  /**
-   * Loads or creates the waveform data.
-   *
-   * @private
-   * @param {WaveformBuilderInitOptions} options
-   * @param {WaveformBuilderInitCallback} callback
-   */
-
-  WaveformBuilder.prototype.init = function (options, callback) {
-    if (options.dataUri && (options.webAudio || options.audioContext) || options.waveformData && (options.webAudio || options.audioContext) || options.dataUri && options.waveformData) {
-      // eslint-disable-next-line max-len
-      callback(new TypeError('Peaks.init(): You may only pass one source (webAudio, dataUri, or waveformData) to render waveform data.'));
-      return;
+  WaveformAxis._buildFontString = function (fontFamily, fontSize, fontStyle) {
+    if (!fontSize) {
+      fontSize = 11;
     }
-    if (options.audioContext) {
-      // eslint-disable-next-line max-len
-      this._peaks._logger('Peaks.init(): The audioContext option is deprecated, please pass a webAudio object instead');
-      options.webAudio = {
-        audioContext: options.audioContext
-      };
+    if (!fontFamily) {
+      fontFamily = 'sans-serif';
     }
-    if (options.dataUri) {
-      return this._getRemoteWaveformData(options, callback);
-    } else if (options.waveformData) {
-      return this._buildWaveformFromLocalData(options, callback);
-    } else if (options.webAudio) {
-      if (options.webAudio.audioBuffer) {
-        return this._buildWaveformDataFromAudioBuffer(options, callback);
+    if (!fontStyle) {
+      fontStyle = 'normal';
+    }
+    return fontStyle + ' ' + fontSize + 'px ' + fontFamily;
+  };
+  WaveformAxis.prototype.addToLayer = function (layer) {
+    layer.add(this._axisShape);
+  };
+  WaveformAxis.prototype.showAxisLabels = function (show, options) {
+    this._showAxisLabels = show;
+    if (options) {
+      if (objectHasProperty(options, 'topMarkerHeight')) {
+        this._axisTopMarkerHeight = options.topMarkerHeight;
+      }
+      if (objectHasProperty(options, 'bottomMarkerHeight')) {
+        this._axisBottomMarkerHeight = options.bottomMarkerHeight;
+      }
+    }
+  };
+
+  /**
+   * Returns number of seconds for each x-axis marker, appropriate for the
+   * current zoom level, ensuring that markers are not too close together
+   * and that markers are placed at intuitive time intervals (i.e., every 1,
+   * 2, 5, 10, 20, 30 seconds, then every 1, 2, 5, 10, 20, 30 minutes, then
+   * every 1, 2, 5, 10, 20, 30 hours).
+   *
+   * @param {WaveformOverview|WaveformZoomView} view
+   * @returns {Number}
+   */
+
+  WaveformAxis.prototype._getAxisLabelScale = function (view) {
+    var baseSecs = 1; // seconds
+    var steps = [1, 2, 5, 10, 20, 30];
+    var minSpacing = 60;
+    var index = 0;
+    var secs;
+    for (;;) {
+      secs = baseSecs * steps[index];
+      var pixels = view.timeToPixels(secs);
+      if (pixels < minSpacing) {
+        if (++index === steps.length) {
+          baseSecs *= 60; // seconds -> minutes -> hours
+          index = 0;
+        }
       } else {
-        return this._buildWaveformDataUsingWebAudio(options, callback);
+        break;
       }
-    } else {
-      // eslint-disable-next-line max-len
-      callback(new Error('Peaks.init(): You must pass an audioContext, or dataUri, or waveformData to render waveform data'));
     }
-  };
-
-  /* eslint-disable max-len */
-
-  /**
-   * Fetches waveform data, based on the given options.
-   *
-   * @private
-   * @param {Object} options
-   * @param {String|Object} options.dataUri
-   * @param {String} options.dataUri.arraybuffer Waveform data URL
-   *   (binary format)
-   * @param {String} options.dataUri.json Waveform data URL (JSON format)
-   * @param {String} options.defaultUriFormat Either 'arraybuffer' (for binary
-   *   data) or 'json'
-   * @param {WaveformBuilderInitCallback} callback
-   *
-   * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
-   *   for details of the binary and JSON waveform data formats.
-   */
-
-  /* eslint-enable max-len */
-
-  WaveformBuilder.prototype._getRemoteWaveformData = function (options, callback) {
-    var self = this;
-    var dataUri = null;
-    var requestType = null;
-    var url;
-    if (isObject(options.dataUri)) {
-      dataUri = options.dataUri;
-    } else if (isString(options.dataUri)) {
-      // Backward compatibility
-      dataUri = {};
-      dataUri[options.dataUriDefaultFormat || 'json'] = options.dataUri;
-    } else {
-      callback(new TypeError('Peaks.init(): The dataUri option must be an object'));
-      return;
-    }
-    ['ArrayBuffer', 'JSON'].some(function (connector) {
-      if (window[connector]) {
-        requestType = connector.toLowerCase();
-        url = dataUri[requestType];
-        return Boolean(url);
-      }
-    });
-    if (!url) {
-      // eslint-disable-next-line max-len
-      callback(new Error('Peaks.init(): Unable to determine a compatible dataUri format for this browser'));
-      return;
-    }
-    self._xhr = self._createXHR(url, requestType, options.withCredentials, function (event) {
-      if (this.readyState !== 4) {
-        return;
-      }
-      if (this.status !== 200) {
-        callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
-        return;
-      }
-      self._xhr = null;
-      var waveformData = WaveformData__default["default"].create(event.target.response);
-      if (waveformData.channels !== 1 && waveformData.channels !== 2) {
-        callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
-        return;
-      } else if (waveformData.bits !== 8) {
-        callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
-        return;
-      }
-      callback(null, waveformData);
-    }, function () {
-      callback(new Error('XHR failed'));
-    }, function () {
-      callback(new Error('XHR aborted'));
-    });
-    self._xhr.send();
-  };
-
-  /* eslint-disable max-len */
-
-  /**
-   * Creates a waveform from given data, based on the given options.
-   *
-   * @private
-   * @param {Object} options
-   * @param {Object} options.waveformData
-   * @param {ArrayBuffer} options.waveformData.arraybuffer Waveform data (binary format)
-   * @param {Object} options.waveformData.json Waveform data (JSON format)
-   * @param {WaveformBuilderInitCallback} callback
-   *
-   * @see Refer to the <a href="https://github.com/bbc/audiowaveform/blob/master/doc/DataFormat.md">data format documentation</a>
-   *   for details of the binary and JSON waveform data formats.
-   */
-
-  /* eslint-enable max-len */
-
-  WaveformBuilder.prototype._buildWaveformFromLocalData = function (options, callback) {
-    var waveformData = null;
-    var data = null;
-    if (isObject(options.waveformData)) {
-      waveformData = options.waveformData;
-    } else {
-      callback(new Error('Peaks.init(): The waveformData option must be an object'));
-      return;
-    }
-    if (isObject(waveformData.json)) {
-      data = waveformData.json;
-    } else if (isArrayBuffer(waveformData.arraybuffer)) {
-      data = waveformData.arraybuffer;
-    }
-    if (!data) {
-      // eslint-disable-next-line max-len
-      callback(new Error('Peaks.init(): Unable to determine a compatible waveformData format'));
-      return;
-    }
-    try {
-      var createdWaveformData = WaveformData__default["default"].create(data);
-      if (createdWaveformData.channels !== 1 && createdWaveformData.channels !== 2) {
-        callback(new Error('Peaks.init(): Only mono or stereo waveforms are currently supported'));
-        return;
-      } else if (createdWaveformData.bits !== 8) {
-        callback(new Error('Peaks.init(): 16-bit waveform data is not supported'));
-        return;
-      }
-      callback(null, createdWaveformData);
-    } catch (err) {
-      callback(err);
-    }
+    return secs;
   };
 
   /**
-   * Creates waveform data using the Web Audio API.
+   * Draws the time axis and labels onto a view.
    *
-   * @private
-   * @param {Object} options
-   * @param {AudioContext} options.audioContext
-   * @param {HTMLMediaElement} options.mediaElement
-   * @param {WaveformBuilderInitCallback} callback
+   * @param {Konva.Context} context The context to draw on.
+   * @param {WaveformOverview|WaveformZoomView} view
    */
 
-  WaveformBuilder.prototype._buildWaveformDataUsingWebAudio = function (options, callback) {
-    var self = this;
-    var audioContext = window.AudioContext || window.webkitAudioContext;
-    if (!(options.webAudio.audioContext instanceof audioContext)) {
-      // eslint-disable-next-line max-len
-      callback(new TypeError('Peaks.init(): The webAudio.audioContext option must be a valid AudioContext'));
-      return;
-    }
-    var webAudioOptions = options.webAudio;
-    if (webAudioOptions.scale !== options.zoomLevels[0]) {
-      webAudioOptions.scale = options.zoomLevels[0];
-    }
+  WaveformAxis.prototype._drawAxis = function (context, view) {
+    var currentFrameStartTime = view.getStartTime();
 
-    // If the media element has already selected which source to play, its
-    // currentSrc attribute will contain the source media URL. Otherwise,
-    // we wait for a canplay event to tell us when the media is ready.
+    // Time interval between axis markers (seconds)
+    var axisLabelIntervalSecs = this._getAxisLabelScale(view);
 
-    var mediaSourceUrl = self._peaks.options.mediaElement.currentSrc;
-    if (mediaSourceUrl) {
-      self._requestAudioAndBuildWaveformData(mediaSourceUrl, webAudioOptions, options.withCredentials, callback);
-    } else {
-      self._peaks.once('player.canplay', function () {
-        self._requestAudioAndBuildWaveformData(self._peaks.options.mediaElement.currentSrc, webAudioOptions, options.withCredentials, callback);
-      });
-    }
-  };
-  WaveformBuilder.prototype._buildWaveformDataFromAudioBuffer = function (options, callback) {
-    var webAudioOptions = options.webAudio;
-    if (webAudioOptions.scale !== options.zoomLevels[0]) {
-      webAudioOptions.scale = options.zoomLevels[0];
-    }
-    var webAudioBuilderOptions = {
-      audio_buffer: webAudioOptions.audioBuffer,
-      split_channels: webAudioOptions.multiChannel,
-      scale: webAudioOptions.scale,
-      disable_worker: true
-    };
-    WaveformData__default["default"].createFromAudio(webAudioBuilderOptions, callback);
-  };
+    // Time of first axis marker (seconds)
+    var firstAxisLabelSecs = roundUpToNearest(currentFrameStartTime, axisLabelIntervalSecs);
 
-  /**
-   * Fetches the audio content, based on the given options, and creates waveform
-   * data using the Web Audio API.
-   *
-   * @private
-   * @param {url} The media source URL
-   * @param {WaveformBuilderWebAudioOptions} webAudio
-   * @param {Boolean} withCredentials
-   * @param {WaveformBuilderInitCallback} callback
-   */
+    // Distance between waveform start time and first axis marker (seconds)
+    var axisLabelOffsetSecs = firstAxisLabelSecs - currentFrameStartTime;
 
-  WaveformBuilder.prototype._requestAudioAndBuildWaveformData = function (url, webAudio, withCredentials, callback) {
-    var self = this;
-    if (!url) {
-      self._peaks._logger('Peaks.init(): The mediaElement src is invalid');
-      return;
-    }
-    self._xhr = self._createXHR(url, 'arraybuffer', withCredentials, function (event) {
-      if (this.readyState !== 4) {
-        return;
+    // Distance between waveform start time and first axis marker (pixels)
+    var axisLabelOffsetPixels = view.timeToPixels(axisLabelOffsetSecs);
+    context.setAttr('strokeStyle', this._axisGridlineColor);
+    context.setAttr('lineWidth', 1);
+
+    // Set text style
+    context.setAttr('font', this._axisLabelFont);
+    context.setAttr('fillStyle', this._axisLabelColor);
+    context.setAttr('textAlign', 'left');
+    context.setAttr('textBaseline', 'bottom');
+    var width = view.getWidth();
+    var height = view.getHeight();
+    var secs = firstAxisLabelSecs;
+    for (;;) {
+      // Position of axis marker (pixels)
+      var x = axisLabelOffsetPixels + view.timeToPixels(secs - firstAxisLabelSecs);
+      if (x >= width) {
+        break;
       }
-      if (this.status !== 200) {
-        callback(new Error('Unable to fetch remote data. HTTP status ' + this.status));
-        return;
+      if (this._axisTopMarkerHeight > 0) {
+        context.beginPath();
+        context.moveTo(x + 0.5, 0);
+        context.lineTo(x + 0.5, 0 + this._axisTopMarkerHeight);
+        context.stroke();
       }
-      self._xhr = null;
-      var webAudioBuilderOptions = {
-        audio_context: webAudio.audioContext,
-        array_buffer: event.target.response,
-        split_channels: webAudio.multiChannel,
-        scale: webAudio.scale
-      };
-      WaveformData__default["default"].createFromAudio(webAudioBuilderOptions, callback);
-    }, function () {
-      callback(new Error('XHR failed'));
-    }, function () {
-      callback(new Error('XHR aborted'));
-    });
-    self._xhr.send();
-  };
-  WaveformBuilder.prototype.abort = function () {
-    if (this._xhr) {
-      this._xhr.abort();
-    }
-  };
-
-  /**
-   * @private
-   * @param {String} url
-   * @param {String} requestType
-   * @param {Boolean} withCredentials
-   * @param {Function} onLoad
-   * @param {Function} onError
-   *
-   * @returns {XMLHttpRequest}
-   */
-
-  WaveformBuilder.prototype._createXHR = function (url, requestType, withCredentials, onLoad, onError, onAbort) {
-    var xhr = new XMLHttpRequest();
-
-    // open an XHR request to the data source file
-    xhr.open('GET', url, true);
-    if (isXhr2) {
-      try {
-        xhr.responseType = requestType;
-      } catch (e) {
-        // Some browsers like Safari 6 do handle XHR2 but not the json
-        // response type, doing only a try/catch fails in IE9
+      if (this._axisBottomMarkerHeight) {
+        context.beginPath();
+        context.moveTo(x + 0.5, height);
+        context.lineTo(x + 0.5, height - this._axisBottomMarkerHeight);
+        context.stroke();
       }
+      if (this._showAxisLabels) {
+        var label = this._formatAxisTime(secs);
+        var labelWidth = context.measureText(label).width;
+        var labelX = x - labelWidth / 2;
+        var labelY = height - 1 - this._axisBottomMarkerHeight;
+        if (labelX >= 0) {
+          context.fillText(label, labelX, labelY);
+        }
+      }
+      secs += axisLabelIntervalSecs;
     }
-    xhr.onload = onLoad;
-    xhr.onerror = onError;
-    if (isXhr2 && withCredentials) {
-      xhr.withCredentials = true;
-    }
-    xhr.addEventListener('abort', onAbort);
-    return xhr;
   };
 
   /**
@@ -7547,7 +7445,6 @@
       mediaElement: null,
       mediaUrl: null,
       dataUri: null,
-      dataUriDefaultFormat: 'json',
       withCredentials: false,
       waveformData: null,
       webAudio: null,
@@ -7567,20 +7464,24 @@
     playheadTextColor: '#aaaaaa',
     axisGridlineColor: '#cccccc',
     showAxisLabels: true,
+    axisTopMarkerHeight: 10,
+    axisBottomMarkerHeight: 10,
     axisLabelColor: '#aaaaaa',
     fontFamily: 'sans-serif',
     fontSize: 11,
     fontStyle: 'normal',
-    timeLabelPrecision: 2
+    timeLabelPrecision: 2,
+    enablePoints: true,
+    enableSegments: true
   };
   var defaultZoomviewOptions = {
     // showPlayheadTime:    true,
     playheadClickTolerance: 3,
     waveformColor: 'rgba(0, 225, 128, 1)',
-    wheelMode: 'none'
-    // zoomAdapter:         'static'
+    wheelMode: 'none',
+    autoScroll: true,
+    autoScrollOffset: 100
   };
-
   var defaultOverviewOptions = {
     // showPlayheadTime:    false,
     waveformColor: 'rgba(0, 0, 0, 0.2)',
@@ -7619,7 +7520,7 @@
     if (opts.overview && opts.overview.showPlayheadTime) {
       overviewOptions.showPlayheadTime = opts.overview.showPlayheadTime;
     }
-    var optNames = ['container', 'waveformColor', 'playedWaveformColor', 'playheadColor', 'playheadTextColor', 'formatPlayheadTime', 'timeLabelPrecision', 'axisGridlineColor', 'showAxisLabels', 'axisLabelColor', 'formatAxisTime', 'fontFamily', 'fontSize', 'fontStyle', 'highlightColor', 'highlightStrokeColor', 'highlightOpacity', 'highlightCornerRadius', 'highlightOffset'];
+    var optNames = ['container', 'waveformColor', 'playedWaveformColor', 'playheadColor', 'playheadTextColor', 'formatPlayheadTime', 'timeLabelPrecision', 'axisGridlineColor', 'showAxisLabels', 'axisTopMarkerHeight', 'axisBottomMarkerHeight', 'axisLabelColor', 'formatAxisTime', 'fontFamily', 'fontSize', 'fontStyle', 'highlightColor', 'highlightStrokeColor', 'highlightOpacity', 'highlightCornerRadius', 'highlightOffset', 'enablePoints', 'enableSegments'];
     optNames.forEach(function (optName) {
       if (opts.overview && objectHasProperty(opts.overview, optName)) {
         overviewOptions[optName] = opts.overview[optName];
@@ -7642,7 +7543,7 @@
     } else if (opts.zoomview && opts.zoomview.showPlayheadTime) {
       zoomviewOptions.showPlayheadTime = opts.zoomview.showPlayheadTime;
     }
-    var optNames = ['container', 'waveformColor', 'playedWaveformColor', 'playheadColor', 'playheadTextColor', 'formatPlayheadTime', 'playheadClickTolerance', 'timeLabelPrecision', 'axisGridlineColor', 'showAxisLabels', 'axisLabelColor', 'formatAxisTime', 'fontFamily', 'fontSize', 'fontStyle', 'wheelMode'];
+    var optNames = ['container', 'waveformColor', 'playedWaveformColor', 'playheadColor', 'playheadTextColor', 'formatPlayheadTime', 'playheadClickTolerance', 'timeLabelPrecision', 'axisGridlineColor', 'showAxisLabels', 'axisTopMarkerHeight', 'axisBottomMarkerHeight', 'axisLabelColor', 'formatAxisTime', 'fontFamily', 'fontSize', 'fontStyle', 'wheelMode', 'autoScroll', 'autoScrollOffset', 'enablePoints', 'enableSegments'];
     optNames.forEach(function (optName) {
       if (opts.zoomview && objectHasProperty(opts.zoomview, optName)) {
         zoomviewOptions[optName] = opts.zoomview[optName];
@@ -7760,7 +7661,7 @@
     instance.views = new ViewController(instance);
 
     // Setup the UI components
-    instance._waveformBuilder = new WaveformBuilder(instance);
+    instance._waveformBuilder = new WaveformAxis(instance);
     instance.player.init(instance).then(function () {
       instance._waveformBuilder.init(instance.options, function (err, waveformData) {
         if (err) {
@@ -7787,9 +7688,8 @@
           instance.views.createZoomview(zoomviewContainer);
         }
         if (scrollbarContainer) {
-          instance.createScrollbar(scrollbarContainer);
+          instance.views.createScrollbar(scrollbarContainer);
         }
-        instance._addWindowResizeHandler();
         if (opts.segments) {
           instance.segments.add(opts.segments);
         }
@@ -7915,7 +7815,7 @@
       if (!options.zoomLevels) {
         options.zoomLevels = self.options.zoomLevels;
       }
-      self._waveformBuilder = new WaveformBuilder(self);
+      self._waveformBuilder = new WaveformAxis(self);
       self._waveformBuilder.init(options, function (err, waveformData) {
         if (err) {
           callback(err);
@@ -7939,28 +7839,12 @@
   Peaks.prototype.getWaveformData = function () {
     return this._waveformData;
   };
-  Peaks.prototype.createScrollbar = function (container) {
-    var waveformData = this.getWaveformData();
-    this._scrollbar = new Scrollbar(waveformData, container, this);
-    return this._scrollbar;
-  };
-  Peaks.prototype._addWindowResizeHandler = function () {
-    this._onResize = this._onResize.bind(this);
-    window.addEventListener('resize', this._onResize);
-  };
-  Peaks.prototype._onResize = function () {
-    this.emit('window_resize');
-  };
-  Peaks.prototype._removeWindowResizeHandler = function () {
-    window.removeEventListener('resize', this._onResize);
-  };
 
   /**
    * Cleans up a Peaks instance after use.
    */
 
   Peaks.prototype.destroy = function () {
-    this._removeWindowResizeHandler();
     if (this._waveformBuilder) {
       this._waveformBuilder.abort();
     }
@@ -7969,10 +7853,6 @@
     }
     if (this.views) {
       this.views.destroy();
-    }
-    if (this._scrollbar) {
-      this._scrollbar.destroy();
-      this._scrollbar = null;
     }
     if (this.player) {
       this.player.destroy();
